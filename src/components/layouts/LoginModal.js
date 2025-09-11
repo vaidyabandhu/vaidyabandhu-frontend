@@ -46,7 +46,7 @@ const LoginModal = () => {
     setErrors({}); // Clear errors
     setIsLoading(true);
     try {
-      const response = await fetch("https://stage.vaidyabandhu.com/api/users/login/", {
+      const response = await fetch("https://52.66.199.115:8000/admin/api/users/login/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -96,7 +96,7 @@ const LoginModal = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        "https://stage.vaidyabandhu.com/api/users/verify_login_otp/",
+        "https://52.66.199.115:8000/admin/api/users/verify_login_otp/",
         {
           method: "POST",
           headers: {
@@ -141,7 +141,7 @@ const LoginModal = () => {
     setOtp(""); // Clear current OTP
     setErrors({}); // Clear errors
     try {
-      const response = await fetch("https://stage.vaidyabandhu.com/api/users/login/", {
+      const response = await fetch("https://52.66.199.115:8000/admin/api/users/login/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

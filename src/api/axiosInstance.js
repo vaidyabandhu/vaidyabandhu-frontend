@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: `https://stage.vaidyabandhu.com/api/`,
+  baseURL: `https://52.66.199.115:8000/admin/api/`,
   headers: {
     // 'Content-Type': 'application/json',
     // "Access-Control-Allow-Origin": "*",

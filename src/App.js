@@ -15,6 +15,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { getAppRoutes } from "./components/AppRoute";
 import BasicDetail from "./components/pages/BasicDetail";
 import { SuspenseFallback } from "./components/SuspenseFallback";
+import Alldetails from "./components/sections/all-details/Alldetails";
 
 // Lazy imports
 const Home = React.lazy(() => import("./components/pages/Home"));
@@ -134,6 +135,7 @@ function AppRoutes() {
 
       <Route path="/contact" element={<Contact />} />
       <Route path="/basic-details" element={<BasicDetail />} />
+      <Route path="/all-details" element={<Alldetails />} />
 
       <Route path="/hospital-list" element={<HospitalList />} />
 

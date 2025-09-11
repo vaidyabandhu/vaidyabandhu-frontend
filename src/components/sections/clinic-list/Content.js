@@ -98,7 +98,7 @@ const DiagnosticCentersApp = () => {
     error: locationsError,
   } = useFetch({
     method: "GET",
-    request: "https://stage.vaidyabandhu.com/api/locations/",
+    request: "https://52.66.199.115:8000/admin/api/locations/",
   });
 
   useEffect(() => {
