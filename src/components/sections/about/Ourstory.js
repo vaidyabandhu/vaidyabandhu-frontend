@@ -340,7 +340,7 @@ const OurStory = () => {
                         display: "flex",
                         fontFamily: "Poppins",
                         alignItems: "flex-start",
-                        padding: "15px 20px ",
+                        padding: "12px 8px!important",
                         backgroundColor: "rgba(0, 122, 126, 0.03)",
                         borderRadius: "12px",
                         border: "1px solid rgba(0, 122, 126, 0.1)",

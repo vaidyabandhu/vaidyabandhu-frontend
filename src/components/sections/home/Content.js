@@ -36,7 +36,7 @@ class Content extends Component {
           <Workprocess />
         </div>
         <MembershipCardBenefits />
-        <DoctorsComponent />
+        {/* <DoctorsComponent /> */}
         <ClientLogosCarousel />
         <Testimonials />
         <ClientTestimonials />
