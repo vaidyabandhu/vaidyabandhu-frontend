@@ -25,6 +25,7 @@ const Blogstandard = React.lazy(() =>
 );
 const Blogdetails = React.lazy(() => import("./components/pages/Blogdetails"));
 const About = React.lazy(() => import("./components/pages/About"));
+const MyProfile = React.lazy(() => import("./components/pages/MyProfile"));
 const Services = React.lazy(() => import("./components/pages/Services"));
 const Servicedetails = React.lazy(() =>
   import("./components/pages/Servicedetails")
@@ -91,7 +92,7 @@ function AppRoutes() {
         path="/blog/author/:authorId"
         element={<Blog key={window.location.pathname} />}
       />
-
+       <Route path="/myprofile" element={<MyProfile />} />
       <Route path="/about" element={<About />} />
       <Route path="/services" element={<Services />} />
       <Route

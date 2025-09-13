@@ -70,7 +70,7 @@ const MedicalDepartments = () => {
     setSpecialtyLoading(true);
     try {
       const response = await fetch(
-        `https://52.66.199.115:8000/admin/api/specialty/?department=${departmentId}`
+        `https://52.66.199.115:8000/api/specialty/?department=${departmentId}`
       );
       if (!response.ok) throw new Error("Failed to fetch specialties");
       const data = await response.json();

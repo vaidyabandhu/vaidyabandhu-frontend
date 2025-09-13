@@ -71,7 +71,7 @@ const ShowEnquireModal = ({ show, onClose, setShowSuccessMessage, token }) => {
     setErrors({});
 
     try {
-      const response = await fetch("https://52.66.199.115:8000/admin/api/users/enquiry/", {
+      const response = await fetch("https://52.66.199.115:8000/api/users/enquiry/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
