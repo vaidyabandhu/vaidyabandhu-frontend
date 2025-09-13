@@ -39,7 +39,7 @@ const MembershipModal = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("https://52.66.199.115:8000/api/users/login/", {
+      const response = await fetch("http://52.66.199.115:8000/api/users/login/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -93,7 +93,7 @@ const MembershipModal = () => {
 
     try {
       const response = await fetch(
-        "https://52.66.199.115:8000/api/users/verify_login_otp/",
+        "http://52.66.199.115:8000/api/users/verify_login_otp/",
         {
           method: "POST",
           headers: {
@@ -144,7 +144,7 @@ const MembershipModal = () => {
     setErrors({}); // Clear errors
 
     try {
-      const response = await fetch("https://52.66.199.115:8000/api/users/login/", {
+      const response = await fetch("http://52.66.199.115:8000/api/users/login/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

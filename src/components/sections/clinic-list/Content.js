@@ -98,7 +98,7 @@ const DiagnosticCentersApp = () => {
     error: locationsError,
   } = useFetch({
     method: "GET",
-    request: "https://52.66.199.115:8000/api/locations/",
+    request: "http://52.66.199.115:8000/api/locations/",
   });
 
   useEffect(() => {
