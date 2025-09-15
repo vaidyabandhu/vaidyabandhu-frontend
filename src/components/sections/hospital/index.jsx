@@ -129,11 +129,11 @@ const HospitalsPage = () => {
                     <Card.Body className="p-3">
                       {/* Contact Actions */}
                       <div className={style.headerContent}>
-                        <h5 className="mb-1 fw-bold">{hospital.hospital_name}</h5>
-                        {hospital.location_name && (
+                        <h5 className="mb-1 fw-bold">{hospital.name}</h5>
+                        {hospital.address && (
                           <div className="d-flex align-items-center mb-2">
                             <MapPin size={16} className="me-2" />
-                            <small>{hospital.location_name}</small>
+                            <small>{hospital.address}</small>
                           </div>
                         )}
                       </div>

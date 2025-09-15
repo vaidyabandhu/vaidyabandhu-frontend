@@ -81,7 +81,6 @@ const MyProfile = () => {
     infoLabel: {
       fontWeight: 600,
       color: "#095D7E",
-      width: "120px",
       fontSize: "14px",
     },
     infoValue: {

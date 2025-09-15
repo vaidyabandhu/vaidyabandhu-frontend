@@ -40,7 +40,7 @@ const VaidyaBandhuForm = () => {
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   const [selectedLanguage, setSelectedLanguage] = useState("en");
 
   // Handle language change
@@ -94,10 +94,7 @@ const VaidyaBandhuForm = () => {
         languagesType[selectedLanguage].validation.alternateValid;
     }
 
-    if (
-      formData.email &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
-    ) {
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = languagesType[selectedLanguage].validation.emailValid;
     }
 
@@ -110,7 +107,8 @@ const VaidyaBandhuForm = () => {
       formData.pan_number &&
       !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.pan_number)
     ) {
-      newErrors.pan_number = languagesType[selectedLanguage].validation.panValid;
+      newErrors.pan_number =
+        languagesType[selectedLanguage].validation.panValid;
     }
 
     return newErrors;
@@ -164,17 +162,69 @@ const VaidyaBandhuForm = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("https://admin.vaidyabandhu.com/api/users/2/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token || ''
-        },
-        body: JSON.stringify({ ...formData, amount: 49, currency: "INR" }),
-      });
+      // Call the payment create_order API with Authorization header
+      const staticToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOm51bGwsIm1vYmlsZSI6Ijk2MTE3OTg4MzgiLCJmaXJzdF9uYW1lIjoiIiwidXNlcl9yb2xlIjpbXSwiYWNjZXNzX3R5cGUiOiJjcm0iLCJjcmVhdGVkX3RpbWUiOiIyMDI1LTA5LTEyIDE1OjQzOjQ3LjY2NjAwNiIsImlhdCI6MTc1NzY5MTgyNywiZXhwIjoxNzY1NDY3ODI3fQ.Y2ch4hfyFNvk9GsaJUQ5kPiOAZ1TjVtx5iJBsuKggKU";
+      const response = await fetch(
+        "https://admin.vaidyabandhu.com/api/user/profile/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: staticToken,
+          },
+          body: JSON.stringify({
+            full_name: formData.full_name,
+            age: formData.age,
+            gender: formData.gender,
+            blood_group: formData.blood_group,
+            address: formData.address,
+            pin_code: formData.pin_code,
+            mobile: formData.mobile_number,
+            alternate_number: formData.alternate_mobile,
+            email: formData.email,
+            aadhaar_number: formData.aadhaar_number,
+            pan_number: formData.pan_number,
+          }),
+        }
+      );
+
+      const createOrder = await fetch(
+        "https://admin.vaidyabandhu.com/api/payment/create_order/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: staticToken,
+          },
+          body: JSON.stringify({
+            subscription: 1,
+            
+          }),
+        }
+      );
+      // create order response
+      const createOrderData = await createOrder.json();
+      if (createOrder.ok) {
+      } else {
+        alert('Failed to create order: ' + (createOrderData.detail || JSON.stringify(createOrderData)));
+      }
 
       const data = await response.json();
-      // Do something with the response
+      if (response.ok) {
+        if (data && data.payment_url) {
+          window.location.href = data.payment_url;
+        } else {
+          alert(
+            "Order created, but no payment URL returned. Order ID: " +
+              (data.id || JSON.stringify(data))
+          );
+        }
+      } else {
+        alert(
+          "Failed to create order: " + (data.detail || JSON.stringify(data))
+        );
+      }
     } catch (error) {
       alert("Error occurred while creating order");
     }
@@ -185,7 +235,7 @@ const VaidyaBandhuForm = () => {
   const termsConditions = languagesType[selectedLanguage].terms;
 
   return (
-    <div className="container-fluid bg-light py-5 container-bg" >
+    <div className="container-fluid bg-light py-5 container-bg">
       <div className="container">
         <div className="d-flex justify-content-end">
           <div className="text-right mb-4" style={{ width: "200px" }}>
@@ -205,10 +255,13 @@ const VaidyaBandhuForm = () => {
         </div>
 
         <div className="text-center mb-5">
-          <h1 className="display-4 mb-2 " style={{ fontFamily: 'Poppins' }}>
+          <h1 className="display-4 mb-2 " style={{ fontFamily: "Poppins" }}>
             {languagesType[selectedLanguage].title}
           </h1>
-          <p className="lead secondary-color mb-4" style={{ fontFamily: 'Poppins' }}>
+          <p
+            className="lead secondary-color mb-4"
+            style={{ fontFamily: "Poppins" }}
+          >
             {languagesType[selectedLanguage].subtitle}
           </p>
         </div>
@@ -217,13 +270,17 @@ const VaidyaBandhuForm = () => {
           <Col md={4}>
             <Card className="mb-4 shadow-lg">
               <Card.Body>
-                <h4 className="h4 mb-4" style={{ fontFamily: 'Poppins' }}>
+                <h4 className="h4 mb-4" style={{ fontFamily: "Poppins" }}>
                   <Star className="h-6 w-6 text-yellow-500 me-1" />{" "}
                   {languagesType[selectedLanguage].membershipBenefits}
                 </h4>
                 <ul className="list-unstyled">
                   {benefits.map((benefit, index) => (
-                    <li key={index} className="d-flex align-items-start mb-2" style={{ fontFamily: 'Poppins' }}>
+                    <li
+                      key={index}
+                      className="d-flex align-items-start mb-2"
+                      style={{ fontFamily: "Poppins" }}
+                    >
                       <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
                       <span className="ms-2">{benefit}</span>
                     </li>
@@ -234,7 +291,7 @@ const VaidyaBandhuForm = () => {
 
             <Card className="mb-4 shadow-lg">
               <Card.Body>
-                <h2 className="h4 mb-4" style={{ fontFamily: 'Poppins' }}>
+                <h2 className="h4 mb-4" style={{ fontFamily: "Poppins" }}>
                   <CreditCard className="h-6 w-6 secondary-color me-2" />{" "}
                   {languagesType[selectedLanguage].membershipCharges}
                 </h2>
@@ -245,10 +302,16 @@ const VaidyaBandhuForm = () => {
                   >
                     ₹49
                   </div>
-                  <div className="text-lg opacity-90" style={{ fontFamily: 'Poppins' }}>
+                  <div
+                    className="text-lg opacity-90"
+                    style={{ fontFamily: "Poppins" }}
+                  >
                     {languagesType[selectedLanguage].validFor}
                   </div>
-                  <div className="text-sm mt-2 opacity-80" style={{ fontFamily: 'Poppins' }}>
+                  <div
+                    className="text-sm mt-2 opacity-80"
+                    style={{ fontFamily: "Poppins" }}
+                  >
                     {languagesType[selectedLanguage].instantCard}
                   </div>
                 </div>
@@ -259,7 +322,10 @@ const VaidyaBandhuForm = () => {
           <Col md={8}>
             <Card className="bg-white rounded-xl shadow-lg p-6 mb-4">
               <Card.Body>
-                <h2 className="h4 mb-6 secondary-color flex items-center" style={{ fontFamily: 'Poppins' }}>
+                <h2
+                  className="h4 mb-6 secondary-color flex items-center"
+                  style={{ fontFamily: "Poppins" }}
+                >
                   <MapPin className="h-6 w-6 text-blue-500 me-2" />{" "}
                   {languagesType[selectedLanguage].personalDetails}
                 </h2>
@@ -364,7 +430,8 @@ const VaidyaBandhuForm = () => {
                           isInvalid={!!errors.blood_group}
                         >
                           <option value="">
-                            {languagesType[selectedLanguage].form.selectBloodGroup || "Select Blood Group"}
+                            {languagesType[selectedLanguage].form
+                              .selectBloodGroup || "Select Blood Group"}
                           </option>
                           {BLOOD_GROUPS.map((bg, idx) => (
                             <option key={bg + idx} value={bg}>
@@ -457,7 +524,10 @@ const VaidyaBandhuForm = () => {
                         className="mb-3"
                       >
                         <Form.Label>
-                          {languagesType[selectedLanguage].form.alternate_mobile}
+                          {
+                            languagesType[selectedLanguage].form
+                              .alternate_mobile
+                          }
                         </Form.Label>
                         <Form.Control
                           type="tel"
@@ -491,8 +561,7 @@ const VaidyaBandhuForm = () => {
                       onChange={handleInputChange}
                       isInvalid={!!errors.email}
                       placeholder={
-                        languagesType[selectedLanguage].form.placeholders
-                          .email
+                        languagesType[selectedLanguage].form.placeholders.email
                       }
                     />
                     <Form.Control.Feedback type="invalid">
@@ -563,15 +632,21 @@ const VaidyaBandhuForm = () => {
           <Col>
             <Card>
               <Card.Body>
-                <h2 className="h4 mb-4" style={{ fontFamily: 'Poppins' }}>
+                <h2 className="h4 mb-4" style={{ fontFamily: "Poppins" }}>
                   <Shield className="h-6 w-6 me-2" />{" "}
                   {languagesType[selectedLanguage].termsConditions}
                 </h2>
                 <ul className="list-unstyled">
                   {termsConditions.map((term, index) => (
-                    <li key={index} className="d-flex align-items-start mb-2" style={{ fontFamily: 'Poppins' }}>
+                    <li
+                      key={index}
+                      className="d-flex align-items-start mb-2"
+                      style={{ fontFamily: "Poppins" }}
+                    >
                       <AlertCircle className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
-                      <span className="ms-4" style={{ fontFamily: 'Poppins' }}>{term}</span>
+                      <span className="ms-4" style={{ fontFamily: "Poppins" }}>
+                        {term}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -584,4 +659,4 @@ const VaidyaBandhuForm = () => {
   );
 };
 
-export default VaidyaBandhuForm
+export default VaidyaBandhuForm;

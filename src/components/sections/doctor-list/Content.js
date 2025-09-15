@@ -64,7 +64,6 @@ function FilterSidebar({
     </>
   );
 }
-
 const Content = () => {
   const [locations, setLocations] = useState([]);
   const [activePage, setActivePage] = useState(1);
@@ -432,8 +431,8 @@ const Content = () => {
           ))}
         </div>
       </div>
-      {/* Rating */}
-      <div className="mb-4">
+      {/* Rating  */}
+      {/* <div className="mb-4">
         <h6 className="font-weight-bold mb-3">Rating</h6>
         {ratingOptions.map((rating) => (
           <div key={rating.value} className="form-check mb-2">
@@ -456,9 +455,9 @@ const Content = () => {
             </label>
           </div>
         ))}
-      </div>
+      </div> */}
       {/* Gender */}
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <h6 className="font-weight-bold mb-3">Gender</h6>
         {genderOptions.map((gender) => (
           <div key={gender.value} className="form-check mb-2">
@@ -481,7 +480,7 @@ const Content = () => {
             </label>
           </div>
         ))}
-      </div>
+      </div> */}
     </>
   );
   return (
@@ -759,5 +758,4 @@ const Content = () => {
     </div>
   );
 };
-
 export default Content;
