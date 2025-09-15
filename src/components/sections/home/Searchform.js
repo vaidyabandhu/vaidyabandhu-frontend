@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Search, MapPin, User } from "lucide-react"; // Import Lucide icons
+import { Search, MapPin, User } from "lucide-react"; 
 
 class Searchform extends Component {
   constructor(props) {
@@ -35,7 +35,7 @@ class Searchform extends Component {
   }
 
   render() {
-    const baseTransition = "all 0.3s ease-in-out"; // Define base transition for consistency
+    const baseTransition = "all 0.3s ease-in-out"; 
     return (
       <div
         className="sigma_banner-info"
@@ -43,7 +43,7 @@ class Searchform extends Component {
           padding: "20px 10px",
           borderRadius: "16px",
           boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
-          fontFamily: "'Poppins'", // Ensure consistent font
+          fontFamily: "'Poppins'", 
           color: "#4a5568",
         }}
       >
@@ -58,14 +58,14 @@ class Searchform extends Component {
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
-                  gap: "15px", // Space between columns
-                  alignItems: "flex-end", // Align items to the bottom
+                  gap: "15px", 
+                  alignItems: "flex-end", 
                 }}
               >
                 {/* Doctor Search Field */}
                 <div
                   className="col-lg-6"
-                  style={{ flex: "1 1 300px", minWidth: "250px" }} // Fixed flex basis and min-width
+                  style={{ flex: "1 1 300px", minWidth: "250px" }} 
                 >
                   <div className="form-group" style={{ marginBottom: "0" }}>
                     <label

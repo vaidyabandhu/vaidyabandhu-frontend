@@ -23,7 +23,7 @@ class Content extends Component {
     return (
       <Fragment>
         <Banner />
-        <Searchform />
+        {/* <Searchform /> */}
         <HealthcareReality />
         <Services />
         <div className="section bg-secondary-1">

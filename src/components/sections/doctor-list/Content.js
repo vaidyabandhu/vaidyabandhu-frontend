@@ -128,7 +128,7 @@ const Content = () => {
     error: locationsError,
   } = useFetch({
     method: "GET",
-    request: "http://52.66.199.115:8000/api/locations/",
+    request: "https://admin.vaidyabandhu.com/api/locations/",
   });
   useEffect(() => {
     if (locationsData) setLocations(locationsData.data || []);

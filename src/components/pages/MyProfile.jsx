@@ -1,14 +1,20 @@
 import React, { useRef, useState } from "react";
-import { Mail, Phone, MapPin, Droplet } from "lucide-react";
+import { Mail, Phone, MapPin, Droplet, User, IdCard, CreditCard, Hash, LogOut } from "lucide-react";
 
 const MyProfile = () => {
   // Example: pull from state or context
   const patient = {
     full_name: "Aravind Kumar",
-    email: "aravind.kumar@example.com",
-    contact_number: "+91 9876543210",
-    place: "123, Health , Pashdbc City, Mland",
+    age: 30,
+    gender: "Male",
     blood_group: "O+",
+    address: "123, Health St, Pashdbc City, Mland",
+    pincode: "560001",
+    mobile_number: "+91 9876543210",
+    alternate_number: "+91 9123456780",
+    email: "aravind.kumar@example.com",
+    Aadhar_number: "1234-5678-9012",
+    pan_number: "ABCDE1234F",
     patient_id: "PAT123456",
     photo: null,
   };
@@ -21,6 +27,16 @@ const MyProfile = () => {
     alert(`Downloading ${patient.full_name}_HealthCard.pdf`);
   };
   
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+  const confirmLogout = () => {
+    localStorage.removeItem("token");
+    setShowLogoutModal(false);
+    window.location.reload();
+  };
+  
   // Inline styles — optimized for alignment and reusability
   const styles = {
     profilePage: {
@@ -28,28 +44,58 @@ const MyProfile = () => {
       backgroundColor: "#f8f9fa",
       minHeight: "100vh",
     },
-    headerCard: {
-      borderRadius: "15px",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-      marginBottom: "30px",
-      backgroundColor: "white",
-    },
-    avatarWrapper: {
-      width: "100px",
-      height: "100px",
-      borderRadius: "50%",
-      background: "#eee",
-      overflow: "hidden",
+    mainContainer: {
+      maxWidth: "1200px",
       margin: "0 auto",
       display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      border: "2px solid  #e0e0e0",
+      gap: "30px",
+      flexWrap: "wrap",
     },
-    avatarImg: {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
+    leftColumn: {
+      flex: "1",
+      minWidth: "300px",
+    },
+    rightColumn: {
+      flex: "0 0 480px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+    },
+    personalInfoCard: {
+      borderRadius: "15px",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+      backgroundColor: "white",
+      padding: "24px",
+      height: "fit-content",
+    },
+    infoRow: {
+      display: "flex",
+      alignItems: "center",
+      marginBottom: "12px",
+    },
+    infoIcon: {
+      width: "20px",
+      marginRight: "12px",
+      color: "#095D7E",
+    },
+    infoLabel: {
+      fontWeight: 600,
+      color: "#095D7E",
+      width: "120px",
+      fontSize: "14px",
+    },
+    infoValue: {
+      color: "#4A4A4A",
+      fontWeight: 500,
+      fontSize: "14px",
+    },
+    sectionTitle: {
+      fontSize: "18px",
+      fontWeight: 600,
+      color: "#095D7E",
+      marginBottom: "20px",
+      paddingBottom: "10px",
+      borderBottom: "1px solid #eee",
     },
     healthCard: {
       width: "480px",
@@ -78,6 +124,9 @@ const MyProfile = () => {
     },
     toggleBtn: {
       marginTop: "20px",
+      display: "flex",
+      gap: "10px",
+      justifyContent: "center",
     },
     cardHeader: {
       display: "flex",
@@ -388,438 +437,479 @@ const MyProfile = () => {
       opacity: 1.2,
       zIndex: 0,
     },
+    // Logout button styles
+    logoutButton: {
+      display: "flex",
+      alignItems: "center",
+      backgroundColor: "#dc3545",
+      color: "white",
+      border: "none",
+      padding: "10px 20px",
+      borderRadius: "5px",
+      cursor: "pointer",
+      fontSize: "16px",
+      fontWeight: "500",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      transition: "all 0.2s ease",
+      marginTop: "15px",
+    },
+    logoutButtonHover: {
+      backgroundColor: "#c82333",
+      boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
+    },
+    logoutIcon: {
+      marginRight: "8px",
+    },
   };
   
   return (
-    <div style={styles.profilePage}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        {/* Profile Header */}
-        <div style={{ marginBottom: "30px" }}>
-          <div style={styles.headerCard}>
-            <div style={{ padding: "24px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                <div
-                  style={{
-                    flex: "0 0 200px",
-                    textAlign: "center",
-                    marginBottom: "20px",
-                  }}
-                >
-                  {/* Display image and name below */}
-                  <div style={styles.avatarWrapper}>
-                    <img
-                      src="assets/img/image.png"
-                      alt={patient.full_name}
-                      style={styles.avatarImg}
-                    />
-                  </div>
-                  {/* Name Below Photo */}
-                  <div
-                    style={{
-                      marginTop: "10px",
-                      textAlign: "center",
-                      fontFamily: "Poppins, sans-serif",
-                      fontWeight: 600,
-                      fontSize: "18px",
-                      lineHeight: "100%",
-                      letterSpacing: "0%",
-                      color: "#095D7E",
-                    }}
-                  >
-                    Aravind Kumar
-                  </div>
-                </div>
-                <div style={{ flex: "1", minWidth: "300px" }}>
-                  <h2 style={{ marginBottom: "15px", color: "#333" }}>
-                    {patient.full_name}
-                  </h2>
-                  <p
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    <Mail
-                      size={16}
-                      style={{ marginRight: "8px", color: "#666" }}
-                    />
-                    {patient.email}
-                  </p>
-                  <p
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    <Phone
-                      size={16}
-                      style={{ marginRight: "8px", color: "#666" }}
-                    />
-                    {patient.contact_number}
-                  </p>
-                  <p
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    <MapPin
-                      size={16}
-                      style={{
-                        marginRight: "8px",
-                        color: "#666",
-                        flexShrink: 0,
-                      }}
-                    />
-                    <span>{patient.place}</span>
-                  </p>
-                  <p style={{ display: "flex", alignItems: "center" }}>
-                    <Droplet
-                      size={16}
-                      style={{ marginRight: "8px", color: "#666" }}
-                    />
-                    Blood Group: {patient.blood_group}
-                  </p>
-                </div>
-              </div>
+    <>
+      {showLogoutModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.25)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        </div>
+      )}
+      <div style={styles.profilePage}>
+        <div style={styles.mainContainer}>
+        {/* Left Column - Personal Information */}
+        <div style={styles.leftColumn}>
+          <div style={styles.personalInfoCard}>
+            <h2 style={styles.sectionTitle}>Personal Information</h2>
+            
+            <div style={styles.infoRow}>
+              <User style={styles.infoIcon} />
+              <span style={styles.infoLabel}>Full Name:</span>
+              <span style={styles.infoValue}>{patient.full_name}</span>
+            </div>
+            
+            <div style={styles.infoRow}>
+              <User style={styles.infoIcon} />
+              <span style={styles.infoLabel}>Age:</span>
+              <span style={styles.infoValue}>{patient.age}</span>
+            </div>
+            
+            <div style={styles.infoRow}>
+              <User style={styles.infoIcon} />
+              <span style={styles.infoLabel}>Gender:</span>
+              <span style={styles.infoValue}>{patient.gender}</span>
+            </div>
+            
+            <div style={styles.infoRow}>
+              <Droplet style={styles.infoIcon} />
+              <span style={styles.infoLabel}>Blood Group:</span>
+              <span style={styles.infoValue}>{patient.blood_group}</span>
+            </div>
+            
+            <div style={styles.infoRow}>
+              <MapPin style={styles.infoIcon} />
+              <span style={styles.infoLabel}>Address:</span>
+              <span style={styles.infoValue}>{patient.address}</span>
+            </div>
+            
+            <div style={styles.infoRow}>
+              <MapPin style={styles.infoIcon} />
+              <span style={styles.infoLabel}>Pincode:</span>
+              <span style={styles.infoValue}>{patient.pincode}</span>
+            </div>
+            
+            <div style={styles.infoRow}>
+              <Phone style={styles.infoIcon} />
+              <span style={styles.infoLabel}>Mobile Number:</span>
+              <span style={styles.infoValue}>{patient.mobile_number}</span>
+            </div>
+            
+            <div style={styles.infoRow}>
+              <Phone style={styles.infoIcon} />
+              <span style={styles.infoLabel}>Alternate Number:</span>
+              <span style={styles.infoValue}>{patient.alternate_number}</span>
+            </div>
+            
+            <div style={styles.infoRow}>
+              <Mail style={styles.infoIcon} />
+              <span style={styles.infoLabel}>Email:</span>
+              <span style={styles.infoValue}>{patient.email}</span>
+            </div>
+            
+            <div style={styles.infoRow}>
+              <IdCard style={styles.infoIcon} />
+              <span style={styles.infoLabel}>Aadhar Number:</span>
+              <span style={styles.infoValue}>{patient.Aadhar_number}</span>
+            </div>
+            
+            <div style={styles.infoRow}>
+              <CreditCard style={styles.infoIcon} />
+              <span style={styles.infoLabel}>PAN Number:</span>
+              <span style={styles.infoValue}>{patient.pan_number}</span>
+            </div>
+            
+            <div style={styles.infoRow}>
+              <Hash style={styles.infoIcon} />
+              <span style={styles.infoLabel}>Patient ID:</span>
+              <span style={styles.infoValue}>{patient.patient_id}</span>
             </div>
           </div>
         </div>
-        {/* Health Card */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <div>
-            <div
-              style={{
-                ...styles.healthCard,
-                ...(isFront ? styles.front : styles.back),
-              }}
-              ref={cardRef}
-            >
-              {isFront ? (
-                <>
-                  {/* Background Image */}
-                  <img
-                    src="assets/img/vb-background.png"
-                    alt="Vaidya Bandhu Background"
-                    style={styles.backgroundImage}
-                  />
-                  {/* Card Header */}
-                  <div style={styles.cardHeader}>
-                    <div style={styles.logoContainer}>
+        
+        {/* Right Column - Health Card */}
+        <div style={styles.rightColumn}>
+          <div
+            style={{
+              ...styles.healthCard,
+              ...(isFront ? styles.front : styles.back),
+            }}
+            ref={cardRef}
+          >
+            {isFront ? (
+              <>
+                {/* Background Image */}
+                <img
+                  src="assets/img/vb-background.png"
+                  alt="Vaidya Bandhu Background"
+                  style={styles.backgroundImage}
+                />
+                {/* Card Header */}
+                <div style={styles.cardHeader}>
+                  <div style={styles.logoContainer}>
+                    <img
+                      src="assets/img/vb-logo.png"
+                      alt="Vaidya Bandhu Logo"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        marginLeft: "28px",
+                      }}
+                    />
+                  </div>
+                  <div style={styles.verticalLine}></div>
+                  <div style={styles.titleContainer}>
+                    <div style={styles.titleText}>VAIDYA BANDHU</div>
+                    <div style={styles.subtitleText}>
+                      HEALTHCARE MEMBERSHIP CARD
+                    </div>
+                  </div>
+                </div>
+                {/* Horizontal Line */}
+                <div style={styles.horizontalLine}></div>
+                {/* Card Content */}
+                <div style={styles.cardContent}>
+                  <div style={styles.cardDetails}>
+                    <div style={styles.detailRowAligned}>
+                      <span style={styles.labelText}>MEMBERSHIP ID:</span>
+                      <span style={styles.valueText}>VB12345678</span>
+                    </div>
+                    <div style={styles.detailRowAligned}>
+                      <span style={styles.labelText}>VALID TILL:</span>
+                      <span style={styles.valueText}>12/2025</span>
+                    </div>
+                    <div style={styles.detailRowAligned}>
+                      <span style={styles.labelText}>CONTACT:</span>
+                      <span style={styles.valueText}>
+                        {patient.mobile_number}
+                      </span>
+                    </div>
+                    <div style={styles.detailRowAligned}>
+                      <span style={styles.labelText}>BLOOD GROUP:</span>
+                      <span style={styles.bloodGroupText}>
+                        {patient.blood_group}
+                      </span>
+                    </div>
+                    <div style={styles.detailRowAligned}>
+                      <span style={styles.labelText}>ADDRESS:</span>
+                      <span style={styles.valueText}>{patient.address}</span>
+                    </div>
+                  </div>
+                  <div style={styles.cardPhoto}>
+                    <div style={styles.photoContainer}>
                       <img
-                        src="assets/img/vb-logo.png"
-                        alt="Vaidya Bandhu Logo"
+                        src="assets/img/image.png"
+                        alt={patient.full_name}
                         style={{
-                          width: "40px",
-                          height: "40px",
-                          marginLeft: "28px",
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
                         }}
                       />
                     </div>
-                    <div style={styles.verticalLine}></div>
-                    <div style={styles.titleContainer}>
-                      <div style={styles.titleText}>VAIDYA BANDHU</div>
-                      <div style={styles.subtitleText}>
-                        HEALTHCARE MEMBERSHIP CARD
-                      </div>
-                    </div>
-                  </div>
-                  {/* Horizontal Line */}
-                  <div style={styles.horizontalLine}></div>
-                  {/* Card Content */}
-                  <div style={styles.cardContent}>
-                    <div style={styles.cardDetails}>
-                      <div style={styles.detailRowAligned}>
-                        <span style={styles.labelText}>MEMBERSHIP ID:</span>
-                        <span style={styles.valueText}>VB12345678</span>
-                      </div>
-                      <div style={styles.detailRowAligned}>
-                        <span style={styles.labelText}>VALID TILL:</span>
-                        <span style={styles.valueText}>12/2025</span>
-                      </div>
-                      <div style={styles.detailRowAligned}>
-                        <span style={styles.labelText}>CONTACT:</span>
-                        <span style={styles.valueText}>
-                          {patient.contact_number}
-                        </span>
-                      </div>
-                      <div style={styles.detailRowAligned}>
-                        <span style={styles.labelText}>BLOOD GROUP:</span>
-                        <span style={styles.bloodGroupText}>
-                          {patient.blood_group}
-                        </span>
-                      </div>
-                      <div style={styles.detailRowAligned}>
-                        <span style={styles.labelText}>ADDRESS:</span>
-                        <span style={styles.valueText}>{patient.place}</span>
-                      </div>
-                    </div>
-                    <div style={styles.cardPhoto}>
-                      <div style={styles.photoContainer}>
-                        <img
-                          src="assets/img/image.png"
-                          alt={patient.full_name}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      </div>
-                      <div style={styles.photoNameText}>
-                        {patient.full_name}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Full-width Blue Strip at the Bottom */}
-                  <div style={styles.blueStrip}>
-                    <div style={styles.stripItem}>
-                      <div style={styles.stripLabel}>WHATSAPP/HELPLINE</div>
-                      <div style={styles.stripValue}>+91 8958593589</div>
-                    </div>
-                    <div style={styles.stripVerticalLine}></div>
-                    <div style={styles.stripItem}>
-                      <div style={styles.stripLabel}>EMAIL ID</div>
-                      <div style={styles.stripValue}>
-                        support@vaidyabandhu.com
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div style={styles.backContainer}>
-                  {/* Cashback Badge */}
-                  <div style={styles.cashbackBadge}>
-                    10% CASHBACK ON YOUR
-                    <br />
-                    TOTAL HOSPITAL BILL
-                    <br />
-                    <span style={{ fontSize: "5px" }}>
-                      EXCLUDING PHARMACY AND IMPLANTS
-                    </span>
-                  </div>
-                  {/* Benefits Section */}
-                  <div style={styles.benefitsSection}>
-                    <div style={styles.benefitsTitle}>
-                      BENEFITS OF THIS CARD
-                    </div>
-                    <ul style={styles.benefitsList}>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          Save 10% to 40% on surgeries, treatments, and
-                          diagnostics Services.
-                        </span>
-                      </li>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          Get 10% Cashback: Send your bill to Vaidya Bandhu via
-                          WhatsApp or Email. Cashback will be credited to your
-                          account within 7 working days.
-                        </span>
-                      </li>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          Free surgeries under certain in need through our
-                          social programs.
-                        </span>
-                      </li>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          Call our helpline from 9 AM to 6 PM for free medical
-                          advice.
-                        </span>
-                      </li>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          We help you choose the right doctor, hospital, or
-                          diagnostic center.
-                        </span>
-                      </li>
-                    </ul>
-                    {/* Section Divider */}
-                    <div style={styles.sectionDivider}></div>
-                  </div>
-                  {/* Terms & Conditions Section */}
-                  <div style={styles.termsSection}>
-                    <div style={styles.termsTitle}>TERMS & CONDITIONS</div>
-                    <ul style={styles.termsList}>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          VALIDITY: CARD IS VALID FOR 1 YEAR FROM THE DATE OF
-                          ISSUE.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          NON-TRANSFERABLE: USE IS LIMITED TO THE REGISTERED
-                          INDIVIDUAL ONLY.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          DISCOUNTS AVAILABLE ON CONSULTATIONS, TREATMENTS,
-                          SURGERIES, DIAGNOSTICS, AND MORE AT PARTNER CENTERS.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          BOOKING REQUIRED: CONTACT OUR TEAM BEFORE VISITING ANY
-                          FACILITY TO AVAIL BENEFITS.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          CARD DELIVERY: CARD WILL BE DELIVERED TO YOU POST
-                          MEMBERSHIP CONFIRMATION.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          LOST CARD: DUPLICATE CAN BE ISSUED WITH A SMALL
-                          REISSUE FEE.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          VALID LOCATIONS: BENEFITS APPLICABLE ONLY AT PARTNER
-                          HOSPITALS, DOCTORS, CLINICS, AND LABS.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          NO CASH VALUE: BENEFITS ARE NON-REDEEMABLE FOR CASH.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          MISUSE: MISUSE OF BENEFITS MAY RESULT IN MEMBERSHIP
-                          CANCELLATION.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          THE CARD DOES NOT COVER EMERGENCY SERVICES UNLESS
-                          PRE-APPROVED.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          IF THE MEMBERSHIP CARD IS NOT USED WITHIN ONE YEAR
-                          MEMBERS MUST INFORM US THROUGH THE HELPLINE NUMBER FOR
-                          THE FREE RENEWAL.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          DISCOUNTS MAY VARY BASED ON LOCATION, SERVICE TYPE,
-                          AND AVAILABILITY.
-                        </span>
-                      </li>
-                    </ul>
-                    {/* Section Divider */}
-                    <div style={styles.sectionDivider}></div>
-                  </div>
-                  {/* Instructions Section */}
-                  <div style={styles.instructionsSection}>
-                    <div style={styles.instructionsTitle}>
-                      INSTRUCTIONS TO USE
-                    </div>
-                    <ul style={styles.instructionsList}>
-                      <li style={styles.instructionItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>CALL OR WHATSAPP US AT +91 9535863589</span>
-                      </li>
-                      <li style={styles.instructionItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>SHARE YOUR MEMBERSHIP ID AND ISSUE</span>
-                      </li>
-                      <li style={styles.instructionItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>GET INSTANT HELP FROM VAIDYA BANDHU TEAM</span>
-                      </li>
-                    </ul>
-                  </div>
-                  {/* Price Tag */}
-                  <div style={styles.priceTag}>49/-</div>
-                  {/* Bottom Banner */}
-                  <div style={styles.bottomBanner}>
-                    <div style={styles.companyName}>
-                      VAIDYA BANDHU (A UNIT OF MV COMPANYON HEALTHCARE PRIVATE
-                      LIMITED)
-                    </div>
-                    <div style={styles.tagline}>
-                      "SERVING WITH CARE & COMMITMENT"
+                    <div style={styles.photoNameText}>
+                      {patient.full_name}
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-            <div style={styles.toggleBtn}>
-              <button
-                style={{
-                  backgroundColor: "#6c757d",
-                  color: "white",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "5px",
-                  marginRight: "10px",
-                  cursor: "pointer",
-                }}
-                onClick={() => setIsFront(!isFront)}
-              >
-                {isFront ? "Show Back" : "Show Front"}
-              </button>
-              <button
-                style={{
-                  backgroundColor: "#007bff",
-                  color: "white",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}
-                onClick={handleDownload}
-              >
-                Download PDF
-              </button>
-            </div>
+                {/* Full-width Blue Strip at the Bottom */}
+                <div style={styles.blueStrip}>
+                  <div style={styles.stripItem}>
+                    <div style={styles.stripLabel}>WHATSAPP/HELPLINE</div>
+                    <div style={styles.stripValue}>+91 8958593589</div>
+                  </div>
+                  <div style={styles.stripVerticalLine}></div>
+                  <div style={styles.stripItem}>
+                    <div style={styles.stripLabel}>EMAIL ID</div>
+                    <div style={styles.stripValue}>
+                      support@vaidyabandhu.com
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div style={styles.backContainer}>
+                {/* Cashback Badge */}
+                <div style={styles.cashbackBadge}>
+                  10% CASHBACK ON YOUR
+                  <br />
+                  TOTAL HOSPITAL BILL
+                  <br />
+                  <span style={{ fontSize: "5px" }}>
+                    EXCLUDING PHARMACY AND IMPLANTS
+                  </span>
+                </div>
+                {/* Benefits Section */}
+                <div style={styles.benefitsSection}>
+                  <div style={styles.benefitsTitle}>
+                    BENEFITS OF THIS CARD
+                  </div>
+                  <ul style={styles.benefitsList}>
+                    <li style={styles.benefitItem}>
+                      <span style={styles.checkMark}>✓</span>
+                      <span>
+                        Save 10% to 40% on surgeries, treatments, and
+                        diagnostics Services.
+                      </span>
+                    </li>
+                    <li style={styles.benefitItem}>
+                      <span style={styles.checkMark}>✓</span>
+                      <span>
+                        Get 10% Cashback: Send your bill to Vaidya Bandhu via
+                        WhatsApp or Email. Cashback will be credited to your
+                        account within 7 working days.
+                      </span>
+                    </li>
+                    <li style={styles.benefitItem}>
+                      <span style={styles.checkMark}>✓</span>
+                      <span>
+                        Free surgeries under certain in need through our
+                        social programs.
+                      </span>
+                    </li>
+                    <li style={styles.benefitItem}>
+                      <span style={styles.checkMark}>✓</span>
+                      <span>
+                        Call our helpline from 9 AM to 6 PM for free medical
+                        advice.
+                      </span>
+                    </li>
+                    <li style={styles.benefitItem}>
+                      <span style={styles.checkMark}>✓</span>
+                      <span>
+                        We help you choose the right doctor, hospital, or
+                        diagnostic center.
+                      </span>
+                    </li>
+                  </ul>
+                  {/* Section Divider */}
+                  <div style={styles.sectionDivider}></div>
+                </div>
+                {/* Terms & Conditions Section */}
+                <div style={styles.termsSection}>
+                  <div style={styles.termsTitle}>TERMS & CONDITIONS</div>
+                  <ul style={styles.termsList}>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        VALIDITY: CARD IS VALID FOR 1 YEAR FROM THE DATE OF
+                        ISSUE.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        NON-TRANSFERABLE: USE IS LIMITED TO THE REGISTERED
+                        INDIVIDUAL ONLY.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        DISCOUNTS AVAILABLE ON CONSULTATIONS, TREATMENTS,
+                        SURGERIES, DIAGNOSTICS, AND MORE AT PARTNER CENTERS.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        BOOKING REQUIRED: CONTACT OUR TEAM BEFORE VISITING ANY
+                        FACILITY TO AVAIL BENEFITS.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        CARD DELIVERY: CARD WILL BE DELIVERED TO YOU POST
+                        MEMBERSHIP CONFIRMATION.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        LOST CARD: DUPLICATE CAN BE ISSUED WITH A SMALL
+                        REISSUE FEE.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        VALID LOCATIONS: BENEFITS APPLICABLE ONLY AT PARTNER
+                        HOSPITALS, DOCTORS, CLINICS, AND LABS.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        NO CASH VALUE: BENEFITS ARE NON-REDEEMABLE FOR CASH.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        MISUSE: MISUSE OF BENEFITS MAY RESULT IN MEMBERSHIP
+                        CANCELLATION.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        THE CARD DOES NOT COVER EMERGENCY SERVICES UNLESS
+                        PRE-APPROVED.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        IF THE MEMBERSHIP CARD IS NOT USED WITHIN ONE YEAR
+                        MEMBERS MUST INFORM US THROUGH THE HELPLINE NUMBER FOR
+                        THE FREE RENEWAL.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        DISCOUNTS MAY VARY BASED ON LOCATION, SERVICE TYPE,
+                        AND AVAILABILITY.
+                      </span>
+                    </li>
+                  </ul>
+                  {/* Section Divider */}
+                  <div style={styles.sectionDivider}></div>
+                </div>
+                {/* Instructions Section */}
+                <div style={styles.instructionsSection}>
+                  <div style={styles.instructionsTitle}>
+                    INSTRUCTIONS TO USE
+                  </div>
+                  <ul style={styles.instructionsList}>
+                    <li style={styles.instructionItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>CALL OR WHATSAPP US AT +91 9535863589</span>
+                    </li>
+                    <li style={styles.instructionItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>SHARE YOUR MEMBERSHIP ID AND ISSUE</span>
+                    </li>
+                    <li style={styles.instructionItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>GET INSTANT HELP FROM VAIDYA BANDHU TEAM</span>
+                    </li>
+                  </ul>
+                </div>
+                {/* Price Tag */}
+                <div style={styles.priceTag}>49/-</div>
+                {/* Bottom Banner */}
+                <div style={styles.bottomBanner}>
+                  <div style={styles.companyName}>
+                    VAIDYA BANDHU (A UNIT OF MV COMPANYON HEALTHCARE PRIVATE
+                    LIMITED)
+                  </div>
+                  <div style={styles.tagline}>
+                    "SERVING WITH CARE & COMMITMENT"
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
+          
+          {/* Buttons Container */}
+          <div style={styles.toggleBtn}>
+            <button
+              style={{
+                backgroundColor: "#6c757d",
+                color: "white",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+              onClick={() => setIsFront(!isFront)}
+            >
+              {isFront ? "Show Back" : "Show Front"}
+            </button>
+            <button
+              style={{
+                backgroundColor: "#007bff",
+                color: "white",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+              onClick={handleDownload}
+            >
+              Download PDF
+            </button>
+          </div>
+          
+          {/* Logout Button */}
+            <button
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  backgroundColor: "#dc3545",
+                  color: "white",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  fontWeight: "500",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  transition: "all 0.2s ease",
+                  marginTop: "15px",
+                }}
+                onClick={confirmLogout}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = "#c82333";
+                  e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = "#dc3545";
+                  e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+                }}
+              >
+                <svg style={{ marginRight: "8px" }} xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" /></svg>
+                Logout
+              </button>
         </div>
       </div>
     </div>
-  );
+  </>);
 };
 
 export default MyProfile;

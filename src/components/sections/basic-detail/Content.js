@@ -164,7 +164,7 @@ const VaidyaBandhuForm = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("http://52.66.199.115:8000/api/users/2/", {
+      const response = await fetch("https://admin.vaidyabandhu.com/api/users/2/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

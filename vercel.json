@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "http://52.66.199.115:8000/api/$1"
+      "destination": "https://admin.vaidyabandhu.com/api/$1"
     }
   ]
 }
