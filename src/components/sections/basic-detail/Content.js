@@ -153,6 +153,22 @@ const VaidyaBandhuForm = () => {
     }
   };
 
+  // Load Razorpay script
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (document.getElementById('razorpay-script')) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.id = 'razorpay-script';
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleSubmit = async () => {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
@@ -162,9 +178,9 @@ const VaidyaBandhuForm = () => {
     setIsSubmitting(true);
 
     try {
-      // Call the payment create_order API with Authorization header
       const staticToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOm51bGwsIm1vYmlsZSI6Ijk2MTE3OTg4MzgiLCJmaXJzdF9uYW1lIjoiIiwidXNlcl9yb2xlIjpbXSwiYWNjZXNzX3R5cGUiOiJjcm0iLCJjcmVhdGVkX3RpbWUiOiIyMDI1LTA5LTEyIDE1OjQzOjQ3LjY2NjAwNiIsImlhdCI6MTc1NzY5MTgyNywiZXhwIjoxNzY1NDY3ODI3fQ.Y2ch4hfyFNvk9GsaJUQ5kPiOAZ1TjVtx5iJBsuKggKU";
+      // Create user profile
       const response = await fetch(
         "https://admin.vaidyabandhu.com/api/user/profile/",
         {
@@ -189,6 +205,7 @@ const VaidyaBandhuForm = () => {
         }
       );
 
+      // Create payment order
       const createOrder = await fetch(
         "https://admin.vaidyabandhu.com/api/payment/create_order/",
         {
@@ -199,34 +216,53 @@ const VaidyaBandhuForm = () => {
           },
           body: JSON.stringify({
             subscription: 1,
-            
           }),
         }
       );
-      // create order response
       const createOrderData = await createOrder.json();
-      if (createOrder.ok) {
-      } else {
+      if (!createOrder.ok) {
         alert('Failed to create order: ' + (createOrderData.detail || JSON.stringify(createOrderData)));
+        setIsSubmitting(false);
+        return;
       }
 
-      const data = await response.json();
-      if (response.ok) {
-        if (data && data.payment_url) {
-          window.location.href = data.payment_url;
-        } else {
-          alert(
-            "Order created, but no payment URL returned. Order ID: " +
-              (data.id || JSON.stringify(data))
-          );
-        }
-      } else {
-        alert(
-          "Failed to create order: " + (data.detail || JSON.stringify(data))
-        );
+      // Razorpay payment integration
+      const order_id = createOrderData.order_id || "order_RI9lDcv6o4vXni";
+      const razorpay_key = createOrderData.razorpay_key || "rzp_live_RBDq4cloXLAvYR";
+      const amount = createOrderData.amount || 4900; // Amount in paise
+      const currency = createOrderData.currency || "INR";
+
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        alert("Failed to load Razorpay script");
+        setIsSubmitting(false);
+        return;
       }
+
+      const options = {
+        key: razorpay_key,
+        amount: amount,
+        currency: currency,
+        name: "VaidyaBandhu Membership",
+        description: "Membership Payment",
+        order_id: order_id,
+        handler: function (response) {
+          alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
+          // You can call backend API to verify payment here
+        },
+        prefill: {
+          name: formData.full_name,
+          email: formData.email,
+          contact: formData.mobile_number,
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (error) {
-      alert("Error occurred while creating order");
+      alert("Error occurred while creating order or payment");
     }
     setIsSubmitting(false);
   };
