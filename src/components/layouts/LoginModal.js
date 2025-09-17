@@ -113,6 +113,7 @@ const LoginModal = () => {
         // Success - redirect to register page
         console.log("OTP verified successfully:", data);
         const token = data?.data?.token || "";
+        console.log("Received token:", token);
         localStorage.setItem("token", token);
         setIsLoggedIn(true); // Update login state
         handleClose(); // Close the modal

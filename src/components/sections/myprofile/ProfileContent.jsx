@@ -19,7 +19,7 @@ const MyProfile = () => {
     blood_group: "",
     address: "",
     pincode: "",
-    mobile_number: "",
+    mobile: "",
     alternate_number: "",
     email: "",
     Aadhar_number: "",
@@ -40,8 +40,7 @@ const MyProfile = () => {
       setError(null);
       
       try {
-        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOm51bGwsIm1vYmlsZSI6Ijk2MTE3OTg4MzgiLCJmaXJzdF9uYW1lIjoiIiwidXNlcl9yb2xlIjpbXSwiYWNjZXNzX3R5cGUiOiJjcm0iLCJjcmVhdGVkX3RpbWUiOiIyMDI1LTA5LTEyIDE1OjQzOjQ3LjY2NjAwNiIsImlhdCI6MTc1NzY5MTgyNywiZXhwIjoxNzY1NDY3ODI3fQ.Y2ch4hfyFNvk9GsaJUQ5kPiOAZ1TjVtx5iJBsuKggKU";
-        
+        const token = localStorage.getItem("token");
         const response = await fetch("https://admin.vaidyabandhu.com/api/user/profile/", {
           method: "GET",
           headers: {
@@ -49,16 +48,12 @@ const MyProfile = () => {
             "Authorization": token
           }
         });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+        if (response.ok) {
+          const data = await response.json();
+          setPatient(data);
         }
-        
-        const data = await response.json();
-        setPatient(data);
       } catch (err) {
         console.error("Error fetching user profile:", err);
-        setError("Failed to load profile data. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -592,18 +587,7 @@ const MyProfile = () => {
 
   // Show error state if there was an error fetching data
   if (error) {
-    return (
-      <div style={styles.errorContainer}>
-        <h3>Error</h3>
-        <p>{error}</p>
-        <button 
-          className="btn btn-primary" 
-          onClick={() => window.location.reload()}
-        >
-          Retry
-        </button>
-      </div>
-    );
+    // ...existing code..
   }
 
   return (
@@ -676,7 +660,7 @@ const MyProfile = () => {
               <div style={styles.infoRow}>
                 <Phone style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Mobile Number:</span>
-                <span style={styles.infoValue}>{patient.mobile_number || "NULL"}</span>
+                <span style={styles.infoValue}>{patient.mobile || "NULL"}</span>
               </div>
 
               <div style={styles.infoRow}>
@@ -694,7 +678,7 @@ const MyProfile = () => {
               <div style={styles.infoRow}>
                 <IdCard style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Aadhar Number:</span>
-                <span style={styles.infoValue}>{patient.Aadhar_number || "NULL"}</span>
+                <span style={styles.infoValue}>{patient.aadhaar_number || "NULL"}</span>
               </div>
 
               <div style={styles.infoRow}>
@@ -750,16 +734,16 @@ const MyProfile = () => {
                     <div style={styles.cardDetails}>
                       <div style={styles.detailRowAligned}>
                         <span style={styles.labelText}>MEMBERSHIP ID:</span>
-                        <span style={styles.valueText}>VB12345678</span>
+                        <span style={styles.valueText}> {patient.id || "NULL"}</span>
                       </div>
                       <div style={styles.detailRowAligned}>
                         <span style={styles.labelText}>VALID TILL:</span>
-                        <span style={styles.valueText}>12/2025</span>
+                        <span style={styles.valueText}>{patient.end_date || "NULL"}</span>
                       </div>
                       <div style={styles.detailRowAligned}>
                         <span style={styles.labelText}>CONTACT:</span>
                         <span style={styles.valueText}>
-                          {patient.mobile_number || "NULL"}
+                          {patient.mobile || "NULL"}
                         </span>
                       </div>
                       <div style={styles.detailRowAligned}>
@@ -976,7 +960,7 @@ const MyProfile = () => {
                     <ul style={styles.instructionsList}>
                       <li style={styles.instructionItem}>
                         <span style={styles.bullet}>•</span>
-                        <span>CALL OR WHATSAPP US AT +91 9535863589</span>
+                        <span>CALL OR WHATSAPP US AT +91 8535863589</span>
                       </li>
                       <li style={styles.instructionItem}>
                         <span style={styles.bullet}>•</span>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   CreditCard,
   MapPin,
@@ -33,7 +33,7 @@ const VaidyaBandhuForm = () => {
     age: "",
     gender: "",
     blood_group: "",
-    mobile_number: "",
+    mobile: "",
     alternate_mobile: "",
     email: "",
     address: "",
@@ -48,6 +48,8 @@ const VaidyaBandhuForm = () => {
   const token = localStorage.getItem("token");
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [photoPreview, setPhotoPreview] = useState(null); // For photo preview
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Handle language change
   const handleLanguageChange = (e) => setSelectedLanguage(e.target.value);
@@ -57,50 +59,83 @@ const VaidyaBandhuForm = () => {
     const file = e.target.files[0];
     if (file) {
       // Validate file type
-      if (!file.type.match('image.*')) {
-        setErrors(prev => ({
+      if (!file.type.match("image.*")) {
+        setErrors((prev) => ({
           ...prev,
-          photo: languagesType[selectedLanguage].validation.photoValid
+          photo: languagesType[selectedLanguage].validation.photoValid,
         }));
         return;
       }
-      
+
       // Validate file size (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          photo: languagesType[selectedLanguage].validation.photoSize
+          photo: languagesType[selectedLanguage].validation.photoSize,
         }));
         return;
       }
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
-        photo: file
+        photo: file,
       }));
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotoPreview(reader.result);
       };
       reader.readAsDataURL(file);
-      
+
       // Clear any existing photo error
       if (errors.photo) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          photo: ""
+          photo: "",
         }));
       }
     }
   };
 
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          "https://admin.vaidyabandhu.com/api/user/profile/",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token,
+            },
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Fetched user profile:", data);
+          setFormData(data);
+        }
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
   // Handle photo removal
   const handleRemovePhoto = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      photo: null
+      photo: null,
     }));
     setPhotoPreview(null);
   };
@@ -124,10 +159,10 @@ const VaidyaBandhuForm = () => {
         languagesType[selectedLanguage].validation.genderRequired;
     }
 
-    if (!formData.mobile_number.trim()) {
+    if (!formData.mobile.trim()) {
       newErrors.mobile_number =
         languagesType[selectedLanguage].validation.mobileRequired;
-    } else if (!/^[6-9]\d{9}$/.test(formData.mobile_number)) {
+    } else if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
       newErrors.mobile_number =
         languagesType[selectedLanguage].validation.mobileValid;
     }
@@ -215,13 +250,13 @@ const VaidyaBandhuForm = () => {
   // Load Razorpay script
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
-      if (document.getElementById('razorpay-script')) {
+      if (document.getElementById("razorpay-script")) {
         resolve(true);
         return;
       }
-      const script = document.createElement('script');
-      script.id = 'razorpay-script';
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      const script = document.createElement("script");
+      script.id = "razorpay-script";
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
@@ -237,9 +272,8 @@ const VaidyaBandhuForm = () => {
     setIsSubmitting(true);
 
     try {
-      const staticToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOm51bGwsIm1vYmlsZSI6Ijk2MTE3OTg4MzgiLCJmaXJzdF9uYW1lIjoiIiwidXNlcl9yb2xlIjpbXSwiYWNjZXNzX3R5cGUiOiJjcm0iLCJjcmVhdGVkX3RpbWUiOiIyMDI1LTA5LTEyIDE1OjQzOjQ3LjY2NjAwNiIsImlhdCI6MTc1NzY5MTgyNywiZXhwIjoxNzY1NDY3ODI3fQ.Y2ch4hfyFNvk9GsaJUQ5kPiOAZ1TjVtx5iJBsuKggKU";
-      
+      const token = localStorage.getItem("token");
+
       // Create user profile
       const response = await fetch(
         "https://admin.vaidyabandhu.com/api/user/profile/",
@@ -247,7 +281,7 @@ const VaidyaBandhuForm = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: staticToken,
+            Authorization: token,
           },
           body: JSON.stringify({
             full_name: formData.full_name,
@@ -256,7 +290,7 @@ const VaidyaBandhuForm = () => {
             blood_group: formData.blood_group,
             address: formData.address,
             pin_code: formData.pin_code,
-            mobile: formData.mobile_number,
+            mobile: formData.mobile,
             alternate_number: formData.alternate_mobile,
             email: formData.email,
             aadhaar_number: formData.aadhaar_number,
@@ -272,7 +306,7 @@ const VaidyaBandhuForm = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: staticToken,
+            Authorization: token,
           },
           body: JSON.stringify({
             subscription: 1,
@@ -281,14 +315,18 @@ const VaidyaBandhuForm = () => {
       );
       const createOrderData = await createOrder.json();
       if (!createOrder.ok) {
-        alert('Failed to create order: ' + (createOrderData.detail || JSON.stringify(createOrderData)));
+        alert(
+          "Failed to create order: " +
+            (createOrderData.detail || JSON.stringify(createOrderData))
+        );
         setIsSubmitting(false);
         return;
       }
 
       // Razorpay payment integration
       const order_id = createOrderData.order_id || "order_RI9lDcv6o4vXni";
-      const razorpay_key = createOrderData.razorpay_key || "rzp_live_RBDq4cloXLAvYR";
+      const razorpay_key =
+        createOrderData.razorpay_key || "rzp_live_RBDq4cloXLAvYR";
       const amount = createOrderData.amount || 4900; // Amount in paise
       const currency = createOrderData.currency || "INR";
 
@@ -314,16 +352,16 @@ const VaidyaBandhuForm = () => {
         prefill: {
           name: formData.full_name,
           email: formData.email,
-          contact: formData.mobile_number,
+          contact: formData.mobile,
         },
         theme: {
           color: "#3399cc",
         },
         modal: {
-          ondismiss: function() {
+          ondismiss: function () {
             setIsSubmitting(false);
-          }
-        }
+          },
+        },
       };
       const rzp = new window.Razorpay(options);
       rzp.open();
@@ -452,7 +490,10 @@ const VaidyaBandhuForm = () => {
                               <div className="text-center">
                                 <Upload className="h-8 w-8 text-secondary mx-auto mb-2" />
                                 <p className="mb-2">
-                                  {languagesType[selectedLanguage].form.uploadPhotoText}
+                                  {
+                                    languagesType[selectedLanguage].form
+                                      .uploadPhotoText
+                                  }
                                 </p>
                                 <Form.Control
                                   type="file"
@@ -465,17 +506,20 @@ const VaidyaBandhuForm = () => {
                                   htmlFor="photo-upload"
                                   className="btn btn-sm"
                                   style={{
-                                    backgroundColor: '#3399cc',
-                                    color: 'white',
-                                    border: 'none',
-                                    padding: '0.375rem 0.75rem',
-                                    fontSize: '0.875rem',
-                                    lineHeight: '1.5',
-                                    borderRadius: '0.25rem',
-                                    cursor: 'pointer'
+                                    backgroundColor: "#3399cc",
+                                    color: "white",
+                                    border: "none",
+                                    padding: "0.375rem 0.75rem",
+                                    fontSize: "0.875rem",
+                                    lineHeight: "1.5",
+                                    borderRadius: "0.25rem",
+                                    cursor: "pointer",
                                   }}
                                 >
-                                  {languagesType[selectedLanguage].form.chooseFile}
+                                  {
+                                    languagesType[selectedLanguage].form
+                                      .chooseFile
+                                  }
                                 </label>
                               </div>
                             </div>
@@ -498,7 +542,10 @@ const VaidyaBandhuForm = () => {
                               </button>
                             </div>
                           )}
-                          <Form.Control.Feedback type="invalid" className="d-block">
+                          <Form.Control.Feedback
+                            type="invalid"
+                            className="d-block"
+                          >
                             {errors.photo}
                           </Form.Control.Feedback>
                         </div>
@@ -672,7 +719,8 @@ const VaidyaBandhuForm = () => {
                         <Form.Control
                           type="tel"
                           name="mobile_number"
-                          value={formData.mobile_number}
+                          value={formData.mobile}
+                          readOnly
                           onChange={(e) =>
                             handleNumberChange(e, "mobile_number")
                           }
