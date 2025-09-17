@@ -200,10 +200,10 @@ const MedicalDepartments = () => {
                   }}
                 />
               </div>
-              <div style={{ fontWeight: "600", fontSize: "16px" }}>
+              <div style={{ fontWeight: "500", fontSize: "16px" }}>
                 {dept.name}
               </div>
-              <div style={{ fontSize: "13px", color: "#666" }}>{dept.code}</div>
+              {/* <div style={{ fontSize: "13px", color: "#666" }}>{dept.code}</div> */}
             </div>
           ))
         )}
@@ -236,10 +236,12 @@ const MedicalDepartments = () => {
               justifyContent: "space-between",
               marginBottom: "20px",
               alignItems: "center",
+              justifyContent: "center",
+            
             }}
           >
             <h4 style={{ margin: 0 }}>{selectedDept.name} Specialties</h4>
-            <button
+            {/* <button
               onClick={() => {
                 setSelectedDept(null);
                 setSpecialties([]);
@@ -247,12 +249,12 @@ const MedicalDepartments = () => {
               style={{
                 border: "none",
                 background: "transparent",
-                fontSize: "22px",
+                fontSize: "18px",
                 cursor: "pointer",
               }}
             >
               ×
-            </button>
+            </button> */}
           </div>
 
           {specialtyLoading ? (
@@ -289,8 +291,8 @@ const MedicalDepartments = () => {
                       e.target.src = DEFAULT_SPEC_IMG;
                     }}
                   />
-                  <div style={{ fontWeight: "600" }}>{spec.title}</div>
-                  <small style={{ color: "#666" }}>{spec.code}</small>
+                  <div style={{ fontWeight: "500", fontSize: "16px" }}>{spec.title}</div>
+                  {/* <small style={{ color: "#666" }}>{spec.code}</small> */}
                 </div>
               ))}
             </div>
