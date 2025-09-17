@@ -6,16 +6,16 @@ import { isNotEmptyArray } from "../../utiles/utils";
 
 // Hospital-specific icons (Icons8 links)
 const deptIcons = [
-  "https://img.icons8.com/color/48/stethoscope.png",      // General Medicine
+  "https://img.icons8.com/color/48/stethoscope.png", // General Medicine
   "https://img.icons8.com/color/48/heart-with-pulse.png", // Cardiology
-  "https://img.icons8.com/color/48/brain.png",            // Neurology
-  "https://img.icons8.com/color/48/lungs.png",            // Pulmonology
-  "https://img.icons8.com/color/48/x-ray.png",            // Radiology
-  "https://img.icons8.com/color/48/bone.png",             // Orthopedics
-  "https://img.icons8.com/color/48/microscope.png",       // Pathology
-  "https://img.icons8.com/color/48/hospital-room.png",    // Pediatrics
-  "https://img.icons8.com/color/48/pregnant.png",         // Gynecology
-  "https://img.icons8.com/color/48/skin.png",             // Dermatology
+  "https://img.icons8.com/color/48/brain.png", // Neurology
+  "https://img.icons8.com/color/48/lungs.png", // Pulmonology
+  "https://img.icons8.com/color/48/x-ray.png", // Radiology
+  "https://img.icons8.com/color/48/bone.png", // Orthopedics
+  "https://img.icons8.com/color/48/microscope.png", // Pathology
+  "https://img.icons8.com/color/48/hospital-room.png", // Pediatrics
+  "https://img.icons8.com/color/48/pregnant.png", // Gynecology
+  "https://img.icons8.com/color/48/skin.png", // Dermatology
 ];
 const DEFAULT_ICON = "https://img.icons8.com/color/48/hospital.png";
 
@@ -171,8 +171,7 @@ const MedicalDepartments = () => {
               style={{
                 border: "1px solid #e5e7eb",
                 borderRadius: "12px",
-                background:
-                  selectedDept?.id === dept.id ? "#e0f2fe" : "#fff",
+                background: selectedDept?.id === dept.id ? "#e0f2fe" : "#fff",
                 padding: "20px",
                 cursor: "pointer",
                 textAlign: "center",
@@ -211,7 +210,7 @@ const MedicalDepartments = () => {
 
       {/* Pagination */}
       {!selectedDept && totalPages > 1 && (
-        <div style={{ textAlign: "center", margin: "20px 0" }}>
+        <div style={{ textAlign: "center", margin: "60px 0" }}>
           <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
             ◀ Prev
           </button>
@@ -237,7 +236,6 @@ const MedicalDepartments = () => {
               marginBottom: "20px",
               alignItems: "center",
               justifyContent: "center",
-            
             }}
           >
             <h4 style={{ margin: 0 }}>{selectedDept.name} Specialties</h4>
@@ -291,13 +289,19 @@ const MedicalDepartments = () => {
                       e.target.src = DEFAULT_SPEC_IMG;
                     }}
                   />
-                  <div style={{ fontWeight: "500", fontSize: "16px" }}>{spec.title}</div>
-                  {/* <small style={{ color: "#666" }}>{spec.code}</small> */}
+                  <div style={{ fontWeight: "500", fontSize: "16px" }}>
+                    {spec.title}
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div>No specialties available.</div>
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              No specialties available. Redirecting to Doctor list...
+              {setTimeout(() => {
+                navigate(`/doctor-list?department=${selectedDept?.id}`);
+              }, 2000)}
+            </div>
           )}
         </div>
       )}
