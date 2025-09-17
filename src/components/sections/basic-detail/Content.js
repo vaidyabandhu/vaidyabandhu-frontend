@@ -6,8 +6,11 @@ import {
   Check,
   AlertCircle,
   Shield,
+  Upload,
+  X,
 } from "lucide-react";
-import { Form, Col, Row, Card } from "react-bootstrap";
+import { Form, Col, Row, Card, Image } from "react-bootstrap";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "../../../assets/css/BasicDetail.css";
 import languagesType from "./data.json";
 
@@ -24,6 +27,7 @@ const BLOOD_GROUPS = [
 ];
 
 const VaidyaBandhuForm = () => {
+  const navigate = useNavigate(); // Initialize navigate
   const [formData, setFormData] = useState({
     full_name: "",
     age: "",
@@ -36,15 +40,70 @@ const VaidyaBandhuForm = () => {
     pin_code: "",
     aadhaar_number: "",
     pan_number: "",
+    photo: null, // Added photo field
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const token = localStorage.getItem("token");
   const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [photoPreview, setPhotoPreview] = useState(null); // For photo preview
 
   // Handle language change
   const handleLanguageChange = (e) => setSelectedLanguage(e.target.value);
+
+  // Handle photo upload
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.match('image.*')) {
+        setErrors(prev => ({
+          ...prev,
+          photo: languagesType[selectedLanguage].validation.photoValid
+        }));
+        return;
+      }
+      
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        setErrors(prev => ({
+          ...prev,
+          photo: languagesType[selectedLanguage].validation.photoSize
+        }));
+        return;
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        photo: file
+      }));
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      
+      // Clear any existing photo error
+      if (errors.photo) {
+        setErrors(prev => ({
+          ...prev,
+          photo: ""
+        }));
+      }
+    }
+  };
+
+  // Handle photo removal
+  const handleRemovePhoto = () => {
+    setFormData(prev => ({
+      ...prev,
+      photo: null
+    }));
+    setPhotoPreview(null);
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -180,6 +239,7 @@ const VaidyaBandhuForm = () => {
     try {
       const staticToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOm51bGwsIm1vYmlsZSI6Ijk2MTE3OTg4MzgiLCJmaXJzdF9uYW1lIjoiIiwidXNlcl9yb2xlIjpbXSwiYWNjZXNzX3R5cGUiOiJjcm0iLCJjcmVhdGVkX3RpbWUiOiIyMDI1LTA5LTEyIDE1OjQzOjQ3LjY2NjAwNiIsImlhdCI6MTc1NzY5MTgyNywiZXhwIjoxNzY1NDY3ODI3fQ.Y2ch4hfyFNvk9GsaJUQ5kPiOAZ1TjVtx5iJBsuKggKU";
+      
       // Create user profile
       const response = await fetch(
         "https://admin.vaidyabandhu.com/api/user/profile/",
@@ -247,8 +307,9 @@ const VaidyaBandhuForm = () => {
         description: "Membership Payment",
         order_id: order_id,
         handler: function (response) {
-          alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
-          // You can call backend API to verify payment here
+          // Payment successful - redirect to myprofile page
+          setIsSubmitting(false);
+          navigate("/myprofile");
         },
         prefill: {
           name: formData.full_name,
@@ -258,13 +319,19 @@ const VaidyaBandhuForm = () => {
         theme: {
           color: "#3399cc",
         },
+        modal: {
+          ondismiss: function() {
+            setIsSubmitting(false);
+          }
+        }
       };
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (error) {
+      console.error("Error occurred while creating order or payment:", error);
       alert("Error occurred while creating order or payment");
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   const benefits = languagesType[selectedLanguage].benefits;
@@ -372,6 +439,73 @@ const VaidyaBandhuForm = () => {
                     handleSubmit();
                   }}
                 >
+                  {/* Photo Upload Section */}
+                  <Row>
+                    <Col md={12}>
+                      <Form.Group controlId="formPhoto" className="mb-3">
+                        <Form.Label>
+                          {languagesType[selectedLanguage].form.photo}
+                        </Form.Label>
+                        <div className="position-relative">
+                          {!photoPreview ? (
+                            <div className="border rounded d-flex align-items-center justify-content-center p-4 bg-light">
+                              <div className="text-center">
+                                <Upload className="h-8 w-8 text-secondary mx-auto mb-2" />
+                                <p className="mb-2">
+                                  {languagesType[selectedLanguage].form.uploadPhotoText}
+                                </p>
+                                <Form.Control
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handlePhotoChange}
+                                  className="d-none"
+                                  id="photo-upload"
+                                />
+                                <label
+                                  htmlFor="photo-upload"
+                                  className="btn btn-sm"
+                                  style={{
+                                    backgroundColor: '#3399cc',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '0.375rem 0.75rem',
+                                    fontSize: '0.875rem',
+                                    lineHeight: '1.5',
+                                    borderRadius: '0.25rem',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {languagesType[selectedLanguage].form.chooseFile}
+                                </label>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="position-relative">
+                              <Image
+                                src={photoPreview}
+                                alt="Preview"
+                                rounded
+                                className="img-thumbnail"
+                                style={{ maxHeight: "200px" }}
+                              />
+                              <button
+                                type="button"
+                                className="position-absolute top-0 end-0 bg-danger text-white rounded-circle p-1 border border-white"
+                                onClick={handleRemovePhoto}
+                                style={{ transform: "translate(50%, -50%)" }}
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          )}
+                          <Form.Control.Feedback type="invalid" className="d-block">
+                            {errors.photo}
+                          </Form.Control.Feedback>
+                        </div>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
                   <Row>
                     <Col md={12}>
                       <Form.Group controlId="formFullName" className="mb-3">

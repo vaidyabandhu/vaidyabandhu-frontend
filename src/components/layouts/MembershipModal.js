@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import MyProfile from "../pages/MyProfile";
 import { useNavigate } from "react-router-dom";
 import { Modal, Button, Form, Spinner } from "react-bootstrap";
 import OTPInput from "react-otp-input";
@@ -11,7 +10,7 @@ const MembershipModal = () => {
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState(1); // 1: Mobile Number, 2: OTP, 3: Basic Details
+  const [step, setStep] = useState(1); 
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
   
@@ -48,10 +47,16 @@ const MembershipModal = () => {
 
   // Logout handler
   const handleLogout = () => {
+    // Remove token from localStorage
     localStorage.removeItem("token");
+    // Remove all cookies
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c.replace(/=.*/, "=;expires=" + new Date(0).toUTCString() + ";path=/");
+    });
     setAlreadyMember(false);
     setShow(false);
-    // No redirect; UI will now show Become a Member and Log In buttons
+    // Redirect to home page
+    window.location.href = "/";
   };
 
   // Validate Mobile Number (10 digits, only numeric)
@@ -217,10 +222,10 @@ const MembershipModal = () => {
         contentClassName={alreadyMember ? "already-member-modal-content" : undefined}
         style={alreadyMember ? { minWidth: 0 } : {}}
       >
-        <Modal.Header closeButton style={alreadyMember ? { borderBottom: 'none', background: 'linear-gradient(90deg, #e0f7fa 0%, #f7fafd 100%)', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '32px 32px 0 32px' } : {}}>
+        <Modal.Header closeButton style={alreadyMember ? { borderBottom: 'none', background: 'linear-gradient(90deg, #e0f7fa 0%, #f7fafd 100%)',  padding: '32px 32px 0 32px' } : {}}>
           <Modal.Title style={alreadyMember ? { fontWeight: 800, color: '#046877', fontSize: 28, letterSpacing: 0.5 } : {}}>
             {alreadyMember
-              ? "You’re already a member!"
+              ? "You're already a member!"
               : step === 1
               ? "Buy Membership - Mobile Verification"
               : step === 2
@@ -228,29 +233,25 @@ const MembershipModal = () => {
               : ""}
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={alreadyMember ? { background: '#f7fafd', padding: 0, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 } : {}}>
+        <Modal.Body style={alreadyMember ? { background: '#f7fafd', padding: '20px' } : {}}>
           {alreadyMember ? (
             <div style={{
               textAlign: "center",
-              padding: 0,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              minHeight: 600,
               background: '#f7fafd',
-              borderBottomLeftRadius: 24,
-              borderBottomRightRadius: 24,
+             
             }}>
               <div style={{
                 width: '100%',
-                padding: '0 0 0 0',
+                padding: '0 0 20px 0',
                 background: 'linear-gradient(90deg, #e0f7fa 0%, #f7fafd 100%)',
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
+           
                 marginBottom: 0,
               }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 30, marginBottom: 18 }}>
-                  <p style={{ fontSize: 17, marginBottom: 10, color: '#444', fontWeight: 500 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 10, marginBottom: 10 }}>
+                  <p style={{ fontSize: 17, marginBottom: 20, color: '#444', fontWeight: 500 }}>
                     Press the button below to log out.
                   </p>
                   <button
@@ -281,34 +282,6 @@ const MembershipModal = () => {
                     <svg style={{ marginRight: "8px" }} xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" /></svg>
                     Logout
                   </button>
-                </div>
-              </div>
-              <div style={{
-                flex: 1,
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'flex-start',
-                background: '#f7fafd',
-                borderBottomLeftRadius: 24,
-                borderBottomRightRadius: 24,
-                padding: '0 0 32px 0',
-                minHeight: 400,
-                maxHeight: 600,
-                overflow: 'hidden',
-              }}>
-                <div style={{
-                  width: '98%',
-                  maxWidth: 750,
-                  margin: '0 auto',
-                  padding: 32,
-                  overflowY: 'auto',
-                  maxHeight: 480,
-                  marginTop: 18,
-                  marginBottom: 8,
-                  border: '1px solid #e0f7fa',
-                }}>
-                  <MyProfile />
                 </div>
               </div>
             </div>
