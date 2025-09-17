@@ -323,7 +323,7 @@ const Banner = () => {
         .container,
         .row,
         .col-lg-10 {
-          pointer-events: none;
+          pointer-events: auto;
         }
 
         .sigma_banner-text > *,
