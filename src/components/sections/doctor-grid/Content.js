@@ -1,76 +1,82 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../../assets/css/speciality.css";
 import { Col, Container, Form, Row } from "react-bootstrap";
 import { Search } from "lucide-react";
-import { useFetch } from "../../hooks/usefetch";
 import { isNotEmptyArray } from "../../utiles/utils";
 
-// Emoji icons for departments
+// Hospital-specific icons (Icons8 links)
 const deptIcons = [
-  "🩺",
-  "🔬",
-  "🚑",
-  "👁️",
-  "🫁",
-  "🫀",
-  "⚖️",
-  "🩹",
-  "👩‍⚕️",
-  "💄",
-  "🔎",
-  "🩻",
-  "🦠",
+  "https://img.icons8.com/color/48/stethoscope.png",      // General Medicine
+  "https://img.icons8.com/color/48/heart-with-pulse.png", // Cardiology
+  "https://img.icons8.com/color/48/brain.png",            // Neurology
+  "https://img.icons8.com/color/48/lungs.png",            // Pulmonology
+  "https://img.icons8.com/color/48/x-ray.png",            // Radiology
+  "https://img.icons8.com/color/48/bone.png",             // Orthopedics
+  "https://img.icons8.com/color/48/microscope.png",       // Pathology
+  "https://img.icons8.com/color/48/hospital-room.png",    // Pediatrics
+  "https://img.icons8.com/color/48/pregnant.png",         // Gynecology
+  "https://img.icons8.com/color/48/skin.png",             // Dermatology
 ];
-const DEFAULT_ICON = "🏥";
+const DEFAULT_ICON = "https://img.icons8.com/color/48/hospital.png";
 
-// Default specialty images (cycle if needed)
-const specialtyImages = [
-  "https://img.icons8.com/doodle/96/000000/doctor-male.png",
-  "https://img.icons8.com/doodle/96/000000/stethoscope.png",
-  "https://img.icons8.com/doodle/96/000000/nurse-female.png",
-  "https://img.icons8.com/doodle/96/000000/health-checkup.png",
-  "https://img.icons8.com/doodle/96/000000/hospital-bed.png",
-];
 const DEFAULT_SPEC_IMG = "https://img.icons8.com/color/96/clinic.png";
 
 const MedicalDepartments = () => {
+  const [departments, setDepartments] = useState([]);
   const [specialties, setSpecialties] = useState([]);
   const [selectedDept, setSelectedDept] = useState(null);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [errorDepartments, setErrorDepartments] = useState(null);
   const [specialtyLoading, setSpecialtyLoading] = useState(false);
+
   const navigate = useNavigate();
+  const specialtyRef = useRef(null);
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
-      // Debounce search input
-      useEffect(() => {
-        const timeoutId = setTimeout(() => {
-          setDebouncedSearchTerm(searchTerm);
-        }, 500); // Adjust delay (500ms) as needed
-    
-        return () => clearTimeout(timeoutId); // Cleanup on each keystroke
-      }, [searchTerm]);
-  
-      const {
-  data: departmentsData,
-  loading: loadingDepartments,
-  error: errorDepartments,
-  refetch: refetchDepartments,
-} = useFetch({
-  method: "GET",
-  request: "department/",
-     params: {
-      search: debouncedSearchTerm.trim() ?? ""
-    },
-});
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  // Fetch specialties for selected department
-  const fetchSpecialties = useCallback(async (departmentId) => {
-    setSpecialtyLoading(true);
+  // debounce
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  // fetch departments
+  const fetchDepartments = useCallback(async () => {
+    setLoadingDepartments(true);
+    setErrorDepartments(null);
     try {
       const response = await fetch(
-        `https://admin.vaidyabandhu.com/api/specialty/?department=${departmentId}`
+        `https://admin.vaidyabandhu.com/api/department/?page=${page}&search=${debouncedSearchTerm}`
+      );
+      if (!response.ok) throw new Error("Failed to fetch departments");
+      const data = await response.json();
+      setDepartments(data.data || []);
+      setTotalCount(data.pagination_data?.total_count || 0);
+    } catch (err) {
+      setErrorDepartments(err.message);
+    } finally {
+      setLoadingDepartments(false);
+    }
+  }, [page, debouncedSearchTerm]);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, [fetchDepartments]);
+
+  // fetch specialties
+  const fetchSpecialties = async (department) => {
+    setSpecialtyLoading(true);
+    setSelectedDept(department);
+    try {
+      const response = await fetch(
+        `https://admin.vaidyabandhu.com/api/specialty/?department=${department.id}`
       );
       if (!response.ok) throw new Error("Failed to fetch specialties");
       const data = await response.json();
@@ -79,196 +85,220 @@ const MedicalDepartments = () => {
       setSpecialties([]);
     } finally {
       setSpecialtyLoading(false);
-    }
-  }, []);
 
-  // Department selection handler
-  const handleSelectDept = (dept, i) => {
-    if (selectedDept && selectedDept.id === dept.id) {
+      // ✅ scroll to the exact top of specialties section
+      setTimeout(() => {
+        if (specialtyRef.current) {
+          const top = specialtyRef.current.offsetTop - 80; // adjust for sticky header
+          window.scrollTo({ top, behavior: "smooth" });
+        }
+      }, 200);
+    }
+  };
+
+  const handleSelectDept = (dept) => {
+    if (selectedDept?.id === dept.id) {
       setSelectedDept(null);
       setSpecialties([]);
-      return;
+    } else {
+      fetchSpecialties(dept);
     }
-    setSelectedDept(dept);
-    fetchSpecialties(dept.id);
   };
 
-    // Search handler
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  // Icon assignment
   const getIcon = (i) => deptIcons[i % deptIcons.length] || DEFAULT_ICON;
-
-  // Specialty image assignment
-  const getSpecImg = (i, imgUrl) =>
-    imgUrl ? imgUrl : specialtyImages[i % specialtyImages.length];
 
   const onClickSpeclist = (item) => {
     navigate("/doctor-list?specialty=" + item.id);
   };
 
+  const totalPages = Math.ceil(totalCount / 15);
+
   return (
-    <div className="mdc-root container-bg">
-            <div className="page-header">
-        <Container className="py-4">
-          <div className="text-center mb-4">
-            <p className="text-muted">
-              Browse All Departments
-            </p>
-          </div>
+    <div style={{ padding: "20px", background: "#f9fafb", minHeight: "100vh" }}>
+      {/* Search */}
+      <Container className="py-4">
+        <Row className="justify-content-center">
+          <Col lg={8} md={10}>
+            <div style={{ position: "relative" }}>
+              <Search
+                size={20}
+                style={{
+                  position: "absolute",
+                  left: 16,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#999",
+                  pointerEvents: "none",
+                  zIndex: 2,
+                }}
+              />
+              <Form.Control
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search department..."
+                style={{
+                  paddingLeft: 42,
+                  height: 46,
+                  borderRadius: "8px",
+                  border: "1px solid #ddd",
+                }}
+              />
+            </div>
+          </Col>
+        </Row>
+      </Container>
 
-          {/* Search Bar */}
-          <Row className="justify-content-center">
-  <Col lg={8} md={10}>
-    <div style={{ position: "relative" }}>
-      <Search
-        size={20}
+      {/* Departments grid */}
+      <div
         style={{
-          position: "absolute",
-          left: 16,
-          top: "50%",
-          transform: "translateY(-50%)",
-          color: "#999",
-          pointerEvents: "none",
-          zIndex: 2,
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+          gap: "20px",
+          margin: "20px 0",
         }}
-      />
-      <Form.Control
-        type="text"
-        value={searchTerm}
-        onChange={handleSearchChange}
-        placeholder="Search department..."
-        style={{
-          paddingLeft: 42,      // Enough space for icon + gap
-          height: 46,           // Adjust as needed
-        }}
-      />
-    </div>
-  </Col>
-</Row>
-
-        </Container>
+      >
+        {loadingDepartments ? (
+          <div>Loading...</div>
+        ) : errorDepartments ? (
+          <div style={{ color: "red" }}>{errorDepartments}</div>
+        ) : (
+          isNotEmptyArray(departments) &&
+          departments.map((dept, i) => (
+            <div
+              key={dept.id}
+              onClick={() => handleSelectDept(dept)}
+              style={{
+                border: "1px solid #e5e7eb",
+                borderRadius: "12px",
+                background:
+                  selectedDept?.id === dept.id ? "#e0f2fe" : "#fff",
+                padding: "20px",
+                cursor: "pointer",
+                textAlign: "center",
+                boxShadow:
+                  "0 2px 4px rgba(0,0,0,0.05), 0 4px 6px rgba(0,0,0,0.1)",
+                transition: "all 0.2s ease-in-out",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.boxShadow =
+                  "0 4px 8px rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.15)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.boxShadow =
+                  "0 2px 4px rgba(0,0,0,0.05), 0 4px 6px rgba(0,0,0,0.1)")
+              }
+            >
+              <div style={{ marginBottom: "12px" }}>
+                <img
+                  src={dept.image || getIcon(i)}
+                  alt={dept.name}
+                  style={{ width: 60, height: 60 }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = DEFAULT_ICON;
+                  }}
+                />
+              </div>
+              <div style={{ fontWeight: "600", fontSize: "16px" }}>
+                {dept.name}
+              </div>
+              <div style={{ fontSize: "13px", color: "#666" }}>{dept.code}</div>
+            </div>
+          ))
+        )}
       </div>
-      {errorDepartments && (
-        <div className="mdc-alert">
-          <span>{errorDepartments}</span>
-          <button onClick={refetchDepartments} className="mdc-btn mdc-btn-alert">
-            Retry
+
+      {/* Pagination */}
+      {!selectedDept && totalPages > 1 && (
+        <div style={{ textAlign: "center", margin: "20px 0" }}>
+          <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+            ◀ Prev
+          </button>
+          <span style={{ margin: "0 12px" }}>
+            Page {page} of {totalPages}
+          </span>
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next ▶
           </button>
         </div>
       )}
 
-      {/* Department Row: Centered with margin */}
-      <div className="mdc-horizontal-container">
-        <div
-          className="mdc-horizontal-scroll"
-          style={{ justifyContent: loadingDepartments ? "center" : "start" }}
-        >
-          {loadingDepartments ? (
-            <div className="mdc-loading">Loading...</div>
+      {/* Specialties */}
+      {selectedDept && (
+        <div ref={specialtyRef} style={{ marginTop: "40px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: "20px",
+              alignItems: "center",
+            }}
+          >
+            <h4 style={{ margin: 0 }}>{selectedDept.name} Specialties</h4>
+            <button
+              onClick={() => {
+                setSelectedDept(null);
+                setSpecialties([]);
+              }}
+              style={{
+                border: "none",
+                background: "transparent",
+                fontSize: "22px",
+                cursor: "pointer",
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          {specialtyLoading ? (
+            <div>Loading specialties...</div>
+          ) : specialties.length ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                gap: "20px",
+              }}
+            >
+              {specialties.map((spec, i) => (
+                <div
+                  key={spec.id}
+                  onClick={() => onClickSpeclist(spec)}
+                  style={{
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    textAlign: "center",
+                    background: "#fff",
+                    boxShadow:
+                      "0 2px 4px rgba(0,0,0,0.05), 0 4px 6px rgba(0,0,0,0.1)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <img
+                    src={spec.image || DEFAULT_SPEC_IMG}
+                    alt={spec.description}
+                    style={{ width: 60, height: 60, marginBottom: "10px" }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = DEFAULT_SPEC_IMG;
+                    }}
+                  />
+                  <div style={{ fontWeight: "600" }}>{spec.title}</div>
+                  <small style={{ color: "#666" }}>{spec.code}</small>
+                </div>
+              ))}
+            </div>
           ) : (
-            isNotEmptyArray(departmentsData?.data) && departmentsData.data.map((dept, i) => (
-              <div
-                key={dept.id}
-                className={`mdc-hcard ${
-                  selectedDept && selectedDept.id === dept.id
-                    ? "mdc-hcard-selected"
-                    : ""
-                }`}
-                onClick={() => handleSelectDept(dept, i)}
-                style={{ animationDelay: `${i * 50}ms` }}
-              >
-                <div className="mdc-hcard-icon">
-                  {dept?.image ? (
-                    <img
-                      src={dept.image}
-                      alt={dept.name}
-                      className="mdc-specialty-img"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = DEFAULT_SPEC_IMG;
-                      }}
-                    />
-                  ) : (
-                    getIcon(i)
-                  )}
-                </div>
-                <div className="mdc-hcard-info">
-                  <div className="mdc-hcard-name">{dept.name}</div>
-                  <div className="mdc-hcard-code">{dept.code}</div>
-                  
-                </div>
-              </div>
-            ))
+            <div>No specialties available.</div>
           )}
         </div>
-        {/* Info message if no department selected */}
-        {!selectedDept && !loadingDepartments && (
-          <div className="mdc-info-msg">
-            <span>ℹ️ Please select a department to view its specialties.</span>
-          </div>
-        )}
-      </div>
-
-      {/* Specialties Section */}
-      <div
-        className={`mdc-specialty-section ${
-          selectedDept ? "mdc-specialty-section-show" : ""
-        }`}
-      >
-        {selectedDept && (
-          <>
-            <div className="mdc-specialty-header">
-              <span>{selectedDept.name} Specialties</span>
-              <button
-                className="mdc-btn mdc-btn-close"
-                onClick={() => {
-                  setSelectedDept(null);
-                  setSpecialties([]);
-                }}
-              >
-                ×
-              </button>
-            </div>
-            {specialtyLoading ? (
-              <div className="mdc-loading-sm">Loading specialties...</div>
-            ) : specialties.length ? (
-              <div className="mdc-specialty-grid">
-                {specialties.map((spec, i) => (
-                  <div
-                    className="mdc-specialty-card"
-                    key={spec.id}
-                    style={{ animationDelay: `${i * 60}ms` }}
-                    onClick={() => onClickSpeclist(spec)}
-                  >
-                    <div className="mdc-specialty-imgwrap">
-                      <img
-                        src={spec.image || getSpecImg(i, spec.image_url)}
-                        alt={spec.description}
-                        className="mdc-specialty-img"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = DEFAULT_SPEC_IMG;
-                        }}
-                      />
-                    </div>
-                    <div className="mdc-specialty-title">
-                      {spec.title}
-                    </div>
-                    <div className="mdc-specialty-meta">
-                      <span className="mdc-specialty-code">{spec.code}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="mdc-empty">No specialties available.</div>
-            )}
-          </>
-        )}
-      </div>
+      )}
     </div>
   );
 };
