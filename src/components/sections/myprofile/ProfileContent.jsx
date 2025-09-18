@@ -18,15 +18,15 @@ const MyProfile = () => {
     gender: "",
     blood_group: "",
     address: "",
-    pincode: "",
+    pin_code: "",
     mobile: "",
     alternate_number: "",
     email: "",
     Aadhar_number: "",
     pan_number: "",
-    photo: null,
+    profile_image: null,
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const cardRef = useRef(null);
@@ -38,16 +38,19 @@ const MyProfile = () => {
     const fetchUserProfile = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("https://admin.vaidyabandhu.com/api/user/profile/", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": token
+        const response = await fetch(
+          "https://admin.vaidyabandhu.com/api/user/profile/",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token,
+            },
           }
-        });
+        );
         if (response.ok) {
           const data = await response.json();
           setPatient(data);
@@ -58,19 +61,19 @@ const MyProfile = () => {
         setLoading(false);
       }
     };
-    
+
     fetchUserProfile();
   }, []);
 
   const handleDownload = async () => {
     // Mock download functionality
-    alert(`Downloading ${patient.full_name || 'user'}_HealthCard.pdf`);
+    alert(`Downloading ${patient.full_name || "user"}_HealthCard.pdf`);
   };
 
   const handleLogout = () => {
     setShowLogoutModal(true);
   };
-  
+
   const confirmLogout = () => {
     // Remove token from localStorage
     localStorage.removeItem("token");
@@ -624,7 +627,9 @@ const MyProfile = () => {
               <div style={styles.infoRow}>
                 <User style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Full Name:</span>
-                <span style={styles.infoValue}>{patient.full_name || "NULL"}</span>
+                <span style={styles.infoValue}>
+                  {patient.full_name || "NULL"}
+                </span>
               </div>
 
               <div style={styles.infoRow}>
@@ -642,19 +647,25 @@ const MyProfile = () => {
               <div style={styles.infoRow}>
                 <Droplet style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Blood Group:</span>
-                <span style={styles.infoValue}>{patient.blood_group || "NULL"}</span>
+                <span style={styles.infoValue}>
+                  {patient.blood_group || "NULL"}
+                </span>
               </div>
 
               <div style={styles.infoRow}>
                 <MapPin style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Address:</span>
-                <span style={styles.infoValue}>{patient.address || "NULL"}</span>
+                <span style={styles.infoValue}>
+                  {patient.address || "NULL"}
+                </span>
               </div>
 
               <div style={styles.infoRow}>
                 <MapPin style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Pincode:</span>
-                <span style={styles.infoValue}>{patient.pincode || "NULL"}</span>
+                <span style={styles.infoValue}>
+                  {patient.pin_code || "NULL"}
+                </span>
               </div>
 
               <div style={styles.infoRow}>
@@ -666,7 +677,9 @@ const MyProfile = () => {
               <div style={styles.infoRow}>
                 <Phone style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Alternate Number:</span>
-                <span style={styles.infoValue}>{patient.alternate_number || "NULL"}</span>
+                <span style={styles.infoValue}>
+                  {patient.alternate_number || "NULL"}
+                </span>
               </div>
 
               <div style={styles.infoRow}>
@@ -678,13 +691,17 @@ const MyProfile = () => {
               <div style={styles.infoRow}>
                 <IdCard style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Aadhar Number:</span>
-                <span style={styles.infoValue}>{patient.aadhaar_number || "NULL"}</span>
+                <span style={styles.infoValue}>
+                  {patient.aadhaar_number || "NULL"}
+                </span>
               </div>
 
               <div style={styles.infoRow}>
                 <CreditCard style={styles.infoIcon} />
                 <span style={styles.infoLabel}>PAN Number:</span>
-                <span style={styles.infoValue}>{patient.pan_number || "NULL"}</span>
+                <span style={styles.infoValue}>
+                  {patient.pan_number || "NULL"}
+                </span>
               </div>
             </div>
           </div>
@@ -734,12 +751,24 @@ const MyProfile = () => {
                     <div style={styles.cardDetails}>
                       <div style={styles.detailRowAligned}>
                         <span style={styles.labelText}>MEMBERSHIP ID:</span>
-                        <span style={styles.valueText}> {patient.id || "NULL"}</span>
+                        <span style={styles.valueText}>
+                          {" "}
+                          {patient.id || "NULL"}
+                        </span>
                       </div>
                       <div style={styles.detailRowAligned}>
                         <span style={styles.labelText}>VALID TILL:</span>
-                        <span style={styles.valueText}>{patient.end_date || "NULL"}</span>
+                        <span style={styles.valueText}>
+                          {patient.end_date
+                            ? patient.end_date
+                                .split("T")[0]
+                                .split("-")
+                                .reverse()
+                                .join("-")
+                            : "NULL"}
+                        </span>
                       </div>
+
                       <div style={styles.detailRowAligned}>
                         <span style={styles.labelText}>CONTACT:</span>
                         <span style={styles.valueText}>
@@ -754,14 +783,16 @@ const MyProfile = () => {
                       </div>
                       <div style={styles.detailRowAligned}>
                         <span style={styles.labelText}>ADDRESS:</span>
-                        <span style={styles.valueText}>{patient.address || "NULL"}</span>
+                        <span style={styles.valueText}>
+                          {patient.address || "NULL"}
+                        </span>
                       </div>
                     </div>
                     <div style={styles.cardPhoto}>
                       <div style={styles.photoContainer}>
-                        {patient.photo ? (
+                        {patient.profile_image ? (
                           <img
-                            src={patient.photo}
+                            src={patient.profile_image}
                             alt={patient.full_name}
                             style={{
                               width: "100%",
@@ -770,14 +801,16 @@ const MyProfile = () => {
                             }}
                           />
                         ) : (
-                          <div style={{
-                            width: "100%",
-                            height: "100%",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            backgroundColor: "#f0f0f0"
-                          }}>
+                          <div
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              backgroundColor: "#f0f0f0",
+                            }}
+                          >
                             <User size={24} color="#ccc" />
                           </div>
                         )}

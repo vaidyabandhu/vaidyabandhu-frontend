@@ -274,28 +274,31 @@ const VaidyaBandhuForm = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // Create user profile
+      // Create user profile using FormData
+      const formDataToSend = new FormData();
+      formDataToSend.append("full_name", formData.full_name);
+      formDataToSend.append("age", formData.age);
+      formDataToSend.append("gender", formData.gender);
+      formDataToSend.append("blood_group", formData.blood_group);
+      formDataToSend.append("address", formData.address);
+      formDataToSend.append("pin_code", formData.pin_code);
+      formDataToSend.append("mobile", formData.mobile);
+      formDataToSend.append("alternate_number", formData.alternate_mobile);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("aadhaar_number", formData.aadhaar_number);
+      formDataToSend.append("pan_number", formData.pan_number);
+      if (formData.photo) {
+        formDataToSend.append("profile_image", formData.photo);
+      }
+
       const response = await fetch(
         "https://admin.vaidyabandhu.com/api/user/profile/",
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: token,
           },
-          body: JSON.stringify({
-            full_name: formData.full_name,
-            age: formData.age,
-            gender: formData.gender,
-            blood_group: formData.blood_group,
-            address: formData.address,
-            pin_code: formData.pin_code,
-            mobile: formData.mobile,
-            alternate_number: formData.alternate_mobile,
-            email: formData.email,
-            aadhaar_number: formData.aadhaar_number,
-            pan_number: formData.pan_number,
-          }),
+          body: formDataToSend,
         }
       );
 
