@@ -68,8 +68,8 @@ function FilterSidebar({
 
 const Content = () => {
   const [locations, setLocations] = useState([]);
-  const [activePage, setActivePage] = useState(1);
-  const [itemPerpage] = useState(5);
+  const [page, setPage] = useState(1);
+  const [itemPerpage] = useState(15); // match doctor-grid
   const { search } = useLocation();
   const params = new URLSearchParams(search);
   const specialtyParam = params.get("specialty");
@@ -161,13 +161,13 @@ const Content = () => {
       gender: selectedGender,
       sort: sortBy,
       page_count: itemPerpage,
-      page: activePage,
+      page: page,
       hostital_id: id,
     },
   });
   console.log({ loader, data });
   // Filter Handlers
-  const handlePageChange = (pageNumber) => setActivePage(pageNumber);
+  const handlePageChange = (pageNumber) => setPage(pageNumber);
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
   const clearSearch = () => setSearchTerm("");
   const handleSpecialtyChange = (specialtyId) => {
@@ -738,20 +738,29 @@ const Content = () => {
                       </div>
                     </div>
                   ))}
-                  {/* Pagination */}
-                  <div className="d-flex justify-content-center mt-4">
-                    <Pagination
-                      activePage={activePage}
-                      itemsCountPerPage={itemPerpage}
-                      totalItemsCount={data?.pagination_data?.total_count}
-                      pageRangeDisplayed={5}
-                      onChange={handlePageChange}
-                      innerClass="pagination"
-                      activeClass="active"
-                      itemClass="page-item"
-                      linkClass="page-link"
-                    />
-                  </div>
+                  {/* Pagination (custom, from doctor-grid) */}
+                  {(() => {
+                    const totalCount = data?.pagination_data?.total_count || 0;
+                    const totalPages = Math.ceil(totalCount / itemPerpage);
+                    return (
+                      totalPages > 1 && (
+                        <div style={{ textAlign: "center", margin: "60px 0" }}>
+                          <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+                             Prev
+                          </button>
+                          <span style={{ margin: "0 12px" }}>
+                            Page {page} of {totalPages}
+                          </span>
+                          <button
+                            disabled={page === totalPages}
+                            onClick={() => setPage((p) => p + 1)}
+                          >
+                            Next 
+                          </button>
+                        </div>
+                      )
+                    );
+                  })()}
                 </>
               )}
             </div>

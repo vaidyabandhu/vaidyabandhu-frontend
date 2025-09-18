@@ -212,7 +212,7 @@ const MedicalDepartments = () => {
       {!selectedDept && totalPages > 1 && (
         <div style={{ textAlign: "center", margin: "60px 0" }}>
           <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-            ◀ Prev
+            Prev
           </button>
           <span style={{ margin: "0 12px" }}>
             Page {page} of {totalPages}
@@ -221,7 +221,7 @@ const MedicalDepartments = () => {
             disabled={page === totalPages}
             onClick={() => setPage((p) => p + 1)}
           >
-            Next ▶
+            Next 
           </button>
         </div>
       )}
