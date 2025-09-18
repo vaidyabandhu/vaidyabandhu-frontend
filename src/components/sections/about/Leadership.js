@@ -102,7 +102,7 @@ const LeadershipInline = () => {
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px', flexDirection: 'row' }}>
               <img
-                src="/assets/img/ajith.jpg"
+                src="/assets/img/Ajith.jpg"
                 alt="Dr. Ajith Ramaswamy"
                 style={{
                   width: '150px',
@@ -119,7 +119,7 @@ const LeadershipInline = () => {
                 }}
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = "https://placehold.co/150x150/CCCCCC/666666?text=Dr+Img";
+                  e.target.src = "/assets/img/Ajith.jpg";
                 }}
               />
               <div style={{ flexGrow: 1, textAlign: 'left' }}>
