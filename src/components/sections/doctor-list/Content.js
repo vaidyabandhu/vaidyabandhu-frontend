@@ -676,7 +676,7 @@ const Content = () => {
                             <img
                               src={item.photo}
                               alt={item.full_name}
-                              style={{ maxHeight: "305px" }}
+                              style={{ maxHeight: "auto", objectFit: "cover" }}
                             />
                           </div>
                         </div>
