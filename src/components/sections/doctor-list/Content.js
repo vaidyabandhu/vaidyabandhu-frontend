@@ -549,7 +549,7 @@ const Content = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Filter Chips Section */}
           <div className="row mb-4">
             <div className="col-12">
@@ -677,9 +677,26 @@ const Content = () => {
                         <div className="col-md-3">
                           <div className="sigma_team-thumb">
                             <img
-                              src={item.photo}
-                              alt={item.full_name}
-                              style={{ maxHeight: "auto", objectFit: "cover" }}
+                              src={
+                                item?.photo && item.photo.trim() !== ""
+                                  ? item.photo
+                                  : "/assets/img/default-img.jpg"
+                              }
+                              alt={item?.full_name || "User"}
+                              style={{
+                                width: "100%",
+                                height: "auto",
+                                objectFit: "cover",
+                              }}
+                              onError={(e) => {
+                                e.currentTarget.onerror = null; // prevent infinite loop
+                                e.currentTarget.src =
+                                  "/assets/img/default-img.jpg"; // fallback
+                                e.currentTarget.classList.add("default-doctor-img"); // Add class when fallback is used
+                              }}
+                              className={
+                                !(item?.photo && item.photo.trim() !== "") ? "default-doctor-img" : ""
+                              }
                             />
                           </div>
                         </div>
@@ -745,8 +762,11 @@ const Content = () => {
                     return (
                       totalPages > 1 && (
                         <div style={{ textAlign: "center", margin: "60px 0" }}>
-                          <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-                             Prev
+                          <button
+                            disabled={page === 1}
+                            onClick={() => setPage((p) => p - 1)}
+                          >
+                            Prev
                           </button>
                           <span style={{ margin: "0 12px" }}>
                             Page {page} of {totalPages}
@@ -755,7 +775,7 @@ const Content = () => {
                             disabled={page === totalPages}
                             onClick={() => setPage((p) => p + 1)}
                           >
-                            Next 
+                            Next
                           </button>
                         </div>
                       )
@@ -767,7 +787,7 @@ const Content = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Mobile pagination styles */}
       <style jsx>{`
         @media (max-width: 767px) {
@@ -775,6 +795,12 @@ const Content = () => {
             padding: 4px 10px;
             font-size: 14px;
             gap: 4px;
+          }
+          
+          .default-doctor-img {
+            width: 70% !important;
+            margin: 15px auto;
+            display: block;
           }
         }
       `}</style>

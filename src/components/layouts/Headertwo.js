@@ -4,6 +4,9 @@ import { Link } from "react-router-dom";
 import navigation from "../../data/navigation.json";
 import MembershipModal from "./MembershipModal";
 import "../../assets/css/Header.css";
+import LoginModal from "./LoginModal";
+
+
 // Custom Hamburger Menu Component
 const CustomHamburgerMenu = ({ isOpen, onClick }) => {
   return (
@@ -25,6 +28,7 @@ const CustomHamburgerMenu = ({ isOpen, onClick }) => {
         padding: "0",
         margin: "0",
         border: "none",
+        zIndex: 1001,
       }}
       onMouseEnter={(e) =>
         (e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.1)")
@@ -129,7 +133,7 @@ const useNavHelper = () => {
     triggerChild,
   };
 };
-const Headertwo = () => {
+const Header = () => {
   const { navMethod, toggleNav } = useNavHelper();
   const [userPhone, setUserPhone] = useState(null);
   useEffect(() => {
@@ -146,11 +150,13 @@ const Headertwo = () => {
     <Fragment>
       {/* Mobile Menu */}
       <aside className={navMethod ? "sigma_aside aside-open" : "sigma_aside"}>
-        <div className="sigma_close aside-trigger" onClick={toggleNav}>
-          <span />
-          <span />
-        </div>
         <Mobilemenu />
+        {/* Added membership button in mobile menu */}
+        {!userPhone && (
+          <div className="p-3 text-center">
+            <MembershipModal />
+          </div>
+        )}
       </aside>
       {navMethod && (
         <div
@@ -160,13 +166,15 @@ const Headertwo = () => {
       )}
       {/* Header */}
       <header
-        className="sigma_header header-absolute style-5 other can-sticky"
+        className={`sigma_header header-absolute style-5 other can-sticky ${
+          navMethod ? "mobile-menu-open" : ""
+        }`}
         style={{
           position: "fixed",
           top: 0,
           left: 0,
           right: 0,
-          zIndex: 1000,
+          zIndex: navMethod ? 1001 : 1000,
           backgroundColor: "#fff",
           boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
           transition: "all 0.3s ease",
@@ -303,7 +311,6 @@ const Headertwo = () => {
                   {/* LinkedIn icon */}
                 </Link>
               </div>
-
               {/* Right: Contact Info */}
               <div
                 className="sigma_header-top-links"
@@ -318,17 +325,28 @@ const Headertwo = () => {
                   href="mailto:support@vaidyabandhu.com"
                   style={{ color: "#fff", textDecoration: "none" }}
                 >
-                  <i className="fal fa-envelope" style={{ marginRight: "5px" }} />{" "}
+                  <i
+                    className="fal fa-envelope"
+                    style={{ marginRight: "5px" }}
+                  />{" "}
                   support@vaidyabandhu.com
                 </a>
                 <Link to="#" style={{ color: "#fff", textDecoration: "none" }}>
-                  <i className="fal fa-map-marker-alt" style={{ marginRight: "5px" }} /> Bangalore
+                  <i
+                    className="fal fa-map-marker-alt"
+                    style={{ marginRight: "5px" }}
+                  />{" "}
+                  Bangalore
                 </Link>
                 <a
                   href="tel:+918535853589"
                   style={{ color: "#fff", textDecoration: "none" }}
                 >
-                  <i className="fal fa-mobile" style={{ marginRight: "5px" }} /> +91 8535 8535 89
+                  <i
+                    className="fal fa-mobile"
+                    style={{ marginRight: "5px" }}
+                  />{" "}
+                  +91 8535 8535 89
                 </a>
               </div>
             </div>
@@ -413,12 +431,46 @@ const Headertwo = () => {
                       </li>
                     </>
                   ) : (
-                    <li className="d-none d-sm-block">
-                      <MembershipModal />
-                    </li>
+                    <>
+                     
+                      {/* Existing Membership Button */}
+                      <li className="d-none d-sm-block">
+                        <MembershipModal />
+                      </li>
+                      {/* Login Button UI */}
+                      <li className="d-none d-sm-block">
+                        {/* <button
+                          className="sigma_btn btn-sm"
+                          style={{
+                            backgroundColor: "#00908d",
+                            color: "white",
+                            border: "none",
+                            padding: "8px 16px",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            textTransform: "uppercase",
+                            fontWeight: "bold",
+                            letterSpacing: "1px",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                            transition: "all 0.3s ease",
+                            whiteSpace: "nowrap", // Prevents text from wrapping
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor = "#007a7e")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor = "#00908d")
+                          }
+                        >
+                          Login
+                        </button> */}
+                        <LoginModal/>
+                      </li>
+                    </>
                   )}
                   {/* Hamburger menu: only visible below md (mobile/tablet) */}
-                  <li className="d-block d-md-none">
+                  <li className="d-block d-md-none mobile-hamburger">
                     <CustomHamburgerMenu
                       isOpen={navMethod}
                       onClick={toggleNav}
@@ -481,6 +533,29 @@ const Headertwo = () => {
                 margin-right: 4px;
               }
             }
+           
+            /* New styles for mobile layout */
+            .navbar {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+           
+            .sigma_header-controls-inner {
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              justify-content: flex-end;
+              gap: 10px;
+              position: absolute;
+              right: 15px;
+              top: 50%;
+              transform: translateY(-50%);
+            }
+           
+            .mobile-hamburger {
+              order: 1;
+            }
           }
           /* Hide hamburger on desktop */
           .sigma_header-controls-inner .aside-toggle {
@@ -498,7 +573,7 @@ const Headertwo = () => {
             height: 40px !important;
             display: flex !important;
             justify-content: center !important;
-            align-items: center !important;
+            alignItems: center !important;
             cursor: pointer !important;
             border-radius: 50% !important;
             transition: background-color 0.3s ease !important;
@@ -523,9 +598,31 @@ const Headertwo = () => {
           .sigma_close.aside-trigger span:last-child {
             transform: rotate(-45deg) !important;
           }
+          /* Style for membership button in mobile menu */
+          .sigma_aside .sigma_btn {
+            width: 100%;
+            margin-top: 15px;
+          }
+          /* Ensure header stays above mobile menu */
+          .sigma_header.mobile-menu-open {
+            z-index: 1001 !important;
+          }
+          /* Custom styles to align buttons */
+          .sigma_header-controls-inner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+          .sigma_header-controls-inner .d-none.d-sm-block {
+            margin: 0;
+            padding: 0;
+          }
+          .sigma_header-controls-inner .btn {
+            white-space: nowrap;
+          }
         `}
       </style>
     </Fragment>
   );
 };
-export default Headertwo;
+export default Header;

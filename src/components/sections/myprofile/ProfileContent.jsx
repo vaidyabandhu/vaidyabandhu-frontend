@@ -993,7 +993,7 @@ const MyProfile = () => {
                     <ul style={styles.instructionsList}>
                       <li style={styles.instructionItem}>
                         <span style={styles.bullet}>•</span>
-                        <span>CALL OR WHATSAPP US AT +91 8535863589</span>
+                        <span>CALL OR WHATSAPP US AT +91 8535853589</span>
                       </li>
                       <li style={styles.instructionItem}>
                         <span style={styles.bullet}>•</span>

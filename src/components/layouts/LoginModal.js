@@ -186,6 +186,8 @@ const LoginModal = () => {
   const handleIconClick = () => {
     navigate("/basic-details");
   };
+
+  
   
   return (
     <>
