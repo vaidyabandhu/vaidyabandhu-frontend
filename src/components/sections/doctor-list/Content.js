@@ -4,6 +4,7 @@ import Pagination from "react-js-pagination";
 import { useLocation } from "react-router-dom";
 import { isNotEmptyArray } from "../../utiles/utils";
 import { useFetch } from "../../hooks/usefetch";
+
 // Responsive filter sidebar for mobile + desktop
 function FilterSidebar({
   filtersContent,
@@ -64,6 +65,7 @@ function FilterSidebar({
     </>
   );
 }
+
 const Content = () => {
   const [locations, setLocations] = useState([]);
   const [activePage, setActivePage] = useState(1);
@@ -483,6 +485,7 @@ const Content = () => {
       </div> */}
     </>
   );
+
   return (
     <div className="sidebar-style-9 container-bg">
       <div className="section section-padding">
@@ -755,7 +758,19 @@ const Content = () => {
           </div>
         </div>
       </div>
+      
+      {/* Mobile pagination styles */}
+      <style jsx>{`
+        @media (max-width: 767px) {
+          .pagination .page-link {
+            padding: 4px 10px;
+            font-size: 14px;
+            gap: 4px;
+          }
+        }
+      `}</style>
     </div>
   );
 };
+
 export default Content;
