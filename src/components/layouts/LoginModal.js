@@ -182,12 +182,12 @@ const LoginModal = () => {
     }
   };
   
-  // Handle icon click - redirect to form page
+  // Handle icon click - redirect to profile page if already a member
   const handleIconClick = () => {
-    navigate("/basic-details");
+    navigate("/myprofile");
   };
 
-  
+
   
   return (
     <>

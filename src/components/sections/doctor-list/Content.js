@@ -144,28 +144,33 @@ const Content = () => {
     }
   }, [locationsData, locationsError]);
   // Fetch doctors
-  const {
-    data,
-    loading: loader,
-    error,
-    refetch,
-  } = useFetch({
-    method: "GET",
-    request: "doctors/",
-    params: {
-      search: debouncedSearchTerm.trim(),
-      specialties: selectedSpecialties.join(","),
-      locations: selectedLocations.join(","),
-      availability: selectedAvailability.join(","),
-      rating: selectedRating,
-      gender: selectedGender,
-      sort: sortBy,
-      page_count: itemPerpage,
-      page: page,
-      hostital_id: id,
-    },
-  });
-  console.log({ loader, data });
+   const token = localStorage.getItem("token");
+ const {
+  data,
+  loading: loader,
+  error,
+  refetch,
+} = useFetch({
+  method: "GET",
+  request: "https://admin.vaidyabandhu.com/api/doctors/?hospital_ids=1%2C2",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: token, // ✅ Add token here
+  },
+  params: {
+    search: debouncedSearchTerm.trim(),
+    specialties: selectedSpecialties.join(","),
+    locations: selectedLocations.join(","),
+    availability: selectedAvailability.join(","),
+    rating: selectedRating,
+    gender: selectedGender,
+    sort: sortBy,
+    page_count: itemPerpage,
+    page: page,
+    hospital_ids: id, 
+  },
+});
+  console.log({ loader, data } ,"test" );
   // Filter Handlers
   const handlePageChange = (pageNumber) => setPage(pageNumber);
   const handleSearchChange = (e) => setSearchTerm(e.target.value);

@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
+import domtoimage from "dom-to-image-more";
+import { saveAs } from "file-saver";
 import {
   Mail,
   Phone,
@@ -30,7 +32,6 @@ const MyProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const cardRef = useRef(null);
-  const [isFront, setIsFront] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Fetch user profile data
@@ -65,10 +66,73 @@ const MyProfile = () => {
     fetchUserProfile();
   }, []);
 
-  const handleDownload = async () => {
-    // Mock download functionality
-    alert(`Downloading ${patient.full_name || "user"}_HealthCard.pdf`);
+  // Helper: convert image URL to Base64
+  const getBase64ImageFromUrl = async (url) => {
+    const res = await fetch(url, { mode: "cors" });
+    const blob = await res.blob();
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   };
+
+ const handleDownload = async () => {
+  const front = document.getElementById("card-front");
+  const back = document.getElementById("card-back");
+
+  if (!front || !back) {
+    alert("Both sides of the card not found!");
+    return;
+  }
+
+  try {
+    // Convert both front and back into PNGs
+    const frontImg = await domtoimage.toPng(front, { cacheBust: true, useCORS: true });
+    const backImg = await domtoimage.toPng(back, { cacheBust: true, useCORS: true });
+
+    // Load them into Image objects
+    const frontImage = new Image();
+    const backImage = new Image();
+    frontImage.src = frontImg;
+    backImage.src = backImg;
+
+    frontImage.onload = () => {
+      backImage.onload = () => {
+        // Create canvas large enough for both with space between
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        const width = Math.max(frontImage.width, backImage.width);
+        const gap = 30; // Space between cards in pixels
+        const height = frontImage.height + backImage.height + gap;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Fill canvas with white background
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw front card at the top
+        ctx.drawImage(frontImage, 0, 0);
+        
+        // Draw back card below with gap
+        ctx.drawImage(backImage, 0, frontImage.height + gap);
+
+        // Save merged image
+        canvas.toBlob((blob) => {
+          saveAs(blob, `${patient.full_name || "user"}_HealthCard.png`);
+        });
+      };
+    };
+  } catch (error) {
+    console.error("Oops, something went wrong!", error);
+    alert("Failed to download merged card.");
+  }
+};
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -161,6 +225,7 @@ const MyProfile = () => {
       display: "flex",
       flexDirection: "column",
       padding: "0px",
+      marginBottom: "20px", // Added space between cards
     },
     front: {
       color: "#4A4A4A",
@@ -171,12 +236,6 @@ const MyProfile = () => {
       fontSize: "12px",
       lineHeight: "1.4",
       padding: "15px",
-    },
-    toggleBtn: {
-      marginTop: "20px",
-      display: "flex",
-      gap: "10px",
-      justifyContent: "center",
     },
     cardHeader: {
       display: "flex",
@@ -590,7 +649,12 @@ const MyProfile = () => {
 
   // Show error state if there was an error fetching data
   if (error) {
-    // ...existing code..
+    return (
+      <div style={styles.errorContainer}>
+        <h3>Error Loading Profile</h3>
+        <p>{error}</p>
+      </div>
+    );
   }
 
   return (
@@ -708,334 +772,327 @@ const MyProfile = () => {
 
           {/* Right Column - Health Card */}
           <div style={styles.rightColumn}>
+            {/* Front Card */}
             <div
+              id="card-front"
               style={{
                 ...styles.healthCard,
-                ...(isFront ? styles.front : styles.back),
+                ...styles.front,
               }}
-              ref={cardRef}
             >
-              {isFront ? (
-                <>
-                  {/* Background Image */}
+              {/* Background Image */}
+              <img
+                src="assets/img/vb-background.png"
+                alt="Vaidya Bandhu Background"
+                style={styles.backgroundImage}
+              />
+              {/* Card Header */}
+              <div style={styles.cardHeader}>
+                <div style={styles.logoContainer}>
                   <img
-                    src="assets/img/vb-background.png"
-                    alt="Vaidya Bandhu Background"
-                    style={styles.backgroundImage}
+                    src="assets/img/vb-logo.png"
+                    alt="Vaidya Bandhu Logo"
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      marginLeft: "28px",
+                    }}
                   />
-                  {/* Card Header */}
-                  <div style={styles.cardHeader}>
-                    <div style={styles.logoContainer}>
-                      <img
-                        src="assets/img/vb-logo.png"
-                        alt="Vaidya Bandhu Logo"
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          marginLeft: "28px",
-                        }}
-                      />
-                    </div>
-                    <div style={styles.verticalLine}></div>
-                    <div style={styles.titleContainer}>
-                      <div style={styles.titleText}>VAIDYA BANDHU</div>
-                      <div style={styles.subtitleText}>
-                        HEALTHCARE MEMBERSHIP CARD
-                      </div>
-                    </div>
-                  </div>
-                  {/* Horizontal Line */}
-                  <div style={styles.horizontalLine}></div>
-                  {/* Card Content */}
-                  <div style={styles.cardContent}>
-                    <div style={styles.cardDetails}>
-                      <div style={styles.detailRowAligned}>
-                        <span style={styles.labelText}>MEMBERSHIP ID:</span>
-                        <span style={styles.valueText}>
-                          {" "}
-                          {patient.id || "NULL"}
-                        </span>
-                      </div>
-                      <div style={styles.detailRowAligned}>
-                        <span style={styles.labelText}>VALID TILL:</span>
-                        <span style={styles.valueText}>
-                          {patient.end_date
-                            ? patient.end_date
-                                .split("T")[0]
-                                .split("-")
-                                .reverse()
-                                .join("-")
-                            : "NULL"}
-                        </span>
-                      </div>
-
-                      <div style={styles.detailRowAligned}>
-                        <span style={styles.labelText}>CONTACT:</span>
-                        <span style={styles.valueText}>
-                          {patient.mobile || "NULL"}
-                        </span>
-                      </div>
-                      <div style={styles.detailRowAligned}>
-                        <span style={styles.labelText}>BLOOD GROUP:</span>
-                        <span style={styles.bloodGroupText}>
-                          {patient.blood_group || "NULL"}
-                        </span>
-                      </div>
-                      <div style={styles.detailRowAligned}>
-                        <span style={styles.labelText}>ADDRESS:</span>
-                        <span style={styles.valueText}>
-                          {patient.address || "NULL"}
-                        </span>
-                      </div>
-                    </div>
-                    <div style={styles.cardPhoto}>
-                      <div style={styles.photoContainer}>
-                        {patient.profile_image ? (
-                          <img
-                            src={patient.profile_image}
-                            alt={patient.full_name}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              backgroundColor: "#f0f0f0",
-                            }}
-                          >
-                            <User size={24} color="#ccc" />
-                          </div>
-                        )}
-                      </div>
-                      <div style={styles.photoNameText}>
-                        {patient.full_name || "NULL"}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Full-width Blue Strip at the Bottom */}
-                  <div style={styles.blueStrip}>
-                    <div style={styles.stripItem}>
-                      <div style={styles.stripLabel}>WHATSAPP/HELPLINE</div>
-                      <div style={styles.stripValue}>+91 8958593589</div>
-                    </div>
-                    <div style={styles.stripVerticalLine}></div>
-                    <div style={styles.stripItem}>
-                      <div style={styles.stripLabel}>EMAIL ID</div>
-                      <div style={styles.stripValue}>
-                        support@vaidyabandhu.com
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div style={styles.backContainer}>
-                  {/* Cashback Badge */}
-                  <div style={styles.cashbackBadge}>
-                    10% CASHBACK ON YOUR
-                    <br />
-                    TOTAL HOSPITAL BILL
-                    <br />
-                    <span style={{ fontSize: "5px" }}>
-                      EXCLUDING PHARMACY AND IMPLANTS
-                    </span>
-                  </div>
-                  {/* Benefits Section */}
-                  <div style={styles.benefitsSection}>
-                    <div style={styles.benefitsTitle}>
-                      BENEFITS OF THIS CARD
-                    </div>
-                    <ul style={styles.benefitsList}>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          Save 10% to 40% on surgeries, treatments, and
-                          diagnostics Services.
-                        </span>
-                      </li>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          Get 10% Cashback: Send your bill to Vaidya Bandhu via
-                          WhatsApp or Email. Cashback will be credited to your
-                          account within 7 working days.
-                        </span>
-                      </li>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          Free surgeries under certain in need through our
-                          social programs.
-                        </span>
-                      </li>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          Call our helpline from 9 AM to 6 PM for free medical
-                          advice.
-                        </span>
-                      </li>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          We help you choose the right doctor, hospital, or
-                          diagnostic center.
-                        </span>
-                      </li>
-                    </ul>
-                    {/* Section Divider */}
-                    <div style={styles.sectionDivider}></div>
-                  </div>
-                  {/* Terms & Conditions Section */}
-                  <div style={styles.termsSection}>
-                    <div style={styles.termsTitle}>TERMS & CONDITIONS</div>
-                    <ul style={styles.termsList}>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          VALIDITY: CARD IS VALID FOR 1 YEAR FROM THE DATE OF
-                          ISSUE.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          NON-TRANSFERABLE: USE IS LIMITED TO THE REGISTERED
-                          INDIVIDUAL ONLY.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          DISCOUNTS AVAILABLE ON CONSULTATIONS, TREATMENTS,
-                          SURGERIES, DIAGNOSTICS, AND MORE AT PARTNER CENTERS.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          BOOKING REQUIRED: CONTACT OUR TEAM BEFORE VISITING ANY
-                          FACILITY TO AVAIL BENEFITS.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          CARD DELIVERY: CARD WILL BE DELIVERED TO YOU POST
-                          MEMBERSHIP CONFIRMATION.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          LOST CARD: DUPLICATE CAN BE ISSUED WITH A SMALL
-                          REISSUE FEE.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          VALID LOCATIONS: BENEFITS APPLICABLE ONLY AT PARTNER
-                          HOSPITALS, DOCTORS, CLINICS, AND LABS.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          NO CASH VALUE: BENEFITS ARE NON-REDEEMABLE FOR CASH.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          MISUSE: MISUSE OF BENEFITS MAY RESULT IN MEMBERSHIP
-                          CANCELLATION.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          THE CARD DOES NOT COVER EMERGENCY SERVICES UNLESS
-                          PRE-APPROVED.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          IF THE MEMBERSHIP CARD IS NOT USED WITHIN ONE YEAR
-                          MEMBERS MUST INFORM US THROUGH THE HELPLINE NUMBER FOR
-                          THE FREE RENEWAL.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          DISCOUNTS MAY VARY BASED ON LOCATION, SERVICE TYPE,
-                          AND AVAILABILITY.
-                        </span>
-                      </li>
-                    </ul>
-                    {/* Section Divider */}
-                    <div style={styles.sectionDivider}></div>
-                  </div>
-                  {/* Instructions Section */}
-                  <div style={styles.instructionsSection}>
-                    <div style={styles.instructionsTitle}>
-                      INSTRUCTIONS TO USE
-                    </div>
-                    <ul style={styles.instructionsList}>
-                      <li style={styles.instructionItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>CALL OR WHATSAPP US AT +91 8535853589</span>
-                      </li>
-                      <li style={styles.instructionItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>SHARE YOUR MEMBERSHIP ID AND ISSUE</span>
-                      </li>
-                      <li style={styles.instructionItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>GET INSTANT HELP FROM VAIDYA BANDHU TEAM</span>
-                      </li>
-                    </ul>
-                  </div>
-                  {/* Price Tag */}
-                  <div style={styles.priceTag}>49/-</div>
-                  {/* Bottom Banner */}
-                  <div style={styles.bottomBanner}>
-                    <div style={styles.companyName}>
-                      VAIDYA BANDHU (A UNIT OF MV COMPANYON HEALTHCARE PRIVATE
-                      LIMITED)
-                    </div>
-                    <div style={styles.tagline}>
-                      "SERVING WITH CARE & COMMITMENT"
-                    </div>
+                </div>
+                <div style={styles.verticalLine}></div>
+                <div style={styles.titleContainer}>
+                  <div style={styles.titleText}>VAIDYA BANDHU</div>
+                  <div style={styles.subtitleText}>
+                    HEALTHCARE MEMBERSHIP CARD
                   </div>
                 </div>
-              )}
+              </div>
+              {/* Horizontal Line */}
+              <div style={styles.horizontalLine}></div>
+              {/* Card Content */}
+              <div style={styles.cardContent}>
+                <div style={styles.cardDetails}>
+                  <div style={styles.detailRowAligned}>
+                    <span style={styles.labelText}>MEMBERSHIP ID:</span>
+                    <span style={styles.valueText}>
+                      {" "}
+                      {patient.id || "NULL"}
+                    </span>
+                  </div>
+                  <div style={styles.detailRowAligned}>
+                    <span style={styles.labelText}>VALID TILL:</span>
+                    <span style={styles.valueText}>
+                      {patient.end_date
+                        ? patient.end_date
+                            .split("T")[0]
+                            .split("-")
+                            .reverse()
+                            .join("-")
+                        : "NULL"}
+                    </span>
+                  </div>
+
+                  <div style={styles.detailRowAligned}>
+                    <span style={styles.labelText}>CONTACT:</span>
+                    <span style={styles.valueText}>
+                      {patient.mobile || "NULL"}
+                    </span>
+                  </div>
+                  <div style={styles.detailRowAligned}>
+                    <span style={styles.labelText}>BLOOD GROUP:</span>
+                    <span style={styles.bloodGroupText}>
+                      {patient.blood_group || "NULL"}
+                    </span>
+                  </div>
+                  <div style={styles.detailRowAligned}>
+                    <span style={styles.labelText}>ADDRESS:</span>
+                    <span style={styles.valueText}>
+                      {patient.address || "NULL"}
+                    </span>
+                  </div>
+                </div>
+                <div style={styles.cardPhoto}>
+                  <div style={styles.photoContainer}>
+                    {patient.profile_image ? (
+                      <img
+                        src={patient.profile_image}
+                        alt={patient.full_name}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          backgroundColor: "#f0f0f0",
+                        }}
+                      >
+                        <User size={24} color="#ccc" />
+                      </div>
+                    )}
+                  </div>
+                  <div style={styles.photoNameText}>
+                    {patient.full_name || "NULL"}
+                  </div>
+                </div>
+              </div>
+              {/* Full-width Blue Strip at the Bottom */}
+              <div style={styles.blueStrip}>
+                <div style={styles.stripItem}>
+                  <div style={styles.stripLabel}>WHATSAPP/HELPLINE</div>
+                  <div style={styles.stripValue}>+91  8535 8535 89</div>
+                </div>
+                <div style={styles.stripVerticalLine}></div>
+                <div style={styles.stripItem}>
+                  <div style={styles.stripLabel}>EMAIL ID</div>
+                  <div style={styles.stripValue}>
+                    support@vaidyabandhu.com
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Back Card */}
+            <div
+              id="card-back"
+              style={{
+                ...styles.healthCard,
+                ...styles.back,
+              }}
+            >
+              <div style={styles.backContainer}>
+                {/* Cashback Badge */}
+                <div style={styles.cashbackBadge}>
+                  10% CASHBACK ON YOUR
+                  <br />
+                  TOTAL HOSPITAL BILL
+                  <br />
+                  <span style={{ fontSize: "5px" }}>
+                    EXCLUDING PHARMACY AND IMPLANTS
+                  </span>
+                </div>
+                {/* Benefits Section */}
+                <div style={styles.benefitsSection}>
+                  <div style={styles.benefitsTitle}>
+                    BENEFITS OF THIS CARD
+                  </div>
+                  <ul style={styles.benefitsList}>
+                    <li style={styles.benefitItem}>
+                      <span style={styles.checkMark}>✓</span>
+                      <span>
+                        Save 10% to 40% on surgeries, treatments, and
+                        diagnostics Services.
+                      </span>
+                    </li>
+                    <li style={styles.benefitItem}>
+                      <span style={styles.checkMark}>✓</span>
+                      <span>
+                        Get 10% Cashback: Send your bill to Vaidya Bandhu via
+                        WhatsApp or Email. Cashback will be credited to your
+                        account within 7 working days.
+                      </span>
+                    </li>
+                    <li style={styles.benefitItem}>
+                      <span style={styles.checkMark}>✓</span>
+                      <span>
+                        Free surgeries under certain in need through our
+                        social programs.
+                      </span>
+                    </li>
+                    <li style={styles.benefitItem}>
+                      <span style={styles.checkMark}>✓</span>
+                      <span>
+                        Call our helpline from 9 AM to 6 PM for free medical
+                        advice.
+                      </span>
+                    </li>
+                    <li style={styles.benefitItem}>
+                      <span style={styles.checkMark}>✓</span>
+                      <span>
+                        We help you choose the right doctor, hospital, or
+                        diagnostic center.
+                      </span>
+                    </li>
+                  </ul>
+                  {/* Section Divider */}
+                  <div style={styles.sectionDivider}></div>
+                </div>
+                {/* Terms & Conditions Section */}
+                <div style={styles.termsSection}>
+                  <div style={styles.termsTitle}>TERMS & CONDITIONS</div>
+                  <ul style={styles.termsList}>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        VALIDITY: CARD IS VALID FOR 1 YEAR FROM THE DATE OF
+                        ISSUE.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        NON-TRANSFERABLE: USE IS LIMITED TO THE REGISTERED
+                        INDIVIDUAL ONLY.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        DISCOUNTS AVAILABLE ON CONSULTATIONS, TREATMENTS,
+                        SURGERIES, DIAGNOSTICS, AND MORE AT PARTNER CENTERS.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        BOOKING REQUIRED: CONTACT OUR TEAM BEFORE VISITING ANY
+                        FACILITY TO AVAIL BENEFITS.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        CARD DELIVERY: CARD WILL BE DELIVERED TO YOU POST
+                        MEMBERSHIP CONFIRMATION.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        LOST CARD: DUPLICATE CAN BE ISSUED WITH A SMALL
+                        REISSUE FEE.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        VALID LOCATIONS: BENEFITS APPLICABLE ONLY AT PARTNER
+                        HOSPITALS, DOCTORS, CLINICS, AND LABS.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        NO CASH VALUE: BENEFITS ARE NON-REDEEMABLE FOR CASH.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        MISUSE: MISUSE OF BENEFITS MAY RESULT IN MEMBERSHIP
+                        CANCELLATION.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        THE CARD DOES NOT COVER EMERGENCY SERVICES UNLESS
+                        PRE-APPROVED.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        IF THE MEMBERSHIP CARD IS NOT USED WITHIN ONE YEAR
+                        MEMBERS MUST INFORM US THROUGH THE HELPLINE NUMBER FOR
+                        THE FREE RENEWAL.
+                      </span>
+                    </li>
+                    <li style={styles.termItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>
+                        DISCOUNTS MAY VARY BASED ON LOCATION, SERVICE TYPE,
+                        AND AVAILABILITY.
+                      </span>
+                    </li>
+                  </ul>
+                  {/* Section Divider */}
+                  <div style={styles.sectionDivider}></div>
+                </div>
+                {/* Instructions Section */}
+                <div style={styles.instructionsSection}>
+                  <div style={styles.instructionsTitle}>
+                    INSTRUCTIONS TO USE
+                  </div>
+                  <ul style={styles.instructionsList}>
+                    <li style={styles.instructionItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>CALL OR WHATSAPP US AT +91 8535 8535 89</span>
+                    </li>
+                    <li style={styles.instructionItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>SHARE YOUR MEMBERSHIP ID AND ISSUE</span>
+                    </li>
+                    <li style={styles.instructionItem}>
+                      <span style={styles.bullet}>•</span>
+                      <span>GET INSTANT HELP FROM VAIDYA BANDHU TEAM</span>
+                    </li>
+                  </ul>
+                </div>
+                {/* Price Tag */}
+                <div style={styles.priceTag}>49/-</div>
+                {/* Bottom Banner */}
+                <div style={styles.bottomBanner}>
+                  <div style={styles.companyName}>
+                    VAIDYA BANDHU (A UNIT OF MV COMPANYON HEALTHCARE PRIVATE
+                    LIMITED)
+                  </div>
+                  <div style={styles.tagline}>
+                    "SERVING WITH CARE & COMMITMENT"
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Buttons Container */}
-            <div style={styles.toggleBtn}>
-              <button
-                style={{
-                  backgroundColor: "#6c757d",
-                  color: "white",
-                  border: "none",
-                  padding: "10px 20px",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}
-                onClick={() => setIsFront(!isFront)}
-              >
-                {isFront ? "Show Back" : "Show Front"}
-              </button>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "20px" }}>
               <button
                 style={{
                   backgroundColor: "#007bff",
