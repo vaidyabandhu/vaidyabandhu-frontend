@@ -121,6 +121,10 @@ const VaidyaBandhuForm = () => {
           console.log("Fetched user profile:", data);
           setFormData(data);
         }
+        if (!token) {
+          alert("Please log in to access your profile.");
+          navigate("/login");
+        }
       } catch (err) {
         console.error("Error fetching user profile:", err);
       } finally {
@@ -330,7 +334,7 @@ const VaidyaBandhuForm = () => {
       const order_id = createOrderData.order_id || "order_RI9lDcv6o4vXni";
       const razorpay_key =
         createOrderData.razorpay_key || "rzp_live_RBDq4cloXLAvYR";
-      const amount = createOrderData.amount || 4900; // Amount in paise
+      const amount = createOrderData.amount || 49;
       const currency = createOrderData.currency || "INR";
 
       const scriptLoaded = await loadRazorpayScript();
@@ -347,11 +351,46 @@ const VaidyaBandhuForm = () => {
         name: "VaidyaBandhu Membership",
         description: "Membership Payment",
         order_id: order_id,
-        handler: function (response) {
-          // Payment successful - redirect to myprofile page
-          setIsSubmitting(false);
-          navigate("/myprofile");
+        handler: async function (response) {
+          try {
+            console.log("Payment successful:", response);
+
+            // ✅ Call backend callback API ONLY after success
+            const callbackResponse = await fetch(
+              "https://admin.vaidyabandhu.com/api/payment/callback/",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: token, // plain token, since your backend doesn’t expect Bearer
+                },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              }
+            );
+
+            if (callbackResponse.ok) {
+              // ✅ Payment verified successfully
+              navigate("/myprofile");
+            } else {
+              // ❌ Payment verification failed
+              const errorData = await callbackResponse.json();
+              console.error("Callback API error:", errorData);
+              alert("Payment verification failed. Please contact support.");
+            }
+          } catch (error) {
+            console.error("Error in payment callback:", error);
+            alert(
+              "An error occurred during payment verification. Please contact support."
+            );
+          } finally {
+            setIsSubmitting(false);
+          }
         },
+
         prefill: {
           name: formData.full_name,
           email: formData.email,

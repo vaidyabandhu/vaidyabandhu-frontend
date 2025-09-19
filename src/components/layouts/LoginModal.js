@@ -110,14 +110,21 @@ const LoginModal = () => {
       );
       const data = await response.json();
       if (data.success) {
-        // Success - redirect to register page
+        // Success - check if user is already a member (token exists)
         console.log("OTP verified successfully:", data);
         const token = data?.data?.token || "";
         console.log("Received token:", token);
         localStorage.setItem("token", token);
         setIsLoggedIn(true); // Update login state
         handleClose(); // Close the modal
-        navigate("/basic-details");
+        // Always redirect to /myprofile if user is already logged in or is_member
+        const isMember = data?.data?.is_member;
+        const alreadyLoggedIn = !!localStorage.getItem("token");
+        if (isMember || alreadyLoggedIn) {
+          navigate("/myprofile");
+        } else {
+          navigate("/basic-details");
+        }
       } else {
         // Handle API error
         setErrors((prev) => ({

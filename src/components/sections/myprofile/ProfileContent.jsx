@@ -79,60 +79,66 @@ const MyProfile = () => {
     });
   };
 
- const handleDownload = async () => {
-  const front = document.getElementById("card-front");
-  const back = document.getElementById("card-back");
+  const handleDownload = async () => {
+    const front = document.getElementById("card-front");
+    const back = document.getElementById("card-back");
 
-  if (!front || !back) {
-    alert("Both sides of the card not found!");
-    return;
-  }
+    if (!front || !back) {
+      alert("Both sides of the card not found!");
+      return;
+    }
 
-  try {
-    // Convert both front and back into PNGs
-    const frontImg = await domtoimage.toPng(front, { cacheBust: true, useCORS: true });
-    const backImg = await domtoimage.toPng(back, { cacheBust: true, useCORS: true });
+    try {
+      // Convert both front and back into PNGs
+      const frontImg = await domtoimage.toPng(front, {
+        cacheBust: true,
+        useCORS: true,
+      });
+      const backImg = await domtoimage.toPng(back, {
+        cacheBust: true,
+        useCORS: true,
+      });
 
-    // Load them into Image objects
-    const frontImage = new Image();
-    const backImage = new Image();
-    frontImage.src = frontImg;
-    backImage.src = backImg;
+      // Load them into Image objects
+      const frontImage = new Image();
+      const backImage = new Image();
+      frontImage.src = frontImg;
+      backImage.src = backImg;
 
-    frontImage.onload = () => {
-      backImage.onload = () => {
-        // Create canvas large enough for both with space between
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
+      frontImage.onload = () => {
+        backImage.onload = () => {
+          // Create canvas large enough for both with space between
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
 
-        const width = Math.max(frontImage.width, backImage.width);
-        const gap = 30; // Space between cards in pixels
-        const height = frontImage.height + backImage.height + gap;
+          const width = Math.max(frontImage.width, backImage.width);
+          const gap = 30; // Space between cards in pixels
+          const height = frontImage.height + backImage.height + gap;
 
-        canvas.width = width;
-        canvas.height = height;
+          canvas.width = width;
+          canvas.height = height;
 
-        // Fill canvas with white background
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+          // Fill canvas with white background
+          ctx.fillStyle = "white";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw front card at the top
-        ctx.drawImage(frontImage, 0, 0);
-        
-        // Draw back card below with gap
-        ctx.drawImage(backImage, 0, frontImage.height + gap);
+          // Draw front card at the top
+          ctx.drawImage(frontImage, 0, 0);
 
-        // Save merged image
-        canvas.toBlob((blob) => {
-          saveAs(blob, `${patient.full_name || "user"}_HealthCard.png`);
-        });
+          // Draw back card below with gap
+          ctx.drawImage(backImage, 0, frontImage.height + gap);
+
+          // Save merged image
+          canvas.toBlob((blob) => {
+            saveAs(blob, `${patient.full_name || "user"}_HealthCard.png`);
+          });
+        };
       };
-    };
-  } catch (error) {
-    console.error("Oops, something went wrong!", error);
-    alert("Failed to download merged card.");
-  }
-};
+    } catch (error) {
+      console.error("Oops, something went wrong!", error);
+      alert("Failed to download merged card.");
+    }
+  };
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -196,12 +202,13 @@ const MyProfile = () => {
     infoLabel: {
       fontWeight: 600,
       color: "#095D7E",
-      fontSize: "14px",
+      fontSize: "20px",
+      marginRight: "8px",
     },
     infoValue: {
       color: "#4A4A4A",
       fontWeight: 500,
-      fontSize: "14px",
+      fontSize: "18px",
     },
     sectionTitle: {
       fontSize: "18px",
@@ -312,7 +319,7 @@ const MyProfile = () => {
       backgroundColor: "#ddd",
     },
     photoNameText: {
-      fontSize: "12px",
+      fontSize: "14px",
       fontWeight: 600,
       color: "#095D7E",
       textAlign: "center",
@@ -321,6 +328,9 @@ const MyProfile = () => {
       overflow: "hidden",
       textOverflow: "ellipsis",
       maxWidth: "100%",
+      whiteSpace: "normal", 
+      wordBreak: "break-word", 
+      overflowWrap: "break-word", 
     },
     detailRowAligned: {
       display: "flex",
@@ -756,7 +766,7 @@ const MyProfile = () => {
                 <IdCard style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Aadhar Number:</span>
                 <span style={styles.infoValue}>
-                  {patient.aadhaar_number || "NULL"}
+                  {patient.aadhaar_number}
                 </span>
               </div>
 
@@ -764,7 +774,7 @@ const MyProfile = () => {
                 <CreditCard style={styles.infoIcon} />
                 <span style={styles.infoLabel}>PAN Number:</span>
                 <span style={styles.infoValue}>
-                  {patient.pan_number || "NULL"}
+                  {patient.pan_number}
                 </span>
               </div>
             </div>
@@ -816,7 +826,7 @@ const MyProfile = () => {
                     <span style={styles.labelText}>MEMBERSHIP ID:</span>
                     <span style={styles.valueText}>
                       {" "}
-                      {patient.id || "NULL"}
+                      {patient.membership_id || "NULL"}
                     </span>
                   </div>
                   <div style={styles.detailRowAligned}>
@@ -887,14 +897,12 @@ const MyProfile = () => {
               <div style={styles.blueStrip}>
                 <div style={styles.stripItem}>
                   <div style={styles.stripLabel}>WHATSAPP/HELPLINE</div>
-                  <div style={styles.stripValue}>+91  8535 8535 89</div>
+                  <div style={styles.stripValue}>+91 8535 8535 89</div>
                 </div>
                 <div style={styles.stripVerticalLine}></div>
                 <div style={styles.stripItem}>
                   <div style={styles.stripLabel}>EMAIL ID</div>
-                  <div style={styles.stripValue}>
-                    support@vaidyabandhu.com
-                  </div>
+                  <div style={styles.stripValue}>support@vaidyabandhu.com</div>
                 </div>
               </div>
             </div>
@@ -920,9 +928,7 @@ const MyProfile = () => {
                 </div>
                 {/* Benefits Section */}
                 <div style={styles.benefitsSection}>
-                  <div style={styles.benefitsTitle}>
-                    BENEFITS OF THIS CARD
-                  </div>
+                  <div style={styles.benefitsTitle}>BENEFITS OF THIS CARD</div>
                   <ul style={styles.benefitsList}>
                     <li style={styles.benefitItem}>
                       <span style={styles.checkMark}>✓</span>
@@ -942,8 +948,8 @@ const MyProfile = () => {
                     <li style={styles.benefitItem}>
                       <span style={styles.checkMark}>✓</span>
                       <span>
-                        Free surgeries under certain in need through our
-                        social programs.
+                        Free surgeries under certain in need through our social
+                        programs.
                       </span>
                     </li>
                     <li style={styles.benefitItem}>
@@ -1006,8 +1012,8 @@ const MyProfile = () => {
                     <li style={styles.termItem}>
                       <span style={styles.bullet}>•</span>
                       <span>
-                        LOST CARD: DUPLICATE CAN BE ISSUED WITH A SMALL
-                        REISSUE FEE.
+                        LOST CARD: DUPLICATE CAN BE ISSUED WITH A SMALL REISSUE
+                        FEE.
                       </span>
                     </li>
                     <li style={styles.termItem}>
@@ -1048,8 +1054,8 @@ const MyProfile = () => {
                     <li style={styles.termItem}>
                       <span style={styles.bullet}>•</span>
                       <span>
-                        DISCOUNTS MAY VARY BASED ON LOCATION, SERVICE TYPE,
-                        AND AVAILABILITY.
+                        DISCOUNTS MAY VARY BASED ON LOCATION, SERVICE TYPE, AND
+                        AVAILABILITY.
                       </span>
                     </li>
                   </ul>
@@ -1092,7 +1098,14 @@ const MyProfile = () => {
             </div>
 
             {/* Buttons Container */}
-            <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "20px" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                justifyContent: "center",
+                marginTop: "20px",
+              }}
+            >
               <button
                 style={{
                   backgroundColor: "#007bff",

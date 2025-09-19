@@ -2,6 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Rating } from "../../../helper/helper";
 import { useFetch } from "../../hooks/usefetch";
+import html2canvas from "html2canvas";
+
 
 const Content = ({ detailId }) => {
   const {
@@ -100,7 +102,7 @@ const Content = ({ detailId }) => {
                 </div>
 
                 {/* Current Positions */}
-                <div className="current-positions my-4">
+                {/* <div className="current-positions my-4">
                   <h5 className="mb-3">Current Positions</h5>
                   <div className="row">
                     {item.hospital &&
@@ -115,7 +117,7 @@ const Content = ({ detailId }) => {
                         </div>
                       ))}
                   </div>
-                </div>
+                </div> */}
 
                 {/* Detail Navigation */}
                 <div className="detail-menu-list">
@@ -335,7 +337,7 @@ const Content = ({ detailId }) => {
                   <div className="sigma_info style-24 p-0 shadow-none">
                     <div className="sigma_info-title">
                       <span className="sigma_info-icon bg-primary-1 text-white">
-                        <i className="fal fa-phone" />
+                        <i className="fal fa-phone" style={{ transform: "scaleX(-1.5)" }} />
                       </span>
                     </div>
                     <div className="sigma_info-description">
@@ -355,7 +357,7 @@ const Content = ({ detailId }) => {
                     <div className="sigma_info-description">
                       <h5>Our Email</h5>
                       <p>
-                        Inquiries:{" "}
+                      
                         {item.email || "support@vaidyabandhu.com"}
                       </p>
                     </div>

@@ -124,8 +124,8 @@ class Content extends Component {
                                                     </div>
                                                 </div>
                                                 <div className="col-lg-6">
-                                                    <div className="form-group">
-                                                        <i className="fal fa-phone" />
+                                                    <div className="form-group"  >
+                                                        <i className="fal fa-phone" style={{ transform: "scaleX(-1)" }} />
                                                         <input type="text" value={this.state.phoneno} onChange={this.phoneno} placeholder="Phone Number" />
                                                     </div>
                                                 </div>
@@ -154,7 +154,7 @@ class Content extends Component {
                                                         </select>
                                                     </div>
                                                 </div>
-                                                <div className="col-12">
+                                                {/* <div className="col-12">
                                                     <div className="form-group">
                                                         <select value={this.state.service} onChange={this.service}>
                                                             <option value={1}>Select Service</option>
@@ -163,19 +163,19 @@ class Content extends Component {
                                                             <option value={4}>Service 3</option>
                                                         </select>
                                                     </div>
-                                                </div>
-                                                <div className="col-12">
+                                                </div> */}
+                                                {/* <div className="col-12">
                                                     <div className="form-group">
                                                         <i className="fal fa-calendar-alt" />
                                                         <input type="text" value={this.state.date} onChange={this.date} data-provide="datepicker" placeholder="Select Date" />
                                                     </div>
-                                                </div>
-                                                <div className="col-12">
+                                                </div> */}
+                                                {/* <div className="col-12">
                                                     <div className="form-group">
                                                         <i className="fal fa-user-md" />
                                                         <input type="text" value={this.state.doctor} onChange={this.doctor} placeholder="Select Doctor" />
                                                     </div>
-                                                </div>
+                                                </div> */}
                                                 <div className="col-12">
                                                     <div className="form-group">
                                                         <textarea value={this.state.remarks} onChange={this.remarks} rows={7} placeholder="Note To The Doctor(Optional)" />
@@ -217,10 +217,10 @@ class Content extends Component {
                                                 </div>
                                             </div>
                                         </div> */}
-                                        <div className="d-flex align-items-center mt-2">
+                                        {/* <div className="d-flex align-items-center mt-2">
                                             <input type="checkbox" id="checkbox" value={this.state.condition} onChange={this.condition} />
                                             <label className="mb-0" htmlFor="checkbox">I accept <Link to="#">Terms</Link> and <Link to="#">conditions</Link> and general policy</label>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </div>
                                 <div className="col-lg-4">
