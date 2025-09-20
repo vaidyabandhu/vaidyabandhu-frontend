@@ -245,7 +245,7 @@ class Content extends Component {
                     </div>
                     <div className="form-block">
                       <div className="row">
-                        <div className="col-12">
+                        {/* <div className="col-12">
                           <div className="form-group">
                             <select
                               value={this.state.hospital}
@@ -257,7 +257,7 @@ class Content extends Component {
                               <option value={4}>Hospital 3</option>
                             </select>
                           </div>
-                        </div>
+                        </div> */}
                         {/* <div className="col-12">
                                                     <div className="form-group">
                                                         <select value={this.state.service} onChange={this.service}>

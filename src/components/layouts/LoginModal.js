@@ -199,7 +199,7 @@ const LoginModal = () => {
   
   // Handle icon click - redirect to profile page if already a member
   const handleIconClick = () => {
-    navigate("/myprofile");
+    navigate("/basic-details");
   };
 
 
