@@ -8,31 +8,56 @@ import {
   Card,
   Modal,
 } from "react-bootstrap";
-import useLogin from "./useLogin";
+import axios from "axios";
 import { FormInputPassword, FormTextInput } from "../../form";
 import { useNavigate } from "react-router-dom";
 
 const DoctorLogin = () => {
-    const { loading, control, login, checkISAuthenticated } =
-    useLogin({ request: 'admin/user/login/', navPath: '/doc-slots' });
-
   const navigate = useNavigate();
-
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
-    if (checkISAuthenticated()) {
-      navigate('/doc-slots');
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      navigate("/doc-slots");
     }
-  }, []);
+  }, [navigate]);
 
-  // Handle Forgot Password click
-  const handleForgotPassword = () => {
-    setShowModal(true);
-  };
-
-  // Handle closing of the modal
+  const handleForgotPassword = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        "https://admin.vaidyabandhu.com/api/doctor/login/",
+        {
+          username: username.trim(),
+          password: password.trim(),
+        },
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      if (response.data?.token) {
+        localStorage.setItem("authToken", response.data.token);
+        localStorage.setItem("userInfo", JSON.stringify(response.data));
+        navigate("/doc-slots");
+      } else {
+        alert("Login failed. Please check your credentials.");
+      }
+    } catch (error) {
+      alert(
+        error?.response?.data?.message || "An error occurred during login."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Container
@@ -45,23 +70,29 @@ const DoctorLogin = () => {
           <Card className="shadow-lg rounded p-4">
             <Card.Body>
               <h3 className="text-center mb-4">Doctor Login</h3>
-
-              <Form onSubmit={login}>
-              <FormTextInput
-                  name="email"
-                  label="Email/Phone"
-                  containerClass="mb-3"
-                  style={{height: '43px'}}
-                  control={control}
-                  placeholder="Enter email/phone number"
-                />
-                <FormInputPassword
-                  name="password"
-                  label="Password"
-                  style={{height: '43px'}}
-                  control={control}
-                  placeholder="Enter password"
-                />
+              <Form onSubmit={handleLogin}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Username</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                    style={{ height: "43px" }}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    style={{ height: "43px" }}
+                    required
+                  />
+                </Form.Group>
                 <div className="d-flex justify-content-center align-items-center mt-4">
                   <Button
                     className="w-100"
@@ -73,7 +104,6 @@ const DoctorLogin = () => {
                     {loading ? "Logging in..." : "Login"}
                   </Button>
                 </div>
-
                 <div className="text-center mt-3">
                   <span
                     onClick={handleForgotPassword}
@@ -88,7 +118,6 @@ const DoctorLogin = () => {
           </Card>
         </Col>
       </Row>
-
       {/* Forgot Password Modal */}
       <Modal show={showModal} onHide={handleCloseModal} centered>
         <Modal.Header closeButton>
@@ -101,7 +130,6 @@ const DoctorLogin = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-
       {/* Styling */}
       <style>{`
         .btn-primary {

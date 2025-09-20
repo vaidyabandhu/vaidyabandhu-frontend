@@ -129,9 +129,9 @@ const LoginModal = () => {
         const isMember = data?.data?.is_member;
         const alreadyLoggedIn = !!localStorage.getItem("token");
         if (isMember || alreadyLoggedIn) {
-          navigate("/myprofile");
-        } else {
           navigate("/basic-details");
+        } else {
+          navigate("/myprofile");
         }
       } else {
         // Handle API error

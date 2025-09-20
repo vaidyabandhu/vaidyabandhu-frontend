@@ -1,11 +1,10 @@
 import React, { Fragment, useState, useEffect, useCallback } from "react";
 import Mobilemenu from "./Mobilemenu";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom"; 
 import navigation from "../../data/navigation.json";
 import MembershipModal from "./MembershipModal";
 import "../../assets/css/Header.css";
 import LoginModal from "./LoginModal";
-
 
 // Custom Hamburger Menu Component
 const CustomHamburgerMenu = ({ isOpen, onClick }) => {
@@ -77,6 +76,7 @@ const CustomHamburgerMenu = ({ isOpen, onClick }) => {
     </div>
   );
 };
+
 // Custom hook for nav actions
 const useNavHelper = () => {
   const [navMethod, setNavMethod] = useState(false);
@@ -133,19 +133,44 @@ const useNavHelper = () => {
     triggerChild,
   };
 };
+
+const normalizePath = (path) => {
+  return path.replace(/\/$/, "");
+};
+
+const isActiveItem = (item, currentPath) => {
+  const normalizedItemLink = normalizePath(item.link);
+  const normalizedPath = normalizePath(currentPath);
+  
+  if (normalizedItemLink === normalizedPath) {
+    return true;
+  }
+  
+  if (item.child && item.submenu) {
+    return item.submenu.some(subItem => isActiveItem(subItem, currentPath));
+  }
+  
+  return false;
+};
+
 const Header = () => {
   const { navMethod, toggleNav } = useNavHelper();
   const [userPhone, setUserPhone] = useState(null);
+  const location = useLocation(); 
+  const currentPath = location.pathname;
+  
   useEffect(() => {
     const storedUserPhone = localStorage.getItem("userPhone");
     if (storedUserPhone) {
       setUserPhone(storedUserPhone);
     }
   }, []);
+  
   const handleLogout = () => {
     localStorage.removeItem("userPhone");
     window.location.reload();
   };
+
   return (
     <Fragment>
       {/* Mobile Menu */}
@@ -370,9 +395,7 @@ const Header = () => {
                   <li
                     key={i}
                     className={
-                      item.child
-                        ? "menu-item menu-item-has-children"
-                        : "menu-item"
+                      `menu-item ${item.child ? "menu-item-has-children" : ""} ${isActiveItem(item, currentPath) ? "active" : ""}`
                     }
                   >
                     {item.child ? (
@@ -386,9 +409,7 @@ const Header = () => {
                           <li
                             key={j}
                             className={
-                              sub.child
-                                ? "menu-item menu-item-has-children"
-                                : "menu-item"
+                              `menu-item ${sub.child ? "menu-item-has-children" : ""} ${isActiveItem(sub, currentPath) ? "active" : ""}`
                             }
                           >
                             {sub.child ? (
@@ -399,7 +420,10 @@ const Header = () => {
                             {sub.child && (
                               <ul className="sub-menu">
                                 {sub.submenu.map((deep, k) => (
-                                  <li className="menu-item" key={k}>
+                                  <li 
+                                    key={k} 
+                                    className={`menu-item ${isActiveItem(deep, currentPath) ? "active" : ""}`}
+                                  >
                                     <Link to={deep.link}>{deep.linkText}</Link>
                                   </li>
                                 ))}
@@ -439,32 +463,6 @@ const Header = () => {
                       </li>
                       {/* Login Button UI */}
                       <li className="d-none d-sm-block">
-                        {/* <button
-                          className="sigma_btn btn-sm"
-                          style={{
-                            backgroundColor: "#00908d",
-                            color: "white",
-                            border: "none",
-                            padding: "8px 16px",
-                            borderRadius: "5px",
-                            cursor: "pointer",
-                            fontSize: "14px",
-                            textTransform: "uppercase",
-                            fontWeight: "bold",
-                            letterSpacing: "1px",
-                            boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                            transition: "all 0.3s ease",
-                            whiteSpace: "nowrap", // Prevents text from wrapping
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor = "#007a7e")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor = "#00908d")
-                          }
-                        >
-                          Login
-                        </button> */}
                         <LoginModal/>
                       </li>
                     </>
@@ -620,9 +618,44 @@ const Header = () => {
           .sigma_header-controls-inner .btn {
             white-space: nowrap;
           }
+          
+          .navbar-nav .menu-item.active > a {
+            color: #00908d !important;
+            font-weight: bold;
+            font-size: 1.1em; /* 增加字体大小 */
+            transition: all 0.3s ease; /* 添加平滑过渡效果 */
+            position: relative;
+          }
+
+          .navbar-nav .menu-item.active > a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            border-radius: 2px;
+          }
+          
+          .navbar-nav .menu-item.active > .sub-menu {
+            display: block;
+          }
+          
+          .navbar-nav .menu-item > a {
+            color: #333;
+            font-weight: 500;
+            padding: 10px 15px;
+            transition: all 0.3s ease;
+            position: relative;
+          }
+          
+          .navbar-nav .menu-item > a:hover {
+            color: #00908d;
+          }
         `}
       </style>
     </Fragment>
   );
 };
+
 export default Header;
