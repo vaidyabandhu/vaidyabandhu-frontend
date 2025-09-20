@@ -8,9 +8,9 @@ const LoginModal = () => {
   // Listen for custom event to open modal from anywhere
   useEffect(() => {
     const handleOpenModal = () => setShow(true);
-    window.addEventListener('open-login-modal', handleOpenModal);
+    window.addEventListener("open-login-modal", handleOpenModal);
     return () => {
-      window.removeEventListener('open-login-modal', handleOpenModal);
+      window.removeEventListener("open-login-modal", handleOpenModal);
     };
   }, []);
   const [show, setShow] = useState(false);
@@ -21,7 +21,7 @@ const LoginModal = () => {
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
-  
+
   // Check for existing token on component mount
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -29,7 +29,7 @@ const LoginModal = () => {
       setIsLoggedIn(true);
     }
   }, []);
-  
+
   const handleShow = () => setShow(true);
   const handleClose = () => {
     setShow(false);
@@ -39,10 +39,10 @@ const LoginModal = () => {
     setOtp("");
     setErrors({});
   };
-  
+
   // Validate Mobile Number (10 digits, only numeric)
   const validateMobile = (mobile) => /^[0-9]{10}$/.test(mobile);
-  
+
   const handleMobileSubmit = async () => {
     if (!validateMobile(mobileNumber)) {
       setErrors((prev) => ({
@@ -54,15 +54,18 @@ const LoginModal = () => {
     setErrors({}); // Clear errors
     setIsLoading(true);
     try {
-      const response = await fetch("https://admin.vaidyabandhu.com/api/users/login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mobile: mobileNumber,
-        }),
-      });
+      const response = await fetch(
+        "https://admin.vaidyabandhu.com/api/users/login/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mobile: mobileNumber,
+          }),
+        }
+      );
       const data = await response.json();
       if (response.ok) {
         // Success - move to OTP step
@@ -88,23 +91,96 @@ const LoginModal = () => {
       setIsLoading(false);
     }
   };
-  
+
   // Validate OTP (4 digits)
   const validateOtp = (otp) => otp.length === 4 && /^[0-9]{4}$/.test(otp);
-  
-  const handleOtpSubmit = async () => {
-    if (!validateOtp(otp)) {
+
+ const handleOtpSubmit = async () => {
+  if (!validateOtp(otp)) {
+    setErrors((prev) => ({
+      ...prev,
+      otp: "OTP should be exactly 4 digits.",
+    }));
+    return;
+  }
+  setErrors({}); // Clear errors
+  setIsLoading(true);
+  try {
+    const response = await fetch(
+      "https://admin.vaidyabandhu.com/api/users/verify_login_otp/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mobile: mobileNumber,
+          otp: otp,
+        }),
+      }
+    );
+    const data = await response.json();
+    if (data.success) {
+      // Success - check if user is already a member (token exists)
+      console.log("OTP verified successfully:", data);
+      const token = data?.data?.token || "";
+      console.log("Received token:", token);
+      localStorage.setItem("token", token);
+      setIsLoggedIn(true); // Update login state
+      handleClose(); // Close the modal
+      
+      // Fetch user profile to check is_active status
+      try {
+        const profileResponse = await fetch(
+          "https://admin.vaidyabandhu.com/api/user/profile/",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token,
+            },
+          }
+        );
+        const profileData = await profileResponse.json();
+        console.log("Profile data after login:", profileData);
+        
+        if (profileResponse.ok && profileData?.is_active === true) {
+          console.log("User is active, navigating to /myprofile");
+          navigate("/myprofile");
+        } else {
+          console.log("User is not active, navigating to /basic-details");
+          navigate("/basic-details");
+        }
+      } catch (profileError) {
+        console.error("Error fetching profile after OTP:", profileError);
+        navigate("/basic-details");
+      }
+    } else {
+      // Handle API error
       setErrors((prev) => ({
         ...prev,
-        otp: "OTP should be exactly 4 digits.",
+        otp: data.message || data.error || "Invalid OTP. Please try again.",
       }));
-      return;
     }
-    setErrors({}); // Clear errors
+  } catch (error) {
+    console.error("API Error:", error);
+    setErrors((prev) => ({
+      ...prev,
+      otp: "Network error. Please check your connection and try again.",
+    }));
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+  // Handle resend OTP
+  const handleResendOtp = async () => {
     setIsLoading(true);
+    setOtp(""); // Clear current OTP
+    setErrors({}); // Clear errors
     try {
       const response = await fetch(
-        "https://admin.vaidyabandhu.com/api/users/verify_login_otp/",
+        "https://admin.vaidyabandhu.com/api/users/login/",
         {
           method: "POST",
           headers: {
@@ -112,60 +188,9 @@ const LoginModal = () => {
           },
           body: JSON.stringify({
             mobile: mobileNumber,
-            otp: otp,
           }),
         }
       );
-      const data = await response.json();
-      if (data.success) {
-        // Success - check if user is already a member (token exists)
-        console.log("OTP verified successfully:", data);
-        const token = data?.data?.token || "";
-        console.log("Received token:", token);
-        localStorage.setItem("token", token);
-        setIsLoggedIn(true); // Update login state
-        handleClose(); // Close the modal
-        // Always redirect to /myprofile if user is already logged in or is_member
-        const isMember = data?.data?.is_member;
-        const alreadyLoggedIn = !!localStorage.getItem("token");
-        if (isMember || alreadyLoggedIn) {
-          navigate("/basic-details");
-        } else {
-          navigate("/myprofile");
-        }
-      } else {
-        // Handle API error
-        setErrors((prev) => ({
-          ...prev,
-          otp: data.message || data.error || "Invalid OTP. Please try again.",
-        }));
-      }
-    } catch (error) {
-      console.error("API Error:", error);
-      setErrors((prev) => ({
-        ...prev,
-        otp: "Network error. Please check your connection and try again.",
-      }));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Handle resend OTP
-  const handleResendOtp = async () => {
-    setIsLoading(true);
-    setOtp(""); // Clear current OTP
-    setErrors({}); // Clear errors
-    try {
-      const response = await fetch("https://admin.vaidyabandhu.com/api/users/login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mobile: mobileNumber,
-        }),
-      });
       const data = await response.json();
       if (response.ok) {
         alert("OTP sent successfully!");
@@ -183,7 +208,7 @@ const LoginModal = () => {
       setIsLoading(false);
     }
   };
-  
+
   // Handle form field changes for number fields (allow integers only)
   const handleMobChange = (e) => {
     const value = e.target.value;
@@ -196,20 +221,64 @@ const LoginModal = () => {
       }
     }
   };
-  
-  // Handle icon click - redirect to profile page if already a member
-  const handleIconClick = () => {
-    navigate("/basic-details");
+
+  // Helper: Call profile API and redirect based on is_active
+  const handleIconClick = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/basic-details");
+      return;
+    }
+    try {
+      const response = await fetch(
+        "https://admin.vaidyabandhu.com/api/user/profile/", // Added trailing slash
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token, // Removed "Bearer " prefix
+          },
+        }
+      );
+      const data = await response.json();
+      console.log("Profile API response:", data); // Add logging to debug
+
+      if (response.ok) {
+        // Check if the user is active - note the path to is_active
+        if (data?.is_active === true) {
+          console.log("User is active, navigating to /myprofile");
+          navigate("/myprofile");
+        } else {
+          console.log("User is not active, navigating to /basic-details");
+          navigate("/basic-details");
+        }
+      } else {
+        // fallback if API fails
+        console.error("Profile API failed with status:", response.status);
+        navigate("/basic-details");
+      }
+    } catch (error) {
+      console.error("Error in handleIconClick:", error);
+      navigate("/basic-details");
+    }
   };
 
-
-  
   return (
     <>
       {/* Conditionally render button based on login state */}
       {isLoggedIn ? (
         <button className="user-icon-btn" onClick={handleIconClick}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
@@ -219,7 +288,6 @@ const LoginModal = () => {
           Log in
         </button>
       )}
-      
       <Modal
         show={show}
         onHide={handleClose}

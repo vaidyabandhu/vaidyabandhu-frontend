@@ -251,13 +251,19 @@ const Content = ({ detailId }) => {
                             },
                           });
                           const data = await response.json();
-                          if (response.ok && data?.membership_id) {
-                            window.location.href = '/appointment';
+                          if (response.ok) {
+                            if (data?.is_active === false) {
+                              window.location.href = '/basic-details';
+                            } else if (data?.is_active === true) {
+                              window.location.href = '/appointment';
+                            } else {
+                              window.location.href = '/basic-detals';
+                            }
                           } else {
-                            window.location.href = '/basic-details';
+                            window.location.href = '/basic-detals';
                           }
                         } catch (err) {
-                          window.location.href = '/basic-details';
+                          window.location.href = '/basic-detals';
                         }
                       }}
                     >

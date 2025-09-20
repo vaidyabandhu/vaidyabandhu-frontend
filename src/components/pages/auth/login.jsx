@@ -9,7 +9,7 @@ import {
   Modal,
 } from "react-bootstrap";
 import axios from "axios";
-import { FormInputPassword, FormTextInput } from "../../form";
+// import { FormInputPassword, FormTextInput } from "../../form";
 import { useNavigate } from "react-router-dom";
 
 const DoctorLogin = () => {
@@ -31,10 +31,13 @@ const DoctorLogin = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log("testing login");
+
     setLoading(true);
     try {
       const response = await axios.post(
         "https://admin.vaidyabandhu.com/api/doctor/login/",
+
         {
           username: username.trim(),
           password: password.trim(),
@@ -98,7 +101,6 @@ const DoctorLogin = () => {
                     className="w-100"
                     variant="primary"
                     type="submit"
-                    block
                     disabled={loading}
                   >
                     {loading ? "Logging in..." : "Login"}
