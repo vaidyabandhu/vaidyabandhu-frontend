@@ -152,7 +152,7 @@ const Content = () => {
   refetch,
 } = useFetch({
   method: "GET",
-  request: "https://admin.vaidyabandhu.com/api/doctors/?hospital_ids=1%2C2",
+  request: "https://admin.vaidyabandhu.com/api/doctors",
   headers: {
     "Content-Type": "application/json",
     Authorization: token, // ✅ Add token here

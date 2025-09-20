@@ -30,8 +30,8 @@ const MembershipModal = () => {
       setAlreadyMember(true);
       setShow(true);
     } else {
-      // Otherwise, show the modal
-      setShow(true);
+      // If not a member, redirect to basic-details page
+      navigate("/basic-details");
     }
   };
 

@@ -233,57 +233,37 @@ const Content = ({ detailId }) => {
                 <hr />
                 <div className="widget-inner widget-service">
                   <form>
-                    {/* <div className="form-group">
-                      <label>Choose Service</label>
-                      <ul>
-                        <li className="d-flex justify-content-between mb-3">
-                          <div className="d-flex">
-                            <input
-                              type="checkbox"
-                              id="angioplasty"
-                              name="checkbox"
-                            />
-                            <label className="mb-0" htmlFor="angioplasty">
-                              Angioplasty Consultation
-                            </label>
-                          </div>
-                          <span>₹1500</span>
-                        </li>
-                        <li className="d-flex justify-content-between mb-3">
-                          <div className="d-flex">
-                            <input
-                              type="checkbox"
-                              id="diagnostic"
-                              name="checkbox"
-                            />
-                            <label className="mb-0" htmlFor="diagnostic">
-                              Diagnostic Angiogram
-                            </label>
-                          </div>
-                          <span>₹2000</span>
-                        </li>
-                        <li className="d-flex justify-content-between">
-                          <div className="d-flex">
-                            <input
-                              type="checkbox"
-                              id="pacemaker"
-                              name="checkbox"
-                            />
-                            <label className="mb-0" htmlFor="pacemaker">
-                              Pacemaker Consultation
-                            </label>
-                          </div>
-                          <span>₹1200</span>
-                        </li>
-                      </ul>
-                    </div> */}
-                    <Link
-                      to="/appointment"
+                    <button
+                      type="button"
                       className="sigma_btn btn-block btn-sm"
+                      onClick={async () => {
+                        const token = window.localStorage.getItem('token');
+                        if (!token) {
+                          window.dispatchEvent(new CustomEvent('open-login-modal'));
+                          return;
+                        }
+                        try {
+                          const response = await fetch('https://admin.vaidyabandhu.com/api/user/profile/', {
+                            method: 'GET',
+                            headers: {
+                              'Authorization': token,
+                              'Content-Type': 'application/json',
+                            },
+                          });
+                          const data = await response.json();
+                          if (response.ok && data?.membership_id) {
+                            window.location.href = '/appointment';
+                          } else {
+                            window.location.href = '/basic-details';
+                          }
+                        } catch (err) {
+                          window.location.href = '/basic-details';
+                        }
+                      }}
                     >
                       Book Appointment
                       <i className="fal fa-arrow-right ms-3" />
-                    </Link>
+                    </button>
                   </form>
                 </div>
               </div>

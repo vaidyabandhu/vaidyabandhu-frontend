@@ -5,6 +5,14 @@ import OTPInput from "react-otp-input";
 import "../../assets/css/MembershipModal.css"; // Custom CSS for styling
 
 const LoginModal = () => {
+  // Listen for custom event to open modal from anywhere
+  useEffect(() => {
+    const handleOpenModal = () => setShow(true);
+    window.addEventListener('open-login-modal', handleOpenModal);
+    return () => {
+      window.removeEventListener('open-login-modal', handleOpenModal);
+    };
+  }, []);
   const [show, setShow] = useState(false);
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");

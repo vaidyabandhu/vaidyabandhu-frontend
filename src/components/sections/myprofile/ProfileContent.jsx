@@ -1117,7 +1117,7 @@ const MyProfile = () => {
                 }}
                 onClick={handleDownload}
               >
-                Download PDF
+                Download Card
               </button>
             </div>
 

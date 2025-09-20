@@ -28,6 +28,7 @@ const HospitalsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   const [pageNo, setPageNo] = useState(1);
+  const [tooltip, setTooltip] = useState({ visible: false, text: "", x: 0, y: 0 });
   const itemPerpage = 6;
 
   // Debounce search input
@@ -56,6 +57,23 @@ const HospitalsPage = () => {
 
   const handleCardClick = (hospitalId) => {
     navigate(`/doctor-list?id=${hospitalId}`);
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  const showTooltip = (e, text) => {
+    setTooltip({
+      visible: true,
+      text,
+      x: e.clientX,
+      y: e.clientY + 20,
+    });
+  };
+
+  const hideTooltip = () => {
+    setTooltip({ visible: false, text: "", x: 0, y: 0 });
   };
 
   const ServiceBadge = ({ icon: Icon, label, available }) => (
@@ -145,30 +163,30 @@ const HospitalsPage = () => {
 
                     {/* Contact Buttons */}
                     <div className={`${style.contactActions} mb-3`}>
-                      {hospital?.mobile && (
-                        <button
-                          className={`${style.contactBtn} ${style.callBtn}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.location.href = `tel:${hospital.mobile}`;
-                          }}
-                        >
-                          <Phone size={14} />
-                          <span>Call Now</span>
-                        </button>
-                      )}
-                      {hospital?.email && (
-                        <button
-                          className={`${style.contactBtn} ${style.emailBtn}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.location.href = `mailto:${hospital.email}`;
-                          }}
-                        >
-                          <Mail size={14} />
-                          {/* <span>Email Us</span> */}
-                        </button>
-                      )}
+                      <button
+                        className={`${style.contactBtn} ${style.emailBtn}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyToClipboard("support@vaidyabandhu.com");
+                        }}
+                        onMouseEnter={(e) => showTooltip(e, "Click to copy email")}
+                        onMouseLeave={hideTooltip}
+                      >
+                        <Mail size={14} />
+                        {/* <span>Email</span> */}
+                      </button>
+                      <button
+                        className={`${style.contactBtn} ${style.phoneBtn}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyToClipboard("+91 8535 8535 89");
+                        }}
+                        onMouseEnter={(e) => showTooltip(e, "Click to copy phone number")}
+                        onMouseLeave={hideTooltip}
+                      >
+                        <Phone size={14} />
+                        {/* <span>Phone</span> */}
+                      </button>
                     </div>
 
                     {/* Verification Badge */}
@@ -225,6 +243,27 @@ const HospitalsPage = () => {
           })()
         )}
       </Container>
+
+      {/* Custom Tooltip */}
+      {tooltip.visible && (
+        <div
+          style={{
+            position: "fixed",
+            left: tooltip.x,
+            top: tooltip.y,
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            color: "white",
+            padding: "8px 12px",
+            borderRadius: "4px",
+            fontSize: "14px",
+            zIndex: 1000,
+            pointerEvents: "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {tooltip.text}
+        </div>
+      )}
     </div>
   );
 };
