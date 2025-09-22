@@ -203,7 +203,7 @@ class Content extends Component {
                         </div>
                         <div className="col-lg-6">
                           <div className="form-group">
-                           <i className="fal fa-child" />
+                            <i className="fal fa-child" />
                             <input
                               type="text"
                               value={this.state.dateofbirth}
@@ -337,7 +337,59 @@ class Content extends Component {
                     {/* Booking Widget */}
                     <div className="widget widget-booking">
                       <h5 className="widget-title">Booking Summary</h5>
-                      <ul>
+                      <form>
+                        <label>Select Date</label>
+                        <div className="form-group">
+                          <input
+                            type="date"
+                            name="date"
+                            placeholder="Select Date"
+                          />
+                        </div>
+                        {/* <label>Time</label>
+                    <div className="form-group mb-0">
+                      <input type="time" name="time" placeholder="08:30 PM" />
+                    </div> */}
+                      </form>
+                      {/* Available Slots */}
+                      <label>Available Slots</label>
+                      <div className="form-group d-flex flex-wrap gap-2">
+                        {[
+                          "08:30 AM",
+                          "09:00 AM",
+                          "10:30 AM",
+                          "02:00 PM",
+                          "04:00 PM",
+                        ].map((slot, index) => (
+                          <label
+                            key={index}
+                            style={{
+                              cursor: "pointer",
+                              margin: "5px",
+                            }}
+                          >
+                            <input
+                              type="radio"
+                              name="slot"
+                              value={slot}
+                              style={{ display: "none" }}
+                            />
+                            <span
+                              style={{
+                                display: "inline-block",
+                                padding: "6px 12px",
+                                border: "1px solid #ddd",
+                                borderRadius: "6px",
+                                background: "#f8f9fa",
+                              }}
+                            >
+                              {slot}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+
+                      {/* <ul>
                         <li className="d-flex align-items-center justify-content-between">
                           <span>Date</span>
                           <span>07/10/2022</span>
@@ -350,7 +402,7 @@ class Content extends Component {
                           <span>Doctor Name</span>
                           <span>Dr. Joseph Doe</span>
                         </li>
-                      </ul>
+                      </ul> */}
                       <hr />
                       {/* <ul>
                                                 <li className="d-flex align-items-center justify-content-between">

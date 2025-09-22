@@ -215,7 +215,7 @@ const Content = ({ detailId }) => {
               <div className="widget widget-form">
                 <h5 className="widget-title">Booking Summary</h5>
                 <div className="widget-inner">
-                  <form>
+                  {/* <form>
                     <label>Date</label>
                     <div className="form-group">
                       <input
@@ -228,7 +228,7 @@ const Content = ({ detailId }) => {
                     <div className="form-group mb-0">
                       <input type="time" name="time" placeholder="08:30 PM" />
                     </div>
-                  </form>
+                  </form> */}
                 </div>
                 <hr />
                 <div className="widget-inner widget-service">
@@ -257,13 +257,13 @@ const Content = ({ detailId }) => {
                             } else if (data?.is_active === true) {
                               window.location.href = '/appointment';
                             } else {
-                              window.location.href = '/basic-detals';
+                              window.location.href = '/basic-details';
                             }
                           } else {
-                            window.location.href = '/basic-detals';
+                            window.location.href = '/basic-details';
                           }
                         } catch (err) {
-                          window.location.href = '/basic-detals';
+                          window.location.href = '/basic-details';
                         }
                       }}
                     >
