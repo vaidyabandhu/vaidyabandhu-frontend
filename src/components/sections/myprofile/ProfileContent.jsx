@@ -702,27 +702,27 @@ const MyProfile = () => {
                 <User style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Full Name:</span>
                 <span style={styles.infoValue}>
-                  {patient.full_name || "NULL"}
+                  {patient.full_name || " "}
                 </span>
               </div>
 
               <div style={styles.infoRow}>
                 <User style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Age:</span>
-                <span style={styles.infoValue}>{patient.age || "NULL"}</span>
+                <span style={styles.infoValue}>{patient.age || " "}</span>
               </div>
 
               <div style={styles.infoRow}>
                 <User style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Gender:</span>
-                <span style={styles.infoValue}>{patient.gender || "NULL"}</span>
+                <span style={styles.infoValue}>{patient.gender || " "}</span>
               </div>
 
               <div style={styles.infoRow}>
                 <Droplet style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Blood Group:</span>
                 <span style={styles.infoValue}>
-                  {patient.blood_group || "NULL"}
+                  {patient.blood_group || " "}
                 </span>
               </div>
 
@@ -730,7 +730,7 @@ const MyProfile = () => {
                 <MapPin style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Address:</span>
                 <span style={styles.infoValue}>
-                  {patient.address || "NULL"}
+                  {patient.address || " "}
                 </span>
               </div>
 
@@ -738,28 +738,28 @@ const MyProfile = () => {
                 <MapPin style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Pincode:</span>
                 <span style={styles.infoValue}>
-                  {patient.pin_code || "NULL"}
+                  {patient.pin_code || " "}
                 </span>
               </div>
 
               <div style={styles.infoRow}>
                 <Phone style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Mobile Number:</span>
-                <span style={styles.infoValue}>{patient.mobile || "NULL"}</span>
+                <span style={styles.infoValue}>{patient.mobile || " "}</span>
               </div>
 
               <div style={styles.infoRow}>
                 <Phone style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Alternate Number:</span>
                 <span style={styles.infoValue}>
-                  {patient.alternate_number || "NULL"}
+                  {patient.alternate_number || " "}
                 </span>
               </div>
 
               <div style={styles.infoRow}>
                 <Mail style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Email:</span>
-                <span style={styles.infoValue}>{patient.email || "NULL"}</span>
+                <span style={styles.infoValue}>{patient.email || " "}</span>
               </div>
 
               <div style={styles.infoRow}>
@@ -826,7 +826,7 @@ const MyProfile = () => {
                     <span style={styles.labelText}>MEMBERSHIP ID:</span>
                     <span style={styles.valueText}>
                       {" "}
-                      {patient.membership_id || "NULL"}
+                      {patient.membership_id || " "}
                     </span>
                   </div>
                   <div style={styles.detailRowAligned}>
@@ -838,26 +838,26 @@ const MyProfile = () => {
                             .split("-")
                             .reverse()
                             .join("-")
-                        : "NULL"}
+                        : " "}
                     </span>
                   </div>
 
                   <div style={styles.detailRowAligned}>
                     <span style={styles.labelText}>CONTACT:</span>
                     <span style={styles.valueText}>
-                      {patient.mobile || "NULL"}
+                      {patient.mobile || " "}
                     </span>
                   </div>
                   <div style={styles.detailRowAligned}>
                     <span style={styles.labelText}>BLOOD GROUP:</span>
                     <span style={styles.bloodGroupText}>
-                      {patient.blood_group || "NULL"}
+                      {patient.blood_group || " "}
                     </span>
                   </div>
                   <div style={styles.detailRowAligned}>
                     <span style={styles.labelText}>ADDRESS:</span>
                     <span style={styles.valueText}>
-                      {patient.address || "NULL"}
+                      {patient.address || " "}
                     </span>
                   </div>
                 </div>
@@ -889,7 +889,7 @@ const MyProfile = () => {
                     )}
                   </div>
                   <div style={styles.photoNameText}>
-                    {patient.full_name || "NULL"}
+                    {patient.full_name || " "}
                   </div>
                 </div>
               </div>
@@ -939,7 +939,7 @@ const MyProfile = () => {
                     </li>
                     <li style={styles.benefitItem}>
                       <span style={styles.checkMark}>✓</span>
-                      <span>
+                      <span className="whitespace: nowrap">
                         Get 10% Cashback: Send your bill to Vaidya Bandhu via
                         WhatsApp or Email. Cashback will be credited to your
                         account within 7 working days.
@@ -1087,8 +1087,7 @@ const MyProfile = () => {
                 {/* Bottom Banner */}
                 <div style={styles.bottomBanner}>
                   <div style={styles.companyName}>
-                    VAIDYA BANDHU (A UNIT OF MV COMPANYON HEALTHCARE PRIVATE
-                    LIMITED)
+                    VAIDYA BANDHU (A UNIT OF MY COMPANYON HEALTHCARE PRIVATE LIMITED)
                   </div>
                   <div style={styles.tagline}>
                     "SERVING WITH CARE & COMMITMENT"

@@ -23,15 +23,42 @@ const MembershipModal = () => {
     }
   }, []);
 
-  const handleShow = () => {
+  const handleShow = async () => {
     const token = localStorage.getItem("token");
     if (token) {
-      // If token exists, show already member modal
-      setAlreadyMember(true);
-      setShow(true);
+      // If token exists, check if user is active
+      try {
+        const response = await fetch("https://admin.vaidyabandhu.com/api/user/profile/", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        });
+        const data = await response.json();
+        
+        if (response.ok && data?.is_active === true) {
+          // User is active, show already member modal
+          setAlreadyMember(true);
+          setShow(true);
+        } else {
+          // User is not active, redirect to basic-details
+          navigate("/basic-details");
+        }
+      } catch (error) {
+        console.error("Error checking user status:", error);
+        // If there's an error, remove token and redirect to basic-details
+        localStorage.removeItem("token");
+        navigate("/basic-details");
+      }
     } else {
-      // If not a member, redirect to basic-details page
-      navigate("/basic-details");
+      // If not a member, show mobile verification modal
+      setShow(true);
+      setAlreadyMember(false);
+      setStep(1);
+      setMobileNumber("");
+      setOtp("");
+      setErrors({});
     }
   };
 
@@ -55,6 +82,10 @@ const MembershipModal = () => {
     });
     setAlreadyMember(false);
     setShow(false);
+    
+    // Dispatch custom event to notify LoginModal about logout
+    window.dispatchEvent(new CustomEvent("login-state-changed", { detail: { isLoggedIn: false } }));
+    
     // Redirect to home page
     window.location.href = "/";
   };
@@ -138,13 +169,44 @@ const MembershipModal = () => {
       );
       const data = await response.json();
       if (data.success) {
-        // Success - redirect to register page
+        // Success - store token and check user status
         console.log("OTP verified successfully:", data);
-        // Store user data or token
         const token = data?.data?.token || "";
         localStorage.setItem("token", token);
-        handleClose(); // Close the modal
-        navigate("/basic-details");
+        
+        // Dispatch custom event to notify LoginModal about login
+        window.dispatchEvent(new CustomEvent("login-state-changed", { detail: { isLoggedIn: true } }));
+        
+        // Check user profile to determine if they are active
+        try {
+          const profileResponse = await fetch("https://admin.vaidyabandhu.com/api/user/profile/", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token,
+            },
+          });
+          const profileData = await profileResponse.json();
+          console.log("Profile data after login:", profileData);
+          
+          if (profileResponse.ok && profileData?.is_active === true) {
+            // User is active, show already member modal
+            setAlreadyMember(true);
+            // Reset form
+            setStep(1);
+            setMobileNumber("");
+            setOtp("");
+            setErrors({});
+          } else {
+            // User is not active, redirect to basic-details
+            handleClose();
+            navigate("/basic-details");
+          }
+        } catch (profileError) {
+          console.error("Error fetching profile after OTP:", profileError);
+          handleClose();
+          navigate("/basic-details");
+        }
       } else {
         // Handle API error
         setErrors((prev) => ({

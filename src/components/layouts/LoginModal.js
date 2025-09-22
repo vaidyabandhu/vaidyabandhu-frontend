@@ -13,6 +13,18 @@ const LoginModal = () => {
       window.removeEventListener("open-login-modal", handleOpenModal);
     };
   }, []);
+  
+  // Listen for login state changes from other components
+  useEffect(() => {
+    const handleLoginStateChange = (event) => {
+      setIsLoggedIn(event.detail.isLoggedIn);
+    };
+    window.addEventListener("login-state-changed", handleLoginStateChange);
+    return () => {
+      window.removeEventListener("login-state-changed", handleLoginStateChange);
+    };
+  }, []);
+  
   const [show, setShow] = useState(false);
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");
@@ -127,6 +139,10 @@ const LoginModal = () => {
       console.log("Received token:", token);
       localStorage.setItem("token", token);
       setIsLoggedIn(true); // Update login state
+      
+      // Dispatch custom event to notify other components about login
+      window.dispatchEvent(new CustomEvent("login-state-changed", { detail: { isLoggedIn: true } }));
+      
       handleClose(); // Close the modal
       
       // Fetch user profile to check is_active status

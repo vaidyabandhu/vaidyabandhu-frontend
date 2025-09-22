@@ -121,10 +121,10 @@ const VaidyaBandhuForm = () => {
           console.log("Fetched user profile:", data);
           setFormData(data);
         }
-        if (!token) {
-          alert("Please log in to access your profile.");
-          navigate("/login");
-        }
+        // if (!token) {
+        //   alert("Please log in to access your profile.");
+        //   navigate("/login");
+        // }
       } catch (err) {
         console.error("Error fetching user profile:", err);
       } finally {
