@@ -141,7 +141,7 @@ const HospitalsPage = () => {
                     className={style.cardHeaderCustom}
                     style={{
                       backgroundImage: `url(${
-                        hospital?.cover_image || hospitalImage
+                        hospital?.image || hospitalImage
                       })`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
