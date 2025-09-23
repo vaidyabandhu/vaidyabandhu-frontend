@@ -840,7 +840,7 @@ const Content = () => {
                               <div className="sigma_team-info">
                                 <span>
                                   <i className="fal fa-calendar" />
-                                  {item.educational_degrees}
+                                  {item.designation}
                                 </span>
 
                                 <span>

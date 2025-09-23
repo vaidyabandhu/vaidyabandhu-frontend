@@ -8,6 +8,7 @@ import {
   Shield,
   Upload,
   X,
+  LogOut,
 } from "lucide-react";
 import { Form, Col, Row, Card, Image } from "react-bootstrap";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
@@ -50,6 +51,7 @@ const VaidyaBandhuForm = () => {
   const [photoPreview, setPhotoPreview] = useState(null); // For photo preview
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Handle language change
   const handleLanguageChange = (e) => setSelectedLanguage(e.target.value);
@@ -362,7 +364,7 @@ const VaidyaBandhuForm = () => {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: token, // plain token, since your backend doesn’t expect Bearer
+                  Authorization: token, // plain token, since your backend doesn't expect Bearer
                 },
                 body: JSON.stringify({
                   razorpay_order_id: response.razorpay_order_id,
@@ -412,6 +414,24 @@ const VaidyaBandhuForm = () => {
       alert("Error occurred while creating order or payment");
       setIsSubmitting(false);
     }
+  };
+
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    // Remove token from localStorage
+    localStorage.removeItem("token");
+    // Remove all cookies
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c.replace(
+        /=.*/,
+        "=;expires=" + new Date(0).toUTCString() + ";path=/"
+      );
+    });
+    setShowLogoutModal(false);
+    window.location.href = "/";
   };
 
   const benefits = languagesType[selectedLanguage].benefits;
@@ -500,6 +520,37 @@ const VaidyaBandhuForm = () => {
                 </div>
               </Card.Body>
             </Card>
+            {/* Logout Button */}
+            <button
+              style={{
+                display: "flex",
+                alignItems: "center",
+                backgroundColor: "#dc3545",
+                color: "white",
+                border: "none",
+                padding: "10px 20px",
+                borderRadius: "5px",
+                cursor: "pointer",
+                fontSize: "16px",
+                fontWeight: "500",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                transition: "all 0.2s ease",
+                marginTop: "15px",
+                margin: "15px auto 0",
+              }}
+              onClick={handleLogout}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#c82333";
+                e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#dc3545";
+                e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+              }}
+            >
+              <LogOut className="h-5 w-5" style={{ marginRight: "8px" }} />
+              Logout
+            </button>
           </Col>
 
           <Col md={8}>
@@ -915,6 +966,85 @@ const VaidyaBandhuForm = () => {
           </Col>
         </Row>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: "0",
+            left: "0",
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              padding: "20px",
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              maxWidth: "400px",
+              width: "90%",
+              textAlign: "center",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "18px",
+                fontWeight: "bold",
+                marginBottom: "15px",
+                color: "#095D7E",
+              }}
+            >
+              Confirm Logout
+            </h3>
+            <p>Are you sure you want to logout?</p>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: "10px",
+                marginTop: "20px",
+              }}
+            >
+              <button
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "4px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: "500",
+                  backgroundColor: "#6c757d",
+                  color: "white",
+                }}
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "4px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: "500",
+                  backgroundColor: "#dc3545",
+                  color: "white",
+                }}
+                onClick={confirmLogout}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

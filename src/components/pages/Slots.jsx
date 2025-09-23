@@ -6,7 +6,7 @@ import DateRangeFilter2 from "../common/DateRangeFilter2";
 import { dateFormat } from "../utiles/dateFormat";
 import { addSlotApi, updateSlotApi } from "../../api/slotApi";
 import { getDateRange } from "../common/DateRangeFilter2/utils";
-import { Button, Col, Form, Row } from "react-bootstrap";
+import { Button, Col, Form, Row, Alert } from "react-bootstrap";
 
 // --- Slot Modal (updated) ---
 function getLocalTimeString(isoDateTime) {
@@ -34,6 +34,56 @@ const DURATION_OPTIONS = [
   { label: "1 hr", value: 60 },
 ];
 
+// Function to update slots using the PATCH API
+const updateSlotPatchApi = async (payload) => {
+  const token = localStorage.getItem("authToken");
+
+  if (!token) {
+    throw new Error("Authentication token not found. Please log in again.");
+  }
+
+  try {
+    // Format the date and time to ISO format with UTC timezone
+    const formatToISO = (date, time) => {
+      return `${date}T${time}:00.000Z`;
+    };
+
+    const response = await fetch(
+      "https://admin.vaidyabandhu.com/api/slots/slot/update_slots/",
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          id: payload.id,
+          doctor: parseInt(payload.doctor),
+          hospital: parseInt(payload.hospital),
+          start_time: formatToISO(payload.start_date, payload.start_time),
+          end_time: formatToISO(payload.end_date, payload.end_time),
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("API Error Response:", errorData);
+      throw new Error(
+        errorData.message ||
+          `Failed to update slot (Status: ${response.status})`
+      );
+    }
+
+    const data = await response.json();
+    console.log("API Success Response:", data);
+    return data;
+  } catch (error) {
+    console.error("Error in updateSlotPatchApi:", error);
+    throw error;
+  }
+};
+
 const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
   const [formData, setFormData] = useState({
     start_date: "",
@@ -41,15 +91,40 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
     end_date: "",
     end_time: "",
     slot_duration: 15,
-    doctor: user?.id || "",
-    hospital: user?.selectedHostiptal?.id || "",
+    doctor: "",
+    hospital: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [validationMsg, setValidationMsg] = useState("");
+  const [userInfo, setUserInfo] = useState(null);
+
+  // Get user info from localStorage
+  useEffect(() => {
+    if (show) {
+      try {
+        const storedUserInfo = localStorage.getItem("userInfo");
+        if (storedUserInfo) {
+          const parsedUserInfo = JSON.parse(storedUserInfo);
+          setUserInfo(parsedUserInfo);
+
+          // Set doctor and hospital IDs from login response
+          setFormData((prev) => ({
+            ...prev,
+            doctor: parsedUserInfo.doctor_id?.toString() || "",
+            hospital: parsedUserInfo.hospital_id?.toString() || "",
+          }));
+        }
+      } catch (err) {
+        console.error("Error parsing user info from localStorage:", err);
+        setError("Failed to load user information. Please log in again.");
+      }
+    }
+  }, [show]);
 
   useEffect(() => {
     if (slot) {
+      // For existing slot, use slot data
       setFormData({
         start_date: getLocalDateString(slot.start_time),
         start_time: getLocalTimeString(slot.start_time),
@@ -58,10 +133,11 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
         slot_duration: Math.round(
           (new Date(slot.end_time) - new Date(slot.start_time)) / (1000 * 60)
         ),
-        doctor: slot.doctor || user?.id || "",
-        hospital: slot.hospital || user?.selectedHostiptal?.id || "",
+        doctor: slot.doctor?.toString() || "",
+        hospital: slot.hospital?.toString() || "",
       });
-    } else {
+    } else if (userInfo) {
+      // For new slot with user info available
       const now = new Date();
       const nextHour = new Date(now.getTime() + 60 * 60 * 1000);
       const endTime = new Date(nextHour.getTime() + 30 * 60 * 1000);
@@ -71,11 +147,25 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
         end_date: nextHour.toISOString().slice(0, 10),
         end_time: endTime.toTimeString().slice(0, 5),
         slot_duration: 30,
-        doctor: user?.id || "",
-        hospital: user?.selectedHostiptal?.id || "",
+        doctor: userInfo.doctor_id?.toString() || "",
+        hospital: userInfo.hospital_id?.toString() || "",
+      });
+    } else if (!slot && !userInfo && show) {
+      // For new slot without user info yet (initial state)
+      const now = new Date();
+      const nextHour = new Date(now.getTime() + 60 * 60 * 1000);
+      const endTime = new Date(nextHour.getTime() + 30 * 60 * 1000);
+      setFormData({
+        start_date: nextHour.toISOString().slice(0, 10),
+        start_time: nextHour.toTimeString().slice(0, 5),
+        end_date: nextHour.toISOString().slice(0, 10),
+        end_time: endTime.toTimeString().slice(0, 5),
+        slot_duration: 30,
+        doctor: "",
+        hospital: "",
       });
     }
-  }, [slot, user]);
+  }, [slot, userInfo, show]);
 
   // Validation helper
   const validateFields = () => {
@@ -139,32 +229,58 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
 
     setLoading(true);
     try {
-      const payload = {
-        doctor: formData.doctor,
-        hospital: formData.hospital,
-        start_date: formData.start_date,
-        start_time: formData.start_time,
-        end_date: formData.end_date,
-        end_time: formData.end_time,
-        slot_duration: formData.slot_duration,
-      };
-      if (slot) payload.id = slot.id;
+      if (slot) {
+        // Use PATCH API for updating existing slots
+        const payload = {
+          id: slot.id,
+          doctor: formData.doctor,
+          hospital: formData.hospital,
+          start_date: formData.start_date,
+          start_time: formData.start_time,
+          end_date: formData.end_date,
+          end_time: formData.end_time,
+        };
 
-      const response = slot
-        ? await updateSlotApi(payload)
-        : await addSlotApi(payload);
+        console.log("Updating slot with payload:", payload);
+        const response = await updateSlotPatchApi(payload);
 
-      // ✅ check for message instead of failing
-      if (response.status >= 200 && response.status < 300) {
-        if (response.data?.message?.toLowerCase().includes("success")) {
+        // Check if the response indicates success
+        if (
+          response.success ||
+          response.status === 200 ||
+          response.message?.toLowerCase().includes("success")
+        ) {
           onSaved(); // refresh + close modal
         } else {
-          setError(response.data?.message || "Unexpected response");
+          throw new Error(response.message || "Failed to update slot");
         }
       } else {
-        throw new Error(response.data?.message || "Failed to save slot");
+        // Use existing API for creating new slots
+        const payload = {
+          doctor: formData.doctor,
+          hospital: formData.hospital,
+          start_date: formData.start_date,
+          start_time: formData.start_time,
+          end_date: formData.end_date,
+          end_time: formData.end_time,
+          slot_duration: formData.slot_duration,
+        };
+
+        console.log("Creating slot with payload:", payload);
+        const response = await addSlotApi(payload);
+
+        if (response.status >= 200 && response.status < 300) {
+          if (response.data?.message?.toLowerCase().includes("success")) {
+            onSaved(); // refresh + close modal
+          } else {
+            setError(response.data?.message || "Unexpected response");
+          }
+        } else {
+          throw new Error(response.data?.message || "Failed to save slot");
+        }
       }
     } catch (err) {
+      console.error("Error in handleSubmit:", err);
       setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
@@ -193,33 +309,41 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
               {error && (
-                <div className="alert alert-danger" role="alert">
+                <Alert variant="danger" className="mb-3">
                   {error}
-                </div>
+                </Alert>
               )}
 
               {/* Doctor and Hospital Fields */}
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Doctor</Form.Label>
+                    <Form.Label>Doctor ID</Form.Label>
                     <Form.Control
                       type="text"
                       value={formData.doctor}
                       onChange={(e) => handleChange("doctor", e.target.value)}
                       required
+                      disabled
                     />
+                    {/* <Form.Text muted>
+                      Fetched from login credentials
+                    </Form.Text> */}
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Hospital</Form.Label>
+                    <Form.Label>Hospital ID</Form.Label>
                     <Form.Control
                       type="text"
                       value={formData.hospital}
                       onChange={(e) => handleChange("hospital", e.target.value)}
                       required
+                      disabled
                     />
+                    {/* <Form.Text muted>
+                      Fetched from login credentials
+                    </Form.Text> */}
                   </Form.Group>
                 </Col>
               </Row>
@@ -294,12 +418,9 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
                 </Form.Text>
               </Form.Group>
               {validationMsg && (
-                <div
-                  className="alert alert-warning py-2 my-2"
-                  style={{ fontSize: 14 }}
-                >
+                <Alert variant="warning" className="py-2 my-2">
                   {validationMsg}
-                </div>
+                </Alert>
               )}
             </div>
             <div className="modal-footer">

@@ -118,7 +118,10 @@ class Content extends Component {
     
     return slotsByDate[firstDate].map(slot => {
       const startTime = new Date(slot.start_time);
-      return startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return {
+        id: slot.id,
+        time: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
     });
   };
 
@@ -144,6 +147,8 @@ class Content extends Component {
       doctorId: "", 
       hospitalId: "", 
       availableSlots: [], // To store available time slots
+      selectedSlot: null, // To store the selected slot
+      isBooking: false, // To track booking status
     };
     this.fullname = this.fullname.bind(this);
     this.email = this.email.bind(this);
@@ -163,15 +168,20 @@ class Content extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     // Bind new methods
     this.handleDateChange = this.handleDateChange.bind(this);
+    this.handleSlotSelect = this.handleSlotSelect.bind(this);
+    this.blockSlot = this.blockSlot.bind(this);
   }
   
   // New method to handle date change
   handleDateChange(event) {
     const selectedDate = event.target.value;
-    this.setState({ date: selectedDate });
+    this.setState({ 
+      date: selectedDate,
+      selectedSlot: null // Reset selected slot when date changes
+    });
     
     // Fetch slots for the selected date
-    if (selectedDate && this.state.doctor && this.state.hospital) {
+    if (selectedDate && this.state.doctorId && this.state.hospitalId) {
       this.fetchSlotsForDate(selectedDate);
     }
   }
@@ -187,7 +197,7 @@ class Content extends Component {
 
     try {
       const response = await fetch(
-        `https://admin.vaidyabandhu.com/api/slots/slot/?doctor_id=${this.state.doctor}&hospital_id=${this.state.hospital}&start_date=${selectedDate}&end_date=${selectedDate}`,
+        `https://admin.vaidyabandhu.com/api/slots/slot/?doctor_id=${this.state.doctorId}&hospital_id=${this.state.hospitalId}&start_date=${selectedDate}&end_date=${selectedDate}`,
         {
           method: "GET",
           headers: {
@@ -209,7 +219,10 @@ class Content extends Component {
         // Process slots to extract time slots
         const timeSlots = data.map(slot => {
           const startTime = new Date(slot.start_time);
-          return startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return {
+            id: slot.id,
+            time: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
         });
         this.setState({ availableSlots: timeSlots });
       } else {
@@ -219,6 +232,69 @@ class Content extends Component {
     } catch (error) {
       console.error("Error fetching slots:", error);
       this.setState({ availableSlots: [] });
+    }
+  };
+
+  // New method to handle slot selection
+  handleSlotSelect(slotId) {
+    this.setState({ selectedSlot: slotId });
+  }
+
+  // New method to block a slot
+  blockSlot = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Session expired. Please login again.");
+      window.location.href = "/basic-details";
+      return;
+    }
+
+    if (!this.state.selectedSlot) {
+      alert("Please select a time slot");
+      return;
+    }
+
+    this.setState({ isBooking: true });
+
+    try {
+      const response = await fetch(
+        "https://admin.vaidyabandhu.com/api/slots/slot/block/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+          body: JSON.stringify({
+            slot: this.state.selectedSlot
+          }),
+        }
+      );
+      
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        alert("Session expired. Please login again.");
+        window.location.href = "/basic-details";
+        return;
+      }
+      
+      const data = await response.json();
+      if (response.ok) {
+        alert("Slot booked successfully!");
+        this.resetForm();
+        // Refresh available slots after booking
+        if (this.state.date) {
+          this.fetchSlotsForDate(this.state.date);
+        }
+      } else {
+        console.error("Failed to book slot:", data);
+        alert("Failed to book slot. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error booking slot:", error);
+      alert("An error occurred. Please try again.");
+    } finally {
+      this.setState({ isBooking: false });
     }
   };
 
@@ -269,24 +345,8 @@ class Content extends Component {
   }
   handleSubmit(e) {
     e.preventDefault();
-    this.resetForm();
-    console.log(
-      this.state.fullname,
-      this.state.email,
-      this.state.dateofbirth,
-      this.state.phoneno,
-      this.state.gender,
-      this.state.hospital,
-      this.state.service,
-      this.state.date,
-      this.state.doctor,
-      this.state.remarks,
-      this.state.cardName,
-      this.state.cardNumber,
-      this.state.expDate,
-      this.state.cardCvv,
-      this.state.condition
-    );
+    // Call blockSlot instead of just logging
+    this.blockSlot();
   }
   resetForm() {
     this.setState({
@@ -305,6 +365,8 @@ class Content extends Component {
       expDate: "",
       cardCvv: "",
       condition: "",
+      selectedSlot: null,
+      availableSlots: []
     });
   }
   render() {
@@ -388,52 +450,6 @@ class Content extends Component {
                     </div>
                     <div className="form-block">
                       <div className="row">
-                        {/* <div className="col-12">
-                          <div className="form-group">
-                            <select
-                              value={this.state.hospital}
-                              onChange={this.hospital}
-                            >
-                              <option value="">Select Hospital</option>
-                              <option value="2">Hospital 1</option>
-                              <option value="3">Hospital 2</option>
-                              <option value="4">Hospital 3</option>
-                            </select>
-                          </div>
-                        </div> */}
-                        {/* <div className="col-12">
-                          <div className="form-group">
-                            <select value={this.state.service} onChange={this.service}>
-                              <option value="">Select Service</option>
-                              <option value="2">Service 1</option>
-                              <option value="3">Service 2</option>
-                              <option value="4">Service 3</option>
-                            </select>
-                          </div>
-                        </div> */}
-                        {/* <div className="col-12">
-                          <div className="form-group">
-                            <i className="fal fa-calendar-alt" />
-                            <input 
-                              type="date" 
-                              value={this.state.date} 
-                              onChange={this.handleDateChange}
-                              data-provide="datepicker" 
-                              placeholder="Select Date" 
-                            />
-                          </div>
-                        </div> */}
-                        {/* <div className="col-12">
-                          <div className="form-group">
-                            <i className="fal fa-user-md" />
-                            <input 
-                              type="text" 
-                              value={this.state.doctor} 
-                              onChange={this.doctor} 
-                              placeholder="Select Doctor" 
-                            />
-                          </div>
-                        </div> */}
                         <div className="col-12">
                           <div className="form-group">
                             <textarea
@@ -469,9 +485,9 @@ class Content extends Component {
                       <label>Available Slots</label>
                       <div className="form-group d-flex flex-wrap gap-2">
                         {this.state.availableSlots.length > 0 ? (
-                          this.state.availableSlots.map((slot, index) => (
+                          this.state.availableSlots.map((slot) => (
                             <label
-                              key={index}
+                              key={slot.id}
                               style={{
                                 cursor: "pointer",
                                 margin: "5px",
@@ -480,7 +496,9 @@ class Content extends Component {
                               <input
                                 type="radio"
                                 name="slot"
-                                value={slot}
+                                value={slot.id}
+                                checked={this.state.selectedSlot === slot.id}
+                                onChange={() => this.handleSlotSelect(slot.id)}
                                 style={{ display: "none" }}
                               />
                               <span
@@ -489,10 +507,11 @@ class Content extends Component {
                                   padding: "6px 12px",
                                   border: "1px solid #ddd",
                                   borderRadius: "6px",
-                                  background: "#f8f9fa",
+                                  background: this.state.selectedSlot === slot.id ? "#007bff" : "#f8f9fa",
+                                  color: this.state.selectedSlot === slot.id ? "white" : "black",
                                 }}
                               >
-                                {slot}
+                                {slot.time}
                               </span>
                             </label>
                           ))
@@ -506,8 +525,9 @@ class Content extends Component {
                           <button
                             type="submit"
                             className="sigma_btn btn-block btn-sm mt-4"
+                            disabled={this.state.isBooking}
                           >
-                            Confirm
+                            {this.state.isBooking ? "Booking..." : "Confirm"}
                             <i className="fal fa-arrow-right ms-3" />
                           </button>
                         </li>
