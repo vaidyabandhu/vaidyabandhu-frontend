@@ -88,6 +88,8 @@ const Content = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [specialtySearchTerm, setSpecialtySearchTerm] = useState("");
   const [locationSearchTerm, setLocationSearchTerm] = useState("");
+  // Added hospital name filter state
+  const [hospitalName, setHospitalName] = useState("");
   console.log({ selectedGender, selectedRating });
   // Static options
   const availabilityOptions = [
@@ -144,33 +146,34 @@ const Content = () => {
     }
   }, [locationsData, locationsError]);
   // Fetch doctors
-   const token = localStorage.getItem("token");
- const {
-  data,
-  loading: loader,
-  error,
-  refetch,
-} = useFetch({
-  method: "GET",
-  request: "https://admin.vaidyabandhu.com/api/doctors",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: token, // ✅ Add token here
-  },
-  params: {
-    search: debouncedSearchTerm.trim(),
-    specialties: selectedSpecialties.join(","),
-    locations: selectedLocations.join(","),
-    availability: selectedAvailability.join(","),
-    rating: selectedRating,
-    gender: selectedGender,
-    sort: sortBy,
-    page_count: itemPerpage,
-    page: page,
-    hospital_ids: id, 
-  },
-});
-  console.log({ loader, data } ,"test" );
+  const token = localStorage.getItem("token");
+  const {
+    data,
+    loading: loader,
+    error,
+    refetch,
+  } = useFetch({
+    method: "GET",
+    request: "https://admin.vaidyabandhu.com/api/doctors",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token,
+    },
+    params: {
+      search: debouncedSearchTerm.trim(),
+      specialties: selectedSpecialties.join(","),
+      locations: selectedLocations.join(","),
+      availability: selectedAvailability.join(","),
+      rating: selectedRating,
+      gender: selectedGender,
+      sort: sortBy,
+      page_count: itemPerpage,
+      page: page,
+      hospital_ids: id,
+      name: hospitalName,
+    },
+  });
+  console.log({ loader, data }, "test");
   // Filter Handlers
   const handlePageChange = (pageNumber) => setPage(pageNumber);
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
@@ -194,6 +197,8 @@ const Content = () => {
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
+  // Added handler for hospital name change
+  const handleHospitalNameChange = (e) => setHospitalName(e.target.value);
   const handleReset = () => {
     setSearchTerm("");
     setSelectedSpecialties([]);
@@ -204,6 +209,8 @@ const Content = () => {
     setSortBy("");
     setSpecialtySearchTerm("");
     setLocationSearchTerm("");
+    // Reset hospital name
+    setHospitalName("");
   };
   const hasActiveFilters =
     searchTerm ||
@@ -212,7 +219,8 @@ const Content = () => {
     selectedAvailability.length > 0 ||
     selectedRating ||
     selectedGender ||
-    sortBy;
+    sortBy ||
+    hospitalName; // Added hospitalName to active filters check
   // Filtered
   const filteredSpecialties = specialtiesData?.data?.filter((specialty) =>
     specialty.title.toLowerCase().includes(specialtySearchTerm.toLowerCase())
@@ -260,6 +268,14 @@ const Content = () => {
           label: gender.label,
         });
     }
+    // Added hospital name to active filters
+    if (hospitalName) {
+      filters.push({
+        type: "hospital_name",
+        id: hospitalName,
+        label: `Hospital: ${hospitalName}`,
+      });
+    }
     return filters;
   };
   const removeFilter = (filterType, filterId) => {
@@ -280,6 +296,10 @@ const Content = () => {
         break;
       case "gender":
         setSelectedGender("");
+        break;
+      // Added case for hospital name
+      case "hospital_name":
+        setHospitalName("");
         break;
       default:
         break;
@@ -411,6 +431,45 @@ const Content = () => {
               </div>
             ))
           )}
+        </div>
+      </div>
+      {/* Hospital Name - Added new filter section */}
+      <div className="mb-4">
+        <h6 className="font-weight-bold mb-3">Hospital Name</h6>
+        <div className="form-group">
+          <div className="position-relative">
+            <input
+              type="text"
+              className="form-control form-control-sm mb-3"
+              placeholder="Search Hospital"
+              value={hospitalName}
+              onChange={handleHospitalNameChange}
+              style={{ paddingRight: hospitalName ? "35px" : "12px" }}
+            />
+            {hospitalName && (
+              <button
+                onClick={() => setHospitalName("")}
+                className="btn btn-link p-0"
+                style={{
+                  position: "absolute",
+                  right: "8px",
+                  top: "20px",
+                  fontSize: "18px",
+                  color: "#6c757d",
+                  textDecoration: "none",
+                  lineHeight: "1",
+                  width: "20px",
+                  height: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 10,
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
         </div>
       </div>
       {/* Availability */}
@@ -585,7 +644,8 @@ const Content = () => {
                               selectedLocations.length +
                               selectedAvailability.length +
                               (selectedRating ? 1 : 0) +
-                              (selectedGender ? 1 : 0)}
+                              (selectedGender ? 1 : 0) +
+                              (hospitalName ? 1 : 0)}
                           </span>
                         )}
                       </button>
@@ -676,90 +736,129 @@ const Content = () => {
                 </div>
               ) : (
                 <>
-                  {data.data.map((item) => (
-                    <div className="sigma_team style-17" key={item.id}>
-                      <div className="row no-gutters">
-                        <div className="col-md-3">
-                          <div className="sigma_team-thumb">
-                            <img
-                              src={
-                                item?.photo && item.photo.trim() !== ""
-                                  ? item.photo
-                                  : "/assets/img/default-img.jpg"
-                              }
-                              alt={item?.full_name || "User"}
-                              style={{
-                                width: "100%",
-                                height: "auto",
-                                objectFit: "cover",
-                              }}
-                              onError={(e) => {
-                                e.currentTarget.onerror = null; // prevent infinite loop
-                                e.currentTarget.src =
-                                  "/assets/img/default-img.jpg"; // fallback
-                                e.currentTarget.classList.add("default-doctor-img"); // Add class when fallback is used
-                              }}
-                              className={
-                                !(item?.photo && item.photo.trim() !== "") ? "default-doctor-img" : ""
-                              }
-                            />
+                  {data.data.map((item) => {
+                    // Extract hospital addresses
+                    const hospitalAddresses =
+                      item?.hospital
+                        ?.map((h) => h.address)
+                        .filter((addr) => addr && addr.trim() !== "") || [];
+                    const addressString =
+                      hospitalAddresses.length > 0
+                        ? hospitalAddresses.join(", ")
+                        : "Not specified";
+
+                    return (
+                      <div className="sigma_team style-17" key={item.id}>
+                        <div className="row no-gutters">
+                          <div className="col-md-3">
+                            <div className="sigma_team-thumb">
+                              <img
+                                src={
+                                  item?.photo && item.photo.trim() !== ""
+                                    ? item.photo
+                                    : "/assets/img/default-img.jpg"
+                                }
+                                alt={item?.full_name || "User"}
+                                style={{
+                                  width: "100%",
+                                  height: "auto",
+                                  objectFit: "cover",
+                                }}
+                                onError={(e) => {
+                                  e.currentTarget.onerror = null; // prevent infinite loop
+                                  e.currentTarget.src =
+                                    "/assets/img/default-img.jpg"; // fallback
+                                  e.currentTarget.classList.add(
+                                    "default-doctor-img"
+                                  ); // Add class when fallback is used
+                                }}
+                                className={
+                                  !(item?.photo && item.photo.trim() !== "")
+                                    ? "default-doctor-img"
+                                    : ""
+                                }
+                              />
+                            </div>
                           </div>
-                        </div>
-                        <div className="col-md-5 col-sm-6">
-                          <div className="sigma_team-body">
-                            <h5>
-                              <Link to={`/doctor-details?id=${item.id}`}>
-                                {item.full_name}
-                              </Link>
-                            </h5>
-                            <div className="sigma_team-categories">
-                              {item.speciality?.map((specialityItem, index) => (
-                                <Link
-                                  to={`/doctor-details?id=${specialityItem.id}`}
-                                  className="sigma_team-category"
-                                  key={index}
-                                >
-                                  {specialityItem.title}
-                                  {index !== item.speciality.length - 1 && ", "}
+                          <div className="col-md-5 col-sm-6">
+                            <div className="sigma_team-body">
+                              <h5>
+                                <Link to={`/doctor-details?id=${item.id}`}>
+                                  {item.full_name}
                                 </Link>
-                              ))}
-                            </div>
-                            <p>{item.qualification}</p>
-                            <div className="d-flex align-items-center mt-4">
-                              <Link
-                                to={`/doctor-details?id=${item.id}`}
-                                className="sigma_btn"
+                              </h5>
+                              <div className="sigma_team-categories">
+                                {item.speciality?.map(
+                                  (specialityItem, index) => (
+                                    <Link
+                                      to={`/doctor-details?id=${specialityItem.id}`}
+                                      className="sigma_team-category"
+                                      key={index}
+                                    >
+                                      {specialityItem.title}
+                                      {index !== item.speciality.length - 1 &&
+                                        ", "}
+                                    </Link>
+                                  )
+                                )}
+                              </div>
+                              <p>{item.qualification}</p>
+                              {/* Added hospital name below designation */}
+                              <div
+                                className="hospital-info"
+                                style={{
+                                  marginTop: "8px",
+                                  marginBottom: "8px",
+                                }}
                               >
-                                View More
-                              </Link>
+                                <span
+                                  style={{ fontSize: "14px", color: "#6c757d" }}
+                                >
+                                  <i
+                                    className="fal fa-hospital"
+                                    style={{ marginRight: "5px" }}
+                                  ></i>
+                                  {isNotEmptyArray(item?.hospital)
+                                    ? item.hospital
+                                        .map((el) => el.name)
+                                        .join(", ")
+                                    : "Not specified"}
+                                </span>
+                              </div>
+                              <div className="d-flex align-items-center mt-4">
+                                <Link
+                                  to={`/doctor-details?id=${item.id}`}
+                                  className="sigma_btn"
+                                >
+                                  View More
+                                </Link>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="col-md-4 col-sm-6">
-                          <div className="sigma_team-footer">
-                            <div className="sigma_team-info">
-                              <span>
-                                <i className="fal fa-map-marker-alt" />
-                                {isNotEmptyArray(item?.hospital)
-                                  ? item.hospital
-                                      .map((el) => el.hospital_name)
-                                      .join(", ")
-                                  : "Not specified"}
-                              </span>
-                              <span>
-                                <i className="fal fa-award" />
-                                {item.experience} Yrs Experience
-                              </span>
-                              <span>
-                                <i className="fal fa-calendar" />
-                                {item.educational_degrees}
-                              </span>
+                          <div className="col-md-4 col-sm-6">
+                            <div className="sigma_team-footer">
+                              <div className="sigma_team-info">
+                                <span>
+                                  <i className="fal fa-calendar" />
+                                  {item.educational_degrees}
+                                </span>
+
+                                <span>
+                                  <i className="fal fa-award" />
+                                  {item.experience} Yrs Experience
+                                </span>
+
+                                <span>
+                                  <i className="fal fa-map-marker-alt" />
+                                  {addressString}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {/* Pagination (custom, from doctor-grid) */}
                   {(() => {
                     const totalCount = data?.pagination_data?.total_count || 0;
@@ -801,7 +900,7 @@ const Content = () => {
             font-size: 14px;
             gap: 4px;
           }
-          
+
           .default-doctor-img {
             width: 70% !important;
             margin: 15px auto;

@@ -778,7 +778,7 @@ const VaidyaBandhuForm = () => {
                         </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
-                    <Col>
+                    {/* <Col>
                       <Form.Group
                         controlId="formAlternateNumber"
                         className="mb-3"
@@ -807,7 +807,7 @@ const VaidyaBandhuForm = () => {
                           {errors.alternate_mobile}
                         </Form.Control.Feedback>
                       </Form.Group>
-                    </Col>
+                    </Col> */}
                   </Row>
                   {/* Email ID */}
                   <Form.Group controlId="formEmailId" className="mb-3">

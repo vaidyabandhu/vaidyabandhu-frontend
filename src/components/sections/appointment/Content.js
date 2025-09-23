@@ -5,7 +5,6 @@ class Content extends Component {
   async componentDidMount() {
     const token = localStorage.getItem("token");
     if (!token) {
-      // No token, redirect to basic-details or show message
       alert("Session expired or not logged in. Please login again.");
       window.location.href = "/basic-details";
       return;
@@ -22,7 +21,6 @@ class Content extends Component {
         }
       );
       if (response.status === 401) {
-        // Unauthorized, token invalid or expired
         localStorage.removeItem("token");
         alert("Session expired. Please login again.");
         window.location.href = "/basic-details";
@@ -36,13 +34,94 @@ class Content extends Component {
           dateofbirth: data.age ? String(data.age) : "",
           phoneno: data.mobile || "",
           gender: data.gender || "",
-          // You can bind other fields as needed
+          // Set default doctor and hospital IDs
+          doctorId: data.doctor || 245, // Default to 245 if not provided
+          hospitalId: data.hospital || 2, // Default to 2 if not provided
         });
+        
+        // Fetch available slots after setting doctor and hospital IDs
+        this.fetchAvailableSlots(data.doctor || 245, data.hospital || 2);
       }
     } catch (error) {
       console.error("Failed to fetch profile:", error);
     }
   }
+
+  // New method to fetch available slots
+  fetchAvailableSlots = async (doctorId, hospitalId) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Session expired. Please login again.");
+      window.location.href = "/basic-details";
+      return;
+    }
+
+    // Set default date range (today to 30 days from now)
+    const today = new Date();
+    const endDate = new Date();
+    endDate.setDate(today.getDate() + 30);
+    
+    const startDateStr = today.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    try {
+      const response = await fetch(
+        `https://admin.vaidyabandhu.com/api/slots/slot/?doctor_id=${doctorId}&hospital_id=${hospitalId}&start_date=${startDateStr}&end_date=${endDateStr}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }
+      );
+      
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        alert("Session expired. Please login again.");
+        window.location.href = "/basic-details";
+        return;
+      }
+      
+      const data = await response.json();
+      if (response.ok) {
+        // Process slots to extract time slots
+        const timeSlots = this.processSlots(data);
+        this.setState({ availableSlots: timeSlots });
+      } else {
+        console.error("Failed to fetch slots:", data);
+        this.setState({ availableSlots: [] });
+      }
+    } catch (error) {
+      console.error("Error fetching slots:", error);
+      this.setState({ availableSlots: [] });
+    }
+  };
+
+  // New method to process slots and extract time slots
+  processSlots = (slots) => {
+    if (!slots || slots.length === 0) return [];
+    
+    // Group slots by date
+    const slotsByDate = {};
+    slots.forEach(slot => {
+      const date = new Date(slot.start_time).toISOString().split('T')[0];
+      if (!slotsByDate[date]) {
+        slotsByDate[date] = [];
+      }
+      slotsByDate[date].push(slot);
+    });
+    
+    // For simplicity, we'll just extract time slots for the first date
+    const firstDate = Object.keys(slotsByDate)[0];
+    if (!firstDate) return [];
+    
+    return slotsByDate[firstDate].map(slot => {
+      const startTime = new Date(slot.start_time);
+      return startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    });
+  };
+
   constructor(props) {
     super(props);
     this.state = {
@@ -61,6 +140,10 @@ class Content extends Component {
       expDate: "",
       cardCvv: "",
       condition: "",
+      // New state variables
+      doctorId: "", 
+      hospitalId: "", 
+      availableSlots: [], // To store available time slots
     };
     this.fullname = this.fullname.bind(this);
     this.email = this.email.bind(this);
@@ -78,7 +161,67 @@ class Content extends Component {
     this.cardCvv = this.cardCvv.bind(this);
     this.condition = this.condition.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    // Bind new methods
+    this.handleDateChange = this.handleDateChange.bind(this);
   }
+  
+  // New method to handle date change
+  handleDateChange(event) {
+    const selectedDate = event.target.value;
+    this.setState({ date: selectedDate });
+    
+    // Fetch slots for the selected date
+    if (selectedDate && this.state.doctor && this.state.hospital) {
+      this.fetchSlotsForDate(selectedDate);
+    }
+  }
+  
+  // New method to fetch slots for a specific date
+  fetchSlotsForDate = async (selectedDate) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Session expired. Please login again.");
+      window.location.href = "/basic-details";
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://admin.vaidyabandhu.com/api/slots/slot/?doctor_id=${this.state.doctor}&hospital_id=${this.state.hospital}&start_date=${selectedDate}&end_date=${selectedDate}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }
+      );
+      
+      if (response.status === 401) {
+        localStorage.removeItem("token");
+        alert("Session expired. Please login again.");
+        window.location.href = "/basic-details";
+        return;
+      }
+      
+      const data = await response.json();
+      if (response.ok) {
+        // Process slots to extract time slots
+        const timeSlots = data.map(slot => {
+          const startTime = new Date(slot.start_time);
+          return startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        });
+        this.setState({ availableSlots: timeSlots });
+      } else {
+        console.error("Failed to fetch slots:", data);
+        this.setState({ availableSlots: [] });
+      }
+    } catch (error) {
+      console.error("Error fetching slots:", error);
+      this.setState({ availableSlots: [] });
+    }
+  };
+
   fullname(event) {
     this.setState({ fullname: event.target.value });
   }
@@ -251,35 +394,46 @@ class Content extends Component {
                               value={this.state.hospital}
                               onChange={this.hospital}
                             >
-                              <option value={1}>Select Hospital</option>
-                              <option value={2}>Hospital 1</option>
-                              <option value={3}>Hospital 2</option>
-                              <option value={4}>Hospital 3</option>
+                              <option value="">Select Hospital</option>
+                              <option value="2">Hospital 1</option>
+                              <option value="3">Hospital 2</option>
+                              <option value="4">Hospital 3</option>
                             </select>
                           </div>
                         </div> */}
                         {/* <div className="col-12">
-                                                    <div className="form-group">
-                                                        <select value={this.state.service} onChange={this.service}>
-                                                            <option value={1}>Select Service</option>
-                                                            <option value={2}>Service 1</option>
-                                                            <option value={3}>Service 2</option>
-                                                            <option value={4}>Service 3</option>
-                                                        </select>
-                                                    </div>
-                                                </div> */}
+                          <div className="form-group">
+                            <select value={this.state.service} onChange={this.service}>
+                              <option value="">Select Service</option>
+                              <option value="2">Service 1</option>
+                              <option value="3">Service 2</option>
+                              <option value="4">Service 3</option>
+                            </select>
+                          </div>
+                        </div> */}
                         {/* <div className="col-12">
-                                                    <div className="form-group">
-                                                        <i className="fal fa-calendar-alt" />
-                                                        <input type="text" value={this.state.date} onChange={this.date} data-provide="datepicker" placeholder="Select Date" />
-                                                    </div>
-                                                </div> */}
+                          <div className="form-group">
+                            <i className="fal fa-calendar-alt" />
+                            <input 
+                              type="date" 
+                              value={this.state.date} 
+                              onChange={this.handleDateChange}
+                              data-provide="datepicker" 
+                              placeholder="Select Date" 
+                            />
+                          </div>
+                        </div> */}
                         {/* <div className="col-12">
-                                                    <div className="form-group">
-                                                        <i className="fal fa-user-md" />
-                                                        <input type="text" value={this.state.doctor} onChange={this.doctor} placeholder="Select Doctor" />
-                                                    </div>
-                                                </div> */}
+                          <div className="form-group">
+                            <i className="fal fa-user-md" />
+                            <input 
+                              type="text" 
+                              value={this.state.doctor} 
+                              onChange={this.doctor} 
+                              placeholder="Select Doctor" 
+                            />
+                          </div>
+                        </div> */}
                         <div className="col-12">
                           <div className="form-group">
                             <textarea
@@ -292,44 +446,6 @@ class Content extends Component {
                         </div>
                       </div>
                     </div>
-                    {/* <div className="form-block mb-0">
-                                            <h4>Payment Information:</h4>
-                                            <div className="row">
-                                                <div className="col-12">
-                                                    <div className="form-group">
-                                                        <label>Name On Card</label>
-                                                        <input type="text" value={this.state.cardName} onChange={this.cardName} placeholder="Dorothy Schneider" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-12">
-                                                    <div className="form-group">
-                                                        <label>Card Number</label>
-                                                        <div className="payment-card-wrapper d-block d-sm-flex align-items-center">
-                                                            <input type="text" value={this.state.cardNumber} onChange={this.cardNumber} placeholder="xxxx-xxxx-xxxx-xxxx" />
-                                                            <div className="card-image">
-                                                                <img src={process.env.PUBLIC_URL + "/assets/img/book-apppointment/243x50.png"} alt="img" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-6">
-                                                    <div className="form-group">
-                                                        <label>Expiration Date</label>
-                                                        <input type="text" value={this.state.expDate} onChange={this.expDate} placeholder="mm/yy" data-provide="datepicker" />
-                                                    </div>
-                                                </div>
-                                                <div className="col-lg-6">
-                                                    <div className="form-group">
-                                                        <label>Security Code</label>
-                                                        <input type="text" value={this.state.cardCvv} onChange={this.cardCvv} placeholder="CCV" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div> */}
-                    {/* <div className="d-flex align-items-center mt-2">
-                                            <input type="checkbox" id="checkbox" value={this.state.condition} onChange={this.condition} />
-                                            <label className="mb-0" htmlFor="checkbox">I accept <Link to="#">Terms</Link> and <Link to="#">conditions</Link> and general policy</label>
-                                        </div> */}
                   </div>
                 </div>
                 <div className="col-lg-4">
@@ -344,82 +460,48 @@ class Content extends Component {
                             type="date"
                             name="date"
                             placeholder="Select Date"
+                            value={this.state.date}
+                            onChange={this.handleDateChange}
                           />
                         </div>
-                        {/* <label>Time</label>
-                    <div className="form-group mb-0">
-                      <input type="time" name="time" placeholder="08:30 PM" />
-                    </div> */}
                       </form>
                       {/* Available Slots */}
                       <label>Available Slots</label>
                       <div className="form-group d-flex flex-wrap gap-2">
-                        {[
-                          "08:30 AM",
-                          "09:00 AM",
-                          "10:30 AM",
-                          "02:00 PM",
-                          "04:00 PM",
-                        ].map((slot, index) => (
-                          <label
-                            key={index}
-                            style={{
-                              cursor: "pointer",
-                              margin: "5px",
-                            }}
-                          >
-                            <input
-                              type="radio"
-                              name="slot"
-                              value={slot}
-                              style={{ display: "none" }}
-                            />
-                            <span
+                        {this.state.availableSlots.length > 0 ? (
+                          this.state.availableSlots.map((slot, index) => (
+                            <label
+                              key={index}
                               style={{
-                                display: "inline-block",
-                                padding: "6px 12px",
-                                border: "1px solid #ddd",
-                                borderRadius: "6px",
-                                background: "#f8f9fa",
+                                cursor: "pointer",
+                                margin: "5px",
                               }}
                             >
-                              {slot}
-                            </span>
-                          </label>
-                        ))}
+                              <input
+                                type="radio"
+                                name="slot"
+                                value={slot}
+                                style={{ display: "none" }}
+                              />
+                              <span
+                                style={{
+                                  display: "inline-block",
+                                  padding: "6px 12px",
+                                  border: "1px solid #ddd",
+                                  borderRadius: "6px",
+                                  background: "#f8f9fa",
+                                }}
+                              >
+                                {slot}
+                              </span>
+                            </label>
+                          ))
+                        ) : (
+                          <p>No available slots for the selected date.</p>
+                        )}
                       </div>
-
-                      {/* <ul>
-                        <li className="d-flex align-items-center justify-content-between">
-                          <span>Date</span>
-                          <span>07/10/2022</span>
-                        </li>
-                        <li className="d-flex align-items-center justify-content-between">
-                          <span>Time</span>
-                          <span>08:30 PM</span>
-                        </li>
-                        <li className="d-flex align-items-center justify-content-between">
-                          <span>Doctor Name</span>
-                          <span>Dr. Joseph Doe</span>
-                        </li>
-                      </ul> */}
-                      <hr />
-                      {/* <ul>
-                                                <li className="d-flex align-items-center justify-content-between">
-                                                    <span>Lorem ipsum dolor</span>
-                                                    <span>$80</span>
-                                                </li>
-                                                <li className="d-flex align-items-center justify-content-between">
-                                                    <span>Lorem ipsum dolor</span>
-                                                    <span>$140</span>
-                                                </li>
-                                            </ul> */}
                       <hr />
                       <ul>
-                        {/* <li className="d-flex align-items-center justify-content-between">
-                                                    <span className="secondary-color"><b>Total</b></span>
-                                                    <span className="secondary-color"><b>$220</b></span>
-                                                </li> */}
                         <li className="d-flex align-items-center justify-content-between">
                           <button
                             type="submit"

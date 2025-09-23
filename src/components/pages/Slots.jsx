@@ -8,11 +8,14 @@ import { addSlotApi, updateSlotApi } from "../../api/slotApi";
 import { getDateRange } from "../common/DateRangeFilter2/utils";
 import { Button, Col, Form, Row } from "react-bootstrap";
 
-// --- Slot Modal (unchanged) ---
+// --- Slot Modal (updated) ---
 function getLocalTimeString(isoDateTime) {
   const date = new Date(isoDateTime);
-  return date
-    .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
 function getLocalDateString(isoDateTime) {
@@ -38,6 +41,8 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
     end_date: "",
     end_time: "",
     slot_duration: 15,
+    doctor: user?.id || "",
+    hospital: user?.selectedHostiptal?.id || "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +58,8 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
         slot_duration: Math.round(
           (new Date(slot.end_time) - new Date(slot.start_time)) / (1000 * 60)
         ),
+        doctor: slot.doctor || user?.id || "",
+        hospital: slot.hospital || user?.selectedHostiptal?.id || "",
       });
     } else {
       const now = new Date();
@@ -64,13 +71,20 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
         end_date: nextHour.toISOString().slice(0, 10),
         end_time: endTime.toTimeString().slice(0, 5),
         slot_duration: 30,
+        doctor: user?.id || "",
+        hospital: user?.selectedHostiptal?.id || "",
       });
     }
-  }, [slot]);
+  }, [slot, user]);
 
   // Validation helper
   const validateFields = () => {
-    if (!formData.start_date || !formData.end_date || !formData.start_time || !formData.end_time) {
+    if (
+      !formData.start_date ||
+      !formData.end_date ||
+      !formData.start_time ||
+      !formData.end_time
+    ) {
       setValidationMsg(""); // Don't show anything until user fills everything
       return false;
     }
@@ -100,7 +114,12 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
   useEffect(() => {
     validateFields();
     // eslint-disable-next-line
-  }, [formData.start_date, formData.end_date, formData.start_time, formData.end_time]);
+  }, [
+    formData.start_date,
+    formData.end_date,
+    formData.start_time,
+    formData.end_time,
+  ]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({
@@ -121,8 +140,8 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
     setLoading(true);
     try {
       const payload = {
-        doctor: user?.id,
-        hospital: user?.selectedHostiptal?.id,
+        doctor: formData.doctor,
+        hospital: formData.hospital,
         start_date: formData.start_date,
         start_time: formData.start_time,
         end_date: formData.end_date,
@@ -131,13 +150,20 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
       };
       if (slot) payload.id = slot.id;
 
-      // Replace with your API call:
       const response = slot
         ? await updateSlotApi(payload)
         : await addSlotApi(payload);
 
-      if (!response.ok) throw new Error("Failed to save slot");
-      onSaved();
+      // ✅ check for message instead of failing
+      if (response.status >= 200 && response.status < 300) {
+        if (response.data?.message?.toLowerCase().includes("success")) {
+          onSaved(); // refresh + close modal
+        } else {
+          setError(response.data?.message || "Unexpected response");
+        }
+      } else {
+        throw new Error(response.data?.message || "Failed to save slot");
+      }
     } catch (err) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -171,6 +197,33 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
                   {error}
                 </div>
               )}
+
+              {/* Doctor and Hospital Fields */}
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Doctor</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={formData.doctor}
+                      onChange={(e) => handleChange("doctor", e.target.value)}
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Hospital</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={formData.hospital}
+                      onChange={(e) => handleChange("hospital", e.target.value)}
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
@@ -178,7 +231,9 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
                     <Form.Control
                       type="date"
                       value={formData.start_date}
-                      onChange={(e) => handleChange("start_date", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("start_date", e.target.value)
+                      }
                       required
                     />
                   </Form.Group>
@@ -189,7 +244,9 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
                     <Form.Control
                       type="time"
                       value={formData.start_time}
-                      onChange={(e) => handleChange("start_time", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("start_time", e.target.value)
+                      }
                       required
                     />
                   </Form.Group>
@@ -237,7 +294,10 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
                 </Form.Text>
               </Form.Group>
               {validationMsg && (
-                <div className="alert alert-warning py-2 my-2" style={{ fontSize: 14 }}>
+                <div
+                  className="alert alert-warning py-2 my-2"
+                  style={{ fontSize: 14 }}
+                >
                   {validationMsg}
                 </div>
               )}
@@ -271,7 +331,6 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
     </div>
   );
 };
-
 
 // --- SlotManager UI ---
 const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {

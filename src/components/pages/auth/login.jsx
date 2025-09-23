@@ -46,13 +46,15 @@ const DoctorLogin = () => {
           headers: { "Content-Type": "application/json" },
         }
       );
-      if (response.data?.token) {
-        localStorage.setItem("authToken", response.data.token);
-        localStorage.setItem("userInfo", JSON.stringify(response.data));
-        navigate("/doc-slots");
-      } else {
-        alert("Login failed. Please check your credentials.");
-      }
+ if (response.data?.data?.token) {
+  localStorage.setItem("authToken", response.data.data.token);
+  localStorage.setItem("refreshToken", response.data.data.refresh_token);
+  localStorage.setItem("userInfo", JSON.stringify(response.data.data));
+  navigate("/doc-slots");
+} else {
+  alert(response.data?.message || "Login failed. Please check your credentials.");
+}
+
     } catch (error) {
       alert(
         error?.response?.data?.message || "An error occurred during login."

@@ -4,7 +4,6 @@ import { Rating } from "../../../helper/helper";
 import { useFetch } from "../../hooks/usefetch";
 import html2canvas from "html2canvas";
 
-
 const Content = ({ detailId }) => {
   const {
     data: doctorData,
@@ -73,6 +72,15 @@ const Content = ({ detailId }) => {
                             {item.designation}
                           </Link>
                         </div>
+                        {/* Added hospital name below designation */}
+                        {/* <div className="hospital-name mb-2">
+                          <small className="text-muted">
+                            <i className="fal fa-building me-2"></i>
+                            {item.hospital && item.hospital.length > 0 
+                              ? item.hospital.map(h => h.name).join(", ") 
+                              : "N/A"}
+                          </small>
+                        </div> */}
                         <div className="qualifications mb-3">
                           <small className="text-muted">
                             <strong>{item.qualification}</strong>
@@ -93,7 +101,9 @@ const Content = ({ detailId }) => {
                           </span> */}
                           <span>
                             <i className="fal fa-building" />
-                            {item.hospital?.[0]?.hospital_name || "N/A"}
+                            {item.hospital && item.hospital.length > 0 
+                              ? item.hospital.map(h => h.name).join(", ") 
+                              : "N/A"}
                           </span>
                         </div>
                       </div>
