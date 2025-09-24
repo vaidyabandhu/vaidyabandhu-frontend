@@ -80,25 +80,25 @@ const Content = ({ detailId }) => {
                             : "N/A"}
                         </span>
 
-                        <div className="qualifications mb-3">
+                        <div className="qualifications mt-2">
                           <small className="text-muted">
                             <strong>{item.qualification}</strong>
                           </small>
                         </div>
 
                         <div className="sigma_team-categories">
-                          <Link
-                            to={"/doctor-details?id=" + (item.id || "unknown")}
+                          <span
                             className="sigma_team-category"
+                            style={{ color: "#686A6F" }}
                           >
                             {item.designation}
-                          </Link>
+                          </span>
                         </div>
 
                         {item.department_name && (
                           <div className="department-info mt-1 mb-2">
                             <span
-                              style={{ fontSize: "14px", color: "#6c757d" }}
+                              style={{ fontSize: "18px", color: "#6c757d" }}
                             >
                               {item.department_name}
                             </span>
@@ -109,17 +109,21 @@ const Content = ({ detailId }) => {
                           {item.speciality
                             ?.slice(0, 3)
                             .map((specialityItem, index) => (
-                              <Link
-                                to={`/doctor-details?id=${specialityItem.id}`}
-                                className="sigma_team-category"
+                              <span
                                 key={index}
+                                className="sigma_team-category"
+                                style={{
+                                  color: "#686A6F",
+                                  cursor: "default",
+                                }}
                               >
                                 {specialityItem.title}
                                 {index !==
                                   Math.min(2, item.speciality.length - 1) &&
                                   ", "}
-                              </Link>
+                              </span>
                             ))}
+
                           {item.speciality?.length > 3 && " ..."}
                         </div>
 
