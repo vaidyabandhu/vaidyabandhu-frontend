@@ -55,7 +55,8 @@ const Content = ({ detailId }) => {
                         />
                       </div>
                     </div>
-                    <div className="col-md-8">
+
+                    <div className="col-md-8 d-flex flex-column justify-content-between">
                       <div className="sigma_team-body">
                         <h5>
                           <Link
@@ -64,23 +65,27 @@ const Content = ({ detailId }) => {
                             {item.full_name}
                           </Link>
                         </h5>
+
                         <div className="sigma_rating">
                           {Rating(item.ratings || 5)}
                           <span className="ms-3">
                             ({item.reviews?.length || 0})
                           </span>
                         </div>
+
                         <span>
                           <i className="fal fa-building" />
                           {item.hospital && item.hospital.length > 0
                             ? item.hospital.map((h) => h.name).join(", ")
                             : "N/A"}
                         </span>
+
                         <div className="qualifications mb-3">
                           <small className="text-muted">
                             <strong>{item.qualification}</strong>
                           </small>
                         </div>
+
                         <div className="sigma_team-categories">
                           <Link
                             to={"/doctor-details?id=" + (item.id || "unknown")}
@@ -89,23 +94,9 @@ const Content = ({ detailId }) => {
                             {item.designation}
                           </Link>
                         </div>
-                        {/* Added hospital name below designation */}
-                        {/* <div className="hospital-name mb-2">
-                          <small className="text-muted">
-                            <i className="fal fa-building me-2"></i>
-                            {item.hospital && item.hospital.length > 0 
-                              ? item.hospital.map(h => h.name).join(", ") 
-                              : "N/A"}
-                          </small>
-                        </div> */}
+
                         {item.department_name && (
-                          <div
-                            className="department-info"
-                            style={{
-                              marginTop: "4px",
-                              marginBottom: "8px",
-                            }}
-                          >
+                          <div className="department-info mt-1 mb-2">
                             <span
                               style={{ fontSize: "14px", color: "#6c757d" }}
                             >
@@ -113,32 +104,77 @@ const Content = ({ detailId }) => {
                             </span>
                           </div>
                         )}
+
                         <div className="sigma_team-categories">
-                          {item.speciality?.map((specialityItem, index) => (
-                            <Link
-                              to={`/doctor-details?id=${specialityItem.id}`}
-                              className="sigma_team-category"
-                              key={index}
-                            >
-                              {specialityItem.title}
-                              {index !== item.speciality.length - 1 && ", "}
-                            </Link>
-                          ))}
+                          {item.speciality
+                            ?.slice(0, 3)
+                            .map((specialityItem, index) => (
+                              <Link
+                                to={`/doctor-details?id=${specialityItem.id}`}
+                                className="sigma_team-category"
+                                key={index}
+                              >
+                                {specialityItem.title}
+                                {index !==
+                                  Math.min(2, item.speciality.length - 1) &&
+                                  ", "}
+                              </Link>
+                            ))}
+                          {item.speciality?.length > 3 && " ..."}
                         </div>
+
                         <div className="sigma_team-info mt-4">
                           <span>
                             <i className="fal fa-user-md" />
                             {item.experience || "N/A"} Years Experience
                           </span>
-                          {/* <span>
-                            <i className="fal fa-phone" />
-                            {item.hospital?.[0]?.mobile || "+91-XXXXXXXXXX"}
-                          </span>
-                          <span>
-                            <i className="fal fa-at" />
-                            {item.email || "Not Provided"}
-                          </span> */}
                         </div>
+                      </div>
+
+                      {/* Right aligned button */}
+                      <div className="d-flex justify-content-end mt-3 pe-3 pb-3">
+                        <button
+                          type="button"
+                          className="sigma_btn btn-sm"
+                          onClick={async () => {
+                            const token = window.localStorage.getItem("token");
+                            if (!token) {
+                              window.dispatchEvent(
+                                new CustomEvent("open-login-modal")
+                              );
+                              return;
+                            }
+                            try {
+                              const response = await fetch(
+                                "https://admin.vaidyabandhu.com/api/user/profile/",
+                                {
+                                  method: "GET",
+                                  headers: {
+                                    Authorization: token,
+                                    "Content-Type": "application/json",
+                                  },
+                                }
+                              );
+                              const data = await response.json();
+                              if (response.ok) {
+                                if (data?.is_active === false) {
+                                  window.location.href = "/basic-details";
+                                } else if (data?.is_active === true) {
+                                  window.location.href = "/appointment";
+                                } else {
+                                  window.location.href = "/basic-details";
+                                }
+                              } else {
+                                window.location.href = "/basic-details";
+                              }
+                            } catch (err) {
+                              window.location.href = "/basic-details";
+                            }
+                          }}
+                        >
+                          Book Appointment
+                          <i className="fal fa-arrow-right ms-3" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -256,10 +292,10 @@ const Content = ({ detailId }) => {
           <div className="col-lg-4">
             <div className="sidebar style-10 mt-5 mt-lg-0">
               {/* Booking Summary Widget */}
-              <div className="widget widget-form">
+              {/* <div className="widget widget-form">
                 <h5 className="widget-title">Booking Summary</h5>
                 <div className="widget-inner">
-                  {/* <form>
+                  <form>
                     <label>Date</label>
                     <div className="form-group">
                       <input
@@ -272,7 +308,7 @@ const Content = ({ detailId }) => {
                     <div className="form-group mb-0">
                       <input type="time" name="time" placeholder="08:30 PM" />
                     </div>
-                  </form> */}
+                  </form>
                 </div>
                 <hr />
                 <div className="widget-inner widget-service">
@@ -321,7 +357,7 @@ const Content = ({ detailId }) => {
                     </button>
                   </form>
                 </div>
-              </div>
+              </div> */}
 
               {/* Get in Touch Widget */}
               <div className="widget">
