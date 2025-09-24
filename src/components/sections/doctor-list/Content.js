@@ -810,8 +810,8 @@ const Content = () => {
                                 </span>
                               </div>
 
-                              <p>{item.qualification}</p>
-                              {/* Added department name below hospital name */}
+                              <p>{item.designation}</p>
+                              {/* Added department*/}
                               {item.department_name && (
                                 <div
                                   className="department-info"
@@ -822,7 +822,7 @@ const Content = () => {
                                 >
                                   <span
                                     style={{
-                                      fontSize: "14px",
+                                      fontSize: "18px",
                                       color: "#6c757d",
                                     }}
                                   >
@@ -834,10 +834,13 @@ const Content = () => {
                                 {item.speciality
                                   ?.slice(0, 3)
                                   .map((specialityItem, index) => (
-                                    <Link
-                                      to={`/doctor-details?id=${specialityItem.id}`}
-                                      className="sigma_team-category"
+                                    <span
                                       key={index}
+                                      className="sigma_team-category"
+                                      style={{
+                                        color: "#686A6F",
+                                        cursor: "default",
+                                      }}
                                     >
                                       {specialityItem.title}
                                       {index !==
@@ -845,7 +848,7 @@ const Content = () => {
                                           2,
                                           item.speciality.length - 1
                                         ) && ", "}
-                                    </Link>
+                                    </span>
                                   ))}
 
                                 {item.speciality?.length > 3 && " ..."}
@@ -866,7 +869,7 @@ const Content = () => {
                               <div className="sigma_team-info">
                                 <span>
                                   <i className="fal fa-calendar" />
-                                  {item.designation}
+                                  {item.qualification}
                                 </span>
 
                                 <span>
