@@ -667,6 +667,16 @@ const MyProfile = () => {
     );
   }
 
+  // Helper function to format dates
+  const formatDate = (dateString) => {
+    if (!dateString) return " ";
+    return dateString
+      .split("T")[0]
+      .split("-")
+      .reverse()
+      .join("-");
+  };
+
   return (
     <>
       {showLogoutModal && (
@@ -830,15 +840,9 @@ const MyProfile = () => {
                     </span>
                   </div>
                   <div style={styles.detailRowAligned}>
-                    <span style={styles.labelText}>VALID TILL:</span>
+                    <span style={styles.labelText}>VALIDITY:</span>
                     <span style={styles.valueText}>
-                      {patient.end_date
-                        ? patient.end_date
-                            .split("T")[0]
-                            .split("-")
-                            .reverse()
-                            .join("-")
-                        : " "}
+                      {formatDate(patient.start_date)} to {formatDate(patient.end_date)}
                     </span>
                   </div>
 

@@ -787,23 +787,7 @@ const Content = () => {
                                   {item.full_name}
                                 </Link>
                               </h5>
-                              <div className="sigma_team-categories">
-                                {item.speciality?.map(
-                                  (specialityItem, index) => (
-                                    <Link
-                                      to={`/doctor-details?id=${specialityItem.id}`}
-                                      className="sigma_team-category"
-                                      key={index}
-                                    >
-                                      {specialityItem.title}
-                                      {index !== item.speciality.length - 1 &&
-                                        ", "}
-                                    </Link>
-                                  )
-                                )}
-                              </div>
-                              <p>{item.qualification}</p>
-                              {/* Added hospital name below designation */}
+                              {/* Added hospital */}
                               <div
                                 className="hospital-info"
                                 style={{
@@ -812,7 +796,7 @@ const Content = () => {
                                 }}
                               >
                                 <span
-                                  style={{ fontSize: "14px", color: "#6c757d" }}
+                                  style={{ fontSize: "18px", color: "#6c757d" }}
                                 >
                                   <i
                                     className="fal fa-hospital"
@@ -825,6 +809,48 @@ const Content = () => {
                                     : "Not specified"}
                                 </span>
                               </div>
+
+                              <p>{item.qualification}</p>
+                              {/* Added department name below hospital name */}
+                              {item.department_name && (
+                                <div
+                                  className="department-info"
+                                  style={{
+                                    marginTop: "4px",
+                                    marginBottom: "8px",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: "14px",
+                                      color: "#6c757d",
+                                    }}
+                                  >
+                                    {item.department_name}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="sigma_team-categories">
+                                {item.speciality
+                                  ?.slice(0, 3)
+                                  .map((specialityItem, index) => (
+                                    <Link
+                                      to={`/doctor-details?id=${specialityItem.id}`}
+                                      className="sigma_team-category"
+                                      key={index}
+                                    >
+                                      {specialityItem.title}
+                                      {index !==
+                                        Math.min(
+                                          2,
+                                          item.speciality.length - 1
+                                        ) && ", "}
+                                    </Link>
+                                  ))}
+
+                                {item.speciality?.length > 3 && " ..."}
+                              </div>
+
                               <div className="d-flex align-items-center mt-4">
                                 <Link
                                   to={`/doctor-details?id=${item.id}`}

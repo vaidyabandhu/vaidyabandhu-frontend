@@ -16,11 +16,15 @@ const Content = ({ detailId }) => {
 
   // Handle loading and error states
   if (loading) {
-    return <div className="p-4 text-center" style={{ height: '400px' }}>Loading doctor details…</div>;
+    return (
+      <div className="p-4 text-center" style={{ height: "400px" }}>
+        Loading doctor details…
+      </div>
+    );
   }
   if (error || !doctorData || !doctorData.data) {
     return (
-      <div className="p-4 text-center text-danger" style={{ height: '500px' }}>
+      <div className="p-4 text-center text-danger" style={{ height: "500px" }}>
         Failed to load doctor details.
       </div>
     );
@@ -54,7 +58,9 @@ const Content = ({ detailId }) => {
                     <div className="col-md-8">
                       <div className="sigma_team-body">
                         <h5>
-                          <Link to={"/doctor-details?id=" + (item.id || "unknown")}>
+                          <Link
+                            to={"/doctor-details?id=" + (item.id || "unknown")}
+                          >
                             {item.full_name}
                           </Link>
                         </h5>
@@ -63,6 +69,17 @@ const Content = ({ detailId }) => {
                           <span className="ms-3">
                             ({item.reviews?.length || 0})
                           </span>
+                        </div>
+                        <span>
+                          <i className="fal fa-building" />
+                          {item.hospital && item.hospital.length > 0
+                            ? item.hospital.map((h) => h.name).join(", ")
+                            : "N/A"}
+                        </span>
+                        <div className="qualifications mb-3">
+                          <small className="text-muted">
+                            <strong>{item.qualification}</strong>
+                          </small>
                         </div>
                         <div className="sigma_team-categories">
                           <Link
@@ -81,10 +98,32 @@ const Content = ({ detailId }) => {
                               : "N/A"}
                           </small>
                         </div> */}
-                        <div className="qualifications mb-3">
-                          <small className="text-muted">
-                            <strong>{item.qualification}</strong>
-                          </small>
+                        {item.department_name && (
+                          <div
+                            className="department-info"
+                            style={{
+                              marginTop: "4px",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            <span
+                              style={{ fontSize: "14px", color: "#6c757d" }}
+                            >
+                              {item.department_name}
+                            </span>
+                          </div>
+                        )}
+                        <div className="sigma_team-categories">
+                          {item.speciality?.map((specialityItem, index) => (
+                            <Link
+                              to={`/doctor-details?id=${specialityItem.id}`}
+                              className="sigma_team-category"
+                              key={index}
+                            >
+                              {specialityItem.title}
+                              {index !== item.speciality.length - 1 && ", "}
+                            </Link>
+                          ))}
                         </div>
                         <div className="sigma_team-info mt-4">
                           <span>
@@ -99,12 +138,6 @@ const Content = ({ detailId }) => {
                             <i className="fal fa-at" />
                             {item.email || "Not Provided"}
                           </span> */}
-                          <span>
-                            <i className="fal fa-building" />
-                            {item.hospital && item.hospital.length > 0 
-                              ? item.hospital.map(h => h.name).join(", ") 
-                              : "N/A"}
-                          </span>
                         </div>
                       </div>
                     </div>
@@ -142,8 +175,10 @@ const Content = ({ detailId }) => {
                         <div className="menu nav-item">
                           <Link
                             to="#"
-                            className={`nav-link p-0 ${i === 0 ? "active" : ""}`}
-                            onClick={e => {
+                            className={`nav-link p-0 ${
+                              i === 0 ? "active" : ""
+                            }`}
+                            onClick={(e) => {
                               e.preventDefault();
                               document
                                 .getElementById(menu.id)
@@ -220,7 +255,6 @@ const Content = ({ detailId }) => {
           {/* Sidebar Start */}
           <div className="col-lg-4">
             <div className="sidebar style-10 mt-5 mt-lg-0">
-
               {/* Booking Summary Widget */}
               <div className="widget widget-form">
                 <h5 className="widget-title">Booking Summary</h5>
@@ -247,33 +281,38 @@ const Content = ({ detailId }) => {
                       type="button"
                       className="sigma_btn btn-block btn-sm"
                       onClick={async () => {
-                        const token = window.localStorage.getItem('token');
+                        const token = window.localStorage.getItem("token");
                         if (!token) {
-                          window.dispatchEvent(new CustomEvent('open-login-modal'));
+                          window.dispatchEvent(
+                            new CustomEvent("open-login-modal")
+                          );
                           return;
                         }
                         try {
-                          const response = await fetch('https://admin.vaidyabandhu.com/api/user/profile/', {
-                            method: 'GET',
-                            headers: {
-                              'Authorization': token,
-                              'Content-Type': 'application/json',
-                            },
-                          });
+                          const response = await fetch(
+                            "https://admin.vaidyabandhu.com/api/user/profile/",
+                            {
+                              method: "GET",
+                              headers: {
+                                Authorization: token,
+                                "Content-Type": "application/json",
+                              },
+                            }
+                          );
                           const data = await response.json();
                           if (response.ok) {
                             if (data?.is_active === false) {
-                              window.location.href = '/basic-details';
+                              window.location.href = "/basic-details";
                             } else if (data?.is_active === true) {
-                              window.location.href = '/appointment';
+                              window.location.href = "/appointment";
                             } else {
-                              window.location.href = '/basic-details';
+                              window.location.href = "/basic-details";
                             }
                           } else {
-                            window.location.href = '/basic-details';
+                            window.location.href = "/basic-details";
                           }
                         } catch (err) {
-                          window.location.href = '/basic-details';
+                          window.location.href = "/basic-details";
                         }
                       }}
                     >
@@ -333,7 +372,10 @@ const Content = ({ detailId }) => {
                   <div className="sigma_info style-24 p-0 shadow-none">
                     <div className="sigma_info-title">
                       <span className="sigma_info-icon bg-primary-1 text-white">
-                        <i className="fal fa-phone" style={{ transform: "scaleX(-1.5)" }} />
+                        <i
+                          className="fal fa-phone"
+                          style={{ transform: "scaleX(-1.5)" }}
+                        />
                       </span>
                     </div>
                     <div className="sigma_info-description">
@@ -352,10 +394,7 @@ const Content = ({ detailId }) => {
                     </div>
                     <div className="sigma_info-description">
                       <h5>Our Email</h5>
-                      <p>
-                      
-                        {item.email || "support@vaidyabandhu.com"}
-                      </p>
+                      <p>{item.email || "support@vaidyabandhu.com"}</p>
                     </div>
                   </div>
                   <div className="sigma_info style-24 p-0 shadow-none mb-0">
@@ -366,10 +405,7 @@ const Content = ({ detailId }) => {
                     </div>
                     <div className="sigma_info-description">
                       <h5>Our Address</h5>
-                       <p>
-                        {item.address || "Bangalore"}
-                      </p>
-                     
+                      <p>{item.address || "Bangalore"}</p>
                     </div>
                   </div>
                 </div>

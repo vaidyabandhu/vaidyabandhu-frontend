@@ -180,6 +180,10 @@ const Header = () => {
         {!userPhone && (
           <div className="p-3 text-center">
             <MembershipModal />
+            {/* Added login button in mobile menu */}
+            <div className="mt-2">
+              <LoginModal />
+            </div>
           </div>
         )}
       </aside>
@@ -461,7 +465,7 @@ const Header = () => {
                       <li className="d-none d-sm-block">
                         <MembershipModal />
                       </li>
-                      {/* Login Button UI */}
+                      {/* Login Button UI - Only for desktop */}
                       <li className="d-none d-sm-block">
                         <LoginModal/>
                       </li>
