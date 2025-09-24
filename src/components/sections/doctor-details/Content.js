@@ -32,6 +32,48 @@ const Content = ({ detailId }) => {
 
   const item = doctorData.data;
 
+  // Extract hospital addresses with safety checks
+  const hospitalAddresses =
+    item?.hospital
+      ?.map((h) => h.address)
+      .filter((addr) => addr && addr.trim() !== "") || [];
+  const addressString =
+    hospitalAddresses.length > 0
+      ? hospitalAddresses.join(", ")
+      : "Not specified";
+
+  // Process fellowship membership from string to array
+  const fellowshipItems = item.fellowship_membership
+    ? item.fellowship_membership
+        .split("•")
+        .filter((item) => item.trim() !== "")
+        .map((item) => item.trim())
+    : [];
+
+  // Process field expertise
+  const fieldExpertiseItems = item.field_expertise
+    ? item.field_expertise
+        .split("•")
+        .filter((item) => item.trim() !== "")
+        .map((item) => item.trim())
+    : [];
+
+  // Process awards and achievements
+  const awardsAchievementsItems = item.awards_achievements
+    ? item.awards_achievements
+        .split("•")
+        .filter((item) => item.trim() !== "")
+        .map((item) => item.trim())
+    : [];
+
+  // Process talks and publications
+  const talksPublicationsItems = item.talks_publications
+    ? item.talks_publications
+        .split("•")
+        .filter((item) => item.trim() !== "")
+        .map((item) => item.trim())
+    : [];
+
   return (
     <div className="section sigma_post-details">
       <div className="container">
@@ -57,40 +99,41 @@ const Content = ({ detailId }) => {
                     </div>
 
                     <div className="col-md-8 d-flex flex-column justify-content-between">
-                      <div className="sigma_team-body">
+                      <div className="sigma_team-body ">
                         <h5>
                           <Link
                             to={"/doctor-details?id=" + (item.id || "unknown")}
                           >
+                            <i className="fas fa-user-md me-2"></i>
                             {item.full_name}
                           </Link>
                         </h5>
 
-                        <div className="sigma_rating">
-                          {Rating(item.ratings || 5)}
-                          <span className="ms-3">
-                            ({item.reviews?.length || 0})
+                        <div className="mt-2">
+                          <span style={{ fontSize: "18px", color: "#6c757d" }}>
+                            <i className="fas fa-hospital me-2"></i>
+                            {item.hospital && item.hospital.length > 0
+                              ? item.hospital.map((h) => h.name).join(", ")
+                              : "N/A"}
                           </span>
                         </div>
 
-                        <span>
-                          <i className="fal fa-building" />
-                          {item.hospital && item.hospital.length > 0
-                            ? item.hospital.map((h) => h.name).join(", ")
-                            : "N/A"}
-                        </span>
-
                         <div className="qualifications mt-2">
                           <small className="text-muted">
+                            <i className="fas fa-graduation-cap me-2"></i>
                             <strong>{item.qualification}</strong>
                           </small>
                         </div>
 
-                        <div className="sigma_team-categories">
+                        <div
+                          className="sigma_team-categories"
+                          style={{ marginTop: "8px" }}
+                        >
                           <span
                             className="sigma_team-category"
                             style={{ color: "#686A6F" }}
                           >
+                            <i className="fas fa-user-tie me-2"></i>
                             {item.designation}
                           </span>
                         </div>
@@ -100,12 +143,17 @@ const Content = ({ detailId }) => {
                             <span
                               style={{ fontSize: "18px", color: "#6c757d" }}
                             >
+                              <i className="fas fa-building me-2"></i>
                               {item.department_name}
                             </span>
                           </div>
                         )}
 
                         <div className="sigma_team-categories">
+                          <i
+                            className="fas fa-stethoscope me-2"
+                            style={{ color: "#686A6F" }}
+                          ></i>
                           {item.speciality
                             ?.slice(0, 3)
                             .map((specialityItem, index) => (
@@ -127,10 +175,16 @@ const Content = ({ detailId }) => {
                           {item.speciality?.length > 3 && " ..."}
                         </div>
 
-                        <div className="sigma_team-info mt-4">
+                        <div className="sigma_team-info mt-2">
                           <span>
-                            <i className="fal fa-user-md" />
+                            <i className="fas fa-user-md me-2"></i>
                             {item.experience || "N/A"} Years Experience
+                          </span>
+
+                          {/* Address section added here */}
+                          <span>
+                            <i className="fas fa-map-marker-alt me-2"></i>
+                            {addressString}
                           </span>
                         </div>
                       </div>
@@ -176,40 +230,23 @@ const Content = ({ detailId }) => {
                             }
                           }}
                         >
+                          <i className="fas fa-calendar-check me-2"></i>
                           Book Appointment
-                          <i className="fal fa-arrow-right ms-3" />
+                          <i className="fas fa-arrow-right ms-3" />
                         </button>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Current Positions */}
-                {/* <div className="current-positions my-4">
-                  <h5 className="mb-3">Current Positions</h5>
-                  <div className="row">
-                    {item.hospital &&
-                      item.hospital.map((hospital, index) => (
-                        <div key={index} className="col-md-12 mb-2">
-                          <div className="position-item d-flex align-items-center">
-                            <i className="fal fa-hospital text-primary me-2"></i>
-                            <span>
-                              {hospital.hospital_name} - {hospital.address}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div> */}
-
                 {/* Detail Navigation */}
                 <div className="detail-menu-list">
                   <div className="row no-gutters">
                     {[
-                      { id: "overview", label: "Overview" },
-                      { id: "expertise", label: "Expertise" },
-                      { id: "achievements", label: "Achievements" },
-                      { id: "awards", label: "Awards" },
+                      { id: "overview", label: "Field expertise" },
+                      { id: "expertise", label: "Fellowship membership" },
+                      { id: "achievements", label: "Awards achievements" },
+                      { id: "awards", label: "Talks publications" },
                     ].map((menu, i) => (
                       <div className="col-md-3" key={menu.id}>
                         <div className="menu nav-item">
@@ -235,30 +272,49 @@ const Content = ({ detailId }) => {
 
                 {/* Overview Section */}
                 <div id="overview" className="mb-5">
-                  <h4>About {item.full_name}</h4>
-                  <p>{item.content}</p>
-                  <div className="why-trust-section mt-4">
-                    {/* <h5>Why Patients Trust {item.full_name}</h5> */}
-                    <p>{item.notes || "—"}</p>
+                  <h4>Field expertise</h4>
+                  <div className="row">
+                    {fieldExpertiseItems.length > 0 ? (
+                      fieldExpertiseItems.map((expertise, index) => (
+                        <div key={index} className="col-md-12 mb-3">
+                          {expertise
+                            .split(".") // split by full stop
+                            .filter((point) => point.trim() !== "") // remove empty ones
+                            .map((point, subIndex) => (
+                              <div
+                                key={`${index}-${subIndex}`}
+                                className="specialty-item d-flex align-items-start mb-1"
+                              >
+                                <i className="fas fa-check-circle text-success me-2 mt-1"></i>
+                                <span>{point.trim()}</span>
+                              </div>
+                            ))}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-md-12 text-muted mb-3">
+                        No field expertise listed.
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Expertise Section */}
                 <div id="expertise" className="mb-5">
-                  <h4>Expertise & Specializations</h4>
+                  <h4>Fellowship & Memberships</h4>
                   <div className="row">
-                    {item.speciality && item.speciality.length > 0 ? (
-                      item.speciality.map((special, index) => (
-                        <div key={index} className="col-md-6 mb-3">
-                          <div className="specialty-item d-flex align-items-center">
-                            <i className="fal fa-check-circle text-success me-2"></i>
-                            <span>{special.title}</span>
+                    {fellowshipItems.length > 0 ? (
+                      fellowshipItems.map((fellowship, index) => (
+                        <div key={index} className="col-md-12 mb-3">
+                          <div className="specialty-item d-flex align-items-start">
+                            <i className="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <span> {fellowship}</span>
                           </div>
                         </div>
                       ))
                     ) : (
                       <div className="col-md-12 text-muted mb-3">
-                        No specialties listed.
+                        No fellowship memberships listed.
                       </div>
                     )}
                   </div>
@@ -266,27 +322,62 @@ const Content = ({ detailId }) => {
 
                 {/* Achievements Section */}
                 <div id="achievements" className="mb-5">
-                  <h4>Professional Achievements</h4>
+                  <h4>Awards & Achievements</h4>
                   <div className="row">
-                    <div className="col-md-12 mb-3">
-                      <div className="achievement-card text-center p-4 border rounded">
-                        {item.awards_achievements || "No achievements listed."}
+                    {awardsAchievementsItems.length > 0 ? (
+                      awardsAchievementsItems.map((achievement, index) => (
+                        <div key={index} className="col-md-12 mb-3">
+                          {achievement
+                            .split("●") // split into bullet points
+                            .filter((point) => point.trim() !== "") // remove empties
+                            .map((point, subIndex) => (
+                              <div
+                                key={`${index}-${subIndex}`}
+                                className="specialty-item d-flex align-items-start mb-1"
+                              >
+                                <i className="fas fa-check-circle text-success me-2 mt-1"></i>
+                                <span>{point.trim()}</span>
+                              </div>
+                            ))}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-md-12 text-muted mb-3">
+                        No awards or achievements listed.
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Awards Section */}
                 <div id="awards" className="mb-5">
-                  <h4>Awards & Recognitions</h4>
-                  <div className="awards-list">
-                    <div className="award-item mb-3 p-3 border-left border-primary">
-                      <div className="award-text">
-                        {item.talks_publications || "No awards."}
+                  <h4>Talks & Publications</h4>
+                  <div className="row">
+                    {talksPublicationsItems.length > 0 ? (
+                      talksPublicationsItems.map((publication, index) => (
+                        <div key={index} className="col-md-12 mb-3">
+                          {publication
+                            .split("●") // split into points
+                            .filter((point) => point.trim() !== "") // remove empty ones
+                            .map((point, subIndex) => (
+                              <div
+                                key={`${index}-${subIndex}`}
+                                className="specialty-item d-flex align-items-start mb-1"
+                              >
+                                <i className="fas fa-check-circle text-success me-2 mt-1"></i>
+                                <span>{point.trim()}</span>
+                              </div>
+                            ))}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-md-12 text-muted mb-3">
+                        No talks or publications listed.
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
+
                 <div className="spacer"></div>
               </div>
             </div>
@@ -295,81 +386,15 @@ const Content = ({ detailId }) => {
           {/* Sidebar Start */}
           <div className="col-lg-4">
             <div className="sidebar style-10 mt-5 mt-lg-0">
-              {/* Booking Summary Widget */}
-              {/* <div className="widget widget-form">
-                <h5 className="widget-title">Booking Summary</h5>
-                <div className="widget-inner">
-                  <form>
-                    <label>Date</label>
-                    <div className="form-group">
-                      <input
-                        type="date"
-                        name="date"
-                        placeholder="Select Date"
-                      />
-                    </div>
-                    <label>Time</label>
-                    <div className="form-group mb-0">
-                      <input type="time" name="time" placeholder="08:30 PM" />
-                    </div>
-                  </form>
-                </div>
-                <hr />
-                <div className="widget-inner widget-service">
-                  <form>
-                    <button
-                      type="button"
-                      className="sigma_btn btn-block btn-sm"
-                      onClick={async () => {
-                        const token = window.localStorage.getItem("token");
-                        if (!token) {
-                          window.dispatchEvent(
-                            new CustomEvent("open-login-modal")
-                          );
-                          return;
-                        }
-                        try {
-                          const response = await fetch(
-                            "https://admin.vaidyabandhu.com/api/user/profile/",
-                            {
-                              method: "GET",
-                              headers: {
-                                Authorization: token,
-                                "Content-Type": "application/json",
-                              },
-                            }
-                          );
-                          const data = await response.json();
-                          if (response.ok) {
-                            if (data?.is_active === false) {
-                              window.location.href = "/basic-details";
-                            } else if (data?.is_active === true) {
-                              window.location.href = "/appointment";
-                            } else {
-                              window.location.href = "/basic-details";
-                            }
-                          } else {
-                            window.location.href = "/basic-details";
-                          }
-                        } catch (err) {
-                          window.location.href = "/basic-details";
-                        }
-                      }}
-                    >
-                      Book Appointment
-                      <i className="fal fa-arrow-right ms-3" />
-                    </button>
-                  </form>
-                </div>
-              </div> */}
-
               {/* Get in Touch Widget */}
               <div className="widget">
-                <h5 className="widget-title">Get in Touch</h5>
+                <h5 className="widget-title">
+                  <i className="fas fa-envelope me-2"></i>Get in Touch
+                </h5>
                 <div className="widget-inner">
                   <form>
                     <div className="form-group">
-                      <i className="fal fa-user" />
+                      <i className="fas fa-user" />
                       <input
                         type="text"
                         name="fname"
@@ -378,7 +403,7 @@ const Content = ({ detailId }) => {
                       />
                     </div>
                     <div className="form-group">
-                      <i className="fal fa-envelope" />
+                      <i className="fas fa-envelope" />
                       <input
                         type="email"
                         name="email"
@@ -398,8 +423,9 @@ const Content = ({ detailId }) => {
                       type="button"
                       className="sigma_btn btn-block btn-sm"
                     >
+                      <i className="fas fa-paper-plane me-2"></i>
                       Send Message
-                      <i className="fal fa-arrow-right ms-3" />
+                      <i className="fas fa-arrow-right ms-3" />
                     </button>
                   </form>
                 </div>
@@ -407,13 +433,15 @@ const Content = ({ detailId }) => {
 
               {/* Contact Widget */}
               <div className="widget">
-                <h5 className="widget-title">Contact</h5>
+                <h5 className="widget-title">
+                  <i className="fas fa-address-book me-2"></i>Contact
+                </h5>
                 <div className="widget-inner">
                   <div className="sigma_info style-24 p-0 shadow-none">
                     <div className="sigma_info-title">
                       <span className="sigma_info-icon bg-primary-1 text-white">
                         <i
-                          className="fal fa-phone"
+                          className="fas fa-phone"
                           style={{ transform: "scaleX(-1.5)" }}
                         />
                       </span>
@@ -429,7 +457,7 @@ const Content = ({ detailId }) => {
                   <div className="sigma_info style-24 p-0 shadow-none">
                     <div className="sigma_info-title">
                       <span className="sigma_info-icon bg-primary-1 text-white">
-                        <i className="fal fa-envelope-open-text" />
+                        <i className="fas fa-envelope-open-text" />
                       </span>
                     </div>
                     <div className="sigma_info-description">
@@ -440,7 +468,7 @@ const Content = ({ detailId }) => {
                   <div className="sigma_info style-24 p-0 shadow-none mb-0">
                     <div className="sigma_info-title">
                       <span className="sigma_info-icon bg-primary-1 text-white">
-                        <i className="fal fa-map-marker-alt" />
+                        <i className="fas fa-map-marker-alt" />
                       </span>
                     </div>
                     <div className="sigma_info-description">

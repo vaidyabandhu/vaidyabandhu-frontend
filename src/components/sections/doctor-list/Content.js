@@ -434,7 +434,7 @@ const Content = () => {
         </div>
       </div>
       {/* Hospital Name - Added new filter section */}
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <h6 className="font-weight-bold mb-3">Hospital Name</h6>
         <div className="form-group">
           <div className="position-relative">
@@ -471,7 +471,7 @@ const Content = () => {
             )}
           </div>
         </div>
-      </div>
+      </div> */}
       {/* Availability */}
       <div className="mb-4">
         <h6 className="font-weight-bold mb-3">Availability</h6>
@@ -787,7 +787,8 @@ const Content = () => {
                                   {item.full_name}
                                 </Link>
                               </h5>
-                              {/* Added hospital */}
+
+                              {/* Hospital Info */}
                               <div
                                 className="hospital-info"
                                 style={{
@@ -800,7 +801,10 @@ const Content = () => {
                                 >
                                   <i
                                     className="fal fa-hospital"
-                                    style={{ marginRight: "5px" }}
+                                    style={{
+                                      marginRight: "6px",
+                                      color: "#444",
+                                    }}
                                   ></i>
                                   {isNotEmptyArray(item?.hospital)
                                     ? item.hospital
@@ -810,8 +814,26 @@ const Content = () => {
                                 </span>
                               </div>
 
-                              <p>{item.designation}</p>
-                              {/* Added department*/}
+                              {/* Designation */}
+                              <div
+                                className="designation-info"
+                                style={{ marginBottom: "8px" }}
+                              >
+                                <span
+                                  style={{ fontSize: "18px", color: "#6c757d" }}
+                                >
+                                  <i
+                                    className="fal fa-user-tie"
+                                    style={{
+                                      marginRight: "6px",
+                                      color: "#444",
+                                    }}
+                                  ></i>
+                                  {item.designation || "Not specified"}
+                                </span>
+                              </div>
+
+                              {/* Department */}
                               {item.department_name && (
                                 <div
                                   className="department-info"
@@ -826,22 +848,31 @@ const Content = () => {
                                       color: "#6c757d",
                                     }}
                                   >
+                                    <i
+                                      className="fal fa-layer-group"
+                                      style={{
+                                        marginRight: "6px",
+                                        color: "#444",
+                                      }}
+                                    ></i>
                                     {item.department_name}
                                   </span>
                                 </div>
                               )}
-                              <div className="sigma_team-categories">
+
+                              {/* Speciality Tags */}
+                              <div
+                                className="sigma_team-categories"
+                                style={{ color: "#686A6F", cursor: "default" }}
+                              >
+                                <i
+                                  className="fal fa-stethoscope"
+                                  style={{ marginRight: "6px", color: "#444" }}
+                                ></i>
                                 {item.speciality
                                   ?.slice(0, 3)
                                   .map((specialityItem, index) => (
-                                    <span
-                                      key={index}
-                                      className="sigma_team-category"
-                                      style={{
-                                        color: "#686A6F",
-                                        cursor: "default",
-                                      }}
-                                    >
+                                    <span key={index}>
                                       {specialityItem.title}
                                       {index !==
                                         Math.min(
@@ -850,10 +881,10 @@ const Content = () => {
                                         ) && ", "}
                                     </span>
                                   ))}
-
                                 {item.speciality?.length > 3 && " ..."}
                               </div>
 
+                              {/* View More Button */}
                               <div className="d-flex align-items-center mt-4">
                                 <Link
                                   to={`/doctor-details?id=${item.id}`}
