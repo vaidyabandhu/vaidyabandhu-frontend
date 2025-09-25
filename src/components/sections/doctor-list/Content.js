@@ -124,18 +124,29 @@ const Content = () => {
     loading: specialtiesLoading,
     error: specialtiesError,
   } = useFetch({ method: "GET", request: "specialty/" });
-  // Fetch locations
+  // Fetch cities using the new API
+  const token = localStorage.getItem("token");
   const {
-    data: locationsData,
-    loading: locationsLoading,
-    error: locationsError,
+    data: citiesData,
+    loading: citiesLoading,
+    error: citiesError,
   } = useFetch({
     method: "GET",
-    request: "https://admin.vaidyabandhu.com/api/locations/",
+    request: "https://admin.vaidyabandhu.com/api/city/",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token,
+    },
   });
   useEffect(() => {
-    if (locationsData) setLocations(locationsData.data || []);
-    if (locationsError) {
+    if (citiesData && citiesData.data) {
+      const transformedCities = citiesData.data.map(city => ({
+        id: city.id,
+        name: city.city_name 
+      }));
+      setLocations(transformedCities);
+    }
+    if (citiesError) {
       setLocations([
         { id: "Delhi", name: "Delhi" },
         { id: "Mumbai", name: "Mumbai" },
@@ -144,9 +155,8 @@ const Content = () => {
         { id: "Hyderabad", name: "Hyderabad" },
       ]);
     }
-  }, [locationsData, locationsError]);
+  }, [citiesData, citiesError]);
   // Fetch doctors
-  const token = localStorage.getItem("token");
   const {
     data,
     loading: loader,
@@ -162,7 +172,8 @@ const Content = () => {
     params: {
       search: debouncedSearchTerm.trim(),
       specialties: selectedSpecialties.join(","),
-      locations: selectedLocations.join(","),
+      // Updated: Changed 'locations' to 'city' parameter
+      city: selectedLocations.join(","),
       availability: selectedAvailability.join(","),
       rating: selectedRating,
       gender: selectedGender,
@@ -221,12 +232,12 @@ const Content = () => {
     selectedGender ||
     sortBy ||
     hospitalName; // Added hospitalName to active filters check
-  // Filtered
+  // Filtered - Fixed the toLowerCase() error by adding null checks
   const filteredSpecialties = specialtiesData?.data?.filter((specialty) =>
-    specialty.title.toLowerCase().includes(specialtySearchTerm.toLowerCase())
+    specialty.title && specialty.title.toLowerCase().includes(specialtySearchTerm.toLowerCase())
   );
   const filteredLocations = locations.filter((location) =>
-    location.name.toLowerCase().includes(locationSearchTerm.toLowerCase())
+    location.name && location.name.toLowerCase().includes(locationSearchTerm.toLowerCase())
   );
   // Filter chips
   const getActiveFilters = () => {

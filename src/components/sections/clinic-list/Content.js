@@ -49,7 +49,7 @@ const DiagnosticCentersApp = () => {
   const defaultImage =
     "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400&h=300&fit=crop";
 
-      // Debounce search input
+  // Debounce search input
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -85,28 +85,38 @@ const DiagnosticCentersApp = () => {
       page_count: itemsPerPage.toString(),
       page: currentPage.toString(),
       search: debouncedSearchTerm.trim() ?? "",
-      address: selectedAddress,
+      // Updated: Changed 'address' to 'city' parameter
+      city: selectedAddress,
       services: selectedServices.join(","),
       sub_services: selectedSubServices.join(","),
     },
   });
 
-  // Fetch locations using useFetch
+  // Fetch cities using the new API
   const {
-    data: locationsData,
+    data: citiesData,
     loading: loadingAddresses,
-    error: locationsError,
+    error: citiesError,
   } = useFetch({
     method: "GET",
-    request: "https://admin.vaidyabandhu.com/api/locations/",
+    request: "https://admin.vaidyabandhu.com/api/city/",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token,
+    },
   });
 
   useEffect(() => {
-    if (locationsData) {
-      setAddresses(locationsData.data || []);
+    if (citiesData && citiesData.data) {
+      // Transform the cities data to match the expected format with 'name' property
+      const transformedCities = citiesData.data.map(city => ({
+        id: city.id,
+        name: city.city_name 
+      }));
+      setAddresses(transformedCities);
     }
-    if (locationsError) {
-      console.error("Error fetching locations:", locationsError);
+    if (citiesError) {
+      console.error("Error fetching cities:", citiesError);
       setAddresses([
         { id: "Delhi", name: "Delhi" },
         { id: "Mumbai", name: "Mumbai" },
@@ -115,7 +125,7 @@ const DiagnosticCentersApp = () => {
         { id: "Hyderabad", name: "Hyderabad" },
       ]);
     }
-  }, [locationsData, locationsError]);
+  }, [citiesData, citiesError]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value); // Set the search term
@@ -152,36 +162,39 @@ const DiagnosticCentersApp = () => {
     console.log({ hasToken });
 
     if (hasToken) {
-      // Call the API with the token
+      // Call the enquiry API with the token
       try {
-        // Example API call using fetch
-        const response = await fetch("https://example.com/hasToken", {
-          method: "GET",
+        const response = await fetch("https://admin.vaidyabandhu.com/api/enquiry/", {
+          method: "POST",
           headers: {
-            Authorization: `Bearer ${hasToken}`, // Pass token in the Authorization header
+            "Content-Type": "application/json",
+            Authorization: token,
           },
+          body: JSON.stringify({
+            full_name: "test",
+            phone: "1234567898",
+            email: "email@email.com",
+            address: "Bangalore"
+          }),
         });
 
         if (response.ok) {
           const data = await response.json();
-          // Show success toast
-          //   toast.success("Token validated successfully! Proceeding with enquiry.", {
-          //     position: toast.POSITION.TOP_RIGHT,
-          //     autoClose: 3000,
-          //   });
+          toast.success("Enquiry submitted successfully!", {
+            position: "top-center",
+          });
+          console.log("Enquiry response:", data);
         } else {
-          // Handle failure (e.g., token invalid)
-          //   toast.error("Failed to validate token! Please try again.", {
-          //     position: toast.POSITION.TOP_RIGHT,
-          //     autoClose: 3000,
-          //   });
+          toast.error("Failed to submit enquiry. Please try again.", {
+            position: "top-center",
+          });
+          console.error("Enquiry submission failed");
         }
       } catch (error) {
-        // Handle error (e.g., network failure)
-        // toast.error("Error occurred while validating token!", {
-        //   position: toast.POSITION.TOP_RIGHT,
-        //   autoClose: 3000,
-        // });
+        toast.error("Error occurred while submitting enquiry.", {
+          position: "top-center",
+        });
+        console.error("Enquiry error:", error);
       }
     } else {
       // If no token found, show the enquiry modal
@@ -398,10 +411,10 @@ const DiagnosticCentersApp = () => {
                       style={{ color: "#00b2b2" }}
                     >
                       <MapIcon size={18} />
-                      Location
+                      City
                     </label>
                     {loadingAddresses ? (
-                      <LoadingSpinner text="Loading locations..." />
+                      <LoadingSpinner text="Loading cities..." />
                     ) : (
                       <select
                         className="form-select border-0 bg-light"
@@ -409,7 +422,7 @@ const DiagnosticCentersApp = () => {
                         onChange={handleAddressChange}
                         style={{ borderRadius: "12px", padding: "12px 16px" }}
                       >
-                        <option value="">All Locations</option>
+                        <option value="">All Cities</option>
                         {addresses.map((address) => (
                           <option key={address.id} value={address.id}>
                             {address.name}
@@ -561,10 +574,10 @@ const DiagnosticCentersApp = () => {
                     style={{ color: "#00b2b2" }}
                   >
                     <MapIcon size={18} />
-                    Location
+                    City
                   </label>
                   {loadingAddresses ? (
-                    <LoadingSpinner text="Loading locations..." />
+                    <LoadingSpinner text="Loading cities..." />
                   ) : (
                     <select
                       className="form-select border-0 bg-light"
@@ -572,7 +585,7 @@ const DiagnosticCentersApp = () => {
                       onChange={handleAddressChange}
                       style={{ borderRadius: "12px", padding: "12px 16px" }}
                     >
-                      <option value="">All Locations</option>
+                      <option value="">All Cities</option>
                       {addresses.map((address) => (
                         <option key={address.id} value={address.id}>
                           {address.name}

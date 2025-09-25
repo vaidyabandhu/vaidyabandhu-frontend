@@ -14,7 +14,110 @@ class Contactform extends Contacthelper {
         this.borderColor = '#e0e0e0';
         this.focusBorder = '#00aaaa'; // Note: Focus border will only apply if default browser focus outline uses 'border-color'
         this.buttonHoverBg = '#005f62'; // Note: This will not be applied on hover inline
+        
+        // Initialize state for form submission status
+        this.state = {
+            name: '',
+            email: '',
+            phone: '',
+            subject: '',
+            message: '',
+            isSubmitting: false,
+            submitSuccess: false,
+            submitError: false
+        };
     }
+
+    // Handle form submission
+    handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        this.setState({ isSubmitting: true, submitSuccess: false, submitError: false });
+        
+        // Get token from localStorage
+        const token = localStorage.getItem('token');
+        
+        try {
+            const response = await fetch('https://admin.vaidyabandhu.com/api/enquiry/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token
+                },
+                body: JSON.stringify({
+                    full_name: this.state.name,
+                    phone: this.state.phone,
+                    email: this.state.email,
+                    address: '', // You can leave this empty or get it from somewhere else
+                    subject: this.state.subject,
+                    message: this.state.message
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Enquiry submitted successfully:', data);
+                
+                // Show success message
+                this.setState({ submitSuccess: true, isSubmitting: false });
+                
+                // Reset form
+                this.setState({
+                    name: '',
+                    email: '',
+                    phone: '',
+                    subject: '',
+                    message: ''
+                });
+                
+                // Hide success message after 5 seconds
+                setTimeout(() => {
+                    this.setState({ submitSuccess: false });
+                }, 5000);
+            } else {
+                console.error('Failed to submit enquiry');
+                this.setState({ submitError: true, isSubmitting: false });
+                
+                // Hide error message after 5 seconds
+                setTimeout(() => {
+                    this.setState({ submitError: false });
+                }, 5000);
+            }
+        } catch (error) {
+            console.error('Error submitting enquiry:', error);
+            this.setState({ submitError: true, isSubmitting: false });
+            
+            // Hide error message after 5 seconds
+            setTimeout(() => {
+                this.setState({ submitError: false });
+            }, 5000);
+        }
+    };
+
+    // Input change handlers
+    onNameChange = (e) => {
+        this.setState({ name: e.target.value });
+    };
+
+    onEmailChange = (e) => {
+        this.setState({ email: e.target.value });
+    };
+
+    onPhoneChange = (e) => {
+        this.setState({ phone: e.target.value });
+    };
+
+    onSubjectChange = (e) => {
+        this.setState({ subject: e.target.value });
+    };
+
+    onMessageChange = (e) => {
+        this.setState({ message: e.target.value });
+    };
+
+    reCaptchaLoaded = (response) => {
+        console.log("reCAPTCHA loaded:", response);
+    };
 
     render() {
         // Define inline styles for reuse
@@ -94,54 +197,105 @@ class Contactform extends Contacthelper {
         return (
             <div className="section pt-0" style={sectionStyle}>
                 <div className="container">
-                  <div className="section-title centered" style={{ paddingTop: '0px' }}>
-  <span style={subtitleStyle}>Connect With Us</span>
-  <h3 style={titleStyle}>Let's Talk!</h3>
-</div>
+                    <div className="section-title centered" style={{ paddingTop: '0px' }}>
+                        <span style={subtitleStyle}>Connect With Us</span>
+                        <h3 style={titleStyle}>Let's Talk!</h3>
+                    </div>
 
                     <div className="sigma_form style-2" style={formWrapperStyle}>
-                        <form onSubmit={this.handleSubmit} method="GET">
+                        <form onSubmit={this.handleSubmit}>
                             <div className="row">
                                 <div className="col-lg-6">
                                     <div style={formGroupStyle}>
-                                        <input type="text" placeholder="Your Full Name" name="name" value={this.state.name} onChange={this.onNameChange} required style={inputStyle} />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Your Full Name" 
+                                            name="name" 
+                                            value={this.state.name} 
+                                            onChange={this.onNameChange} 
+                                            required 
+                                            style={inputStyle} 
+                                        />
                                     </div>
                                 </div>
                                 <div className="col-lg-6">
                                     <div style={formGroupStyle}>
-                                        <input type="email" placeholder="Your Email Address" name="email" value={this.state.email} onChange={this.onEmailChange} required style={inputStyle} />
+                                        <input 
+                                            type="email" 
+                                            placeholder="Your Email Address" 
+                                            name="email" 
+                                            value={this.state.email} 
+                                            onChange={this.onEmailChange} 
+                                            required 
+                                            style={inputStyle} 
+                                        />
                                     </div>
                                 </div>
                                 <div className="col-lg-6">
                                     <div style={formGroupStyle}>
-                                        <input type="tel" placeholder="Your Phone Number" name="phone" value={this.state.phone} onChange={this.onPhoneChange} required style={inputStyle} />
+                                        <input 
+                                            type="tel" 
+                                            placeholder="Your Phone Number" 
+                                            name="phone" 
+                                            value={this.state.phone} 
+                                            onChange={this.onPhoneChange} 
+                                            required 
+                                            style={inputStyle} 
+                                        />
                                     </div>
                                 </div>
                                 <div className="col-lg-6">
                                     <div style={formGroupStyle}>
-                                        <input type="text" placeholder="Subject of Your Inquiry" name="subject" value={this.state.subject} onChange={this.onSubjectChange} required style={inputStyle} />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Subject of Your Inquiry" 
+                                            name="subject" 
+                                            value={this.state.subject} 
+                                            onChange={this.onSubjectChange} 
+                                            required 
+                                            style={inputStyle} 
+                                        />
                                     </div>
                                 </div>
                                 <div className="col-12">
                                     <div style={formGroupStyle}>
-                                        <textarea rows={6} placeholder="Type Your Message Here..." name="message" value={this.state.message} onChange={this.onMessageChange} required style={textareaStyle} />
+                                        <textarea 
+                                            rows={6} 
+                                            placeholder="Type Your Message Here..." 
+                                            name="message" 
+                                            value={this.state.message} 
+                                            onChange={this.onMessageChange} 
+                                            required 
+                                            style={textareaStyle} 
+                                        />
                                     </div>
                                 </div>
                                 <ReCAPTCHA
                                     sitekey="6LdxUhMaAAAAAIrQt-_6Gz7F_58S4FlPWaxOh5ib"
-                                    onChange={this.reCaptchaLoaded.bind(this)}
+                                    onChange={this.reCaptchaLoaded}
                                     size="invisible"
                                 />
                                 <div className="col-12 text-center">
-                                    <button type="submit" style={buttonStyle}>Send Request</button>
+                                    <button 
+                                        type="submit" 
+                                        style={buttonStyle}
+                                        disabled={this.state.isSubmitting}
+                                    >
+                                        {this.state.isSubmitting ? 'Sending...' : 'Send Request'}
+                                    </button>
+                                    
                                     {/* Form Messages */}
-                                    <Alert variant="success" className="d-none mt-3 mb-0" id="server_response_success">
-                                        <strong>Success!</strong> Your request has been successfully submitted!
-                                    </Alert>
-                                    <Alert variant="danger" className="d-none mt-3 mb-0" id="server_response_danger">
-                                        <strong>Oops!</strong> Something went wrong. Please try again later.
-                                    </Alert>
-                                    {/* Form Messages */}
+                                    {this.state.submitSuccess && (
+                                        <Alert variant="success" className="mt-3 mb-0">
+                                            <strong>Success!</strong> Your request has been successfully submitted!
+                                        </Alert>
+                                    )}
+                                    
+                                    {this.state.submitError && (
+                                        <Alert variant="danger" className="mt-3 mb-0">
+                                            <strong>Oops!</strong> Something went wrong. Please try again later.
+                                        </Alert>
+                                    )}
                                 </div>
                             </div>
                         </form>

@@ -1,10 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Rating } from "../../../helper/helper";
 import { useFetch } from "../../hooks/usefetch";
 import html2canvas from "html2canvas";
 
 const Content = ({ detailId }) => {
+  // State for form fields and submission status
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
+
   const {
     data: doctorData,
     loading,
@@ -13,6 +23,70 @@ const Content = ({ detailId }) => {
     method: "GET",
     request: "doctors/" + detailId,
   });
+
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitSuccess(false);
+    setSubmitError(false);
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('https://admin.vaidyabandhu.com/api/enquiry/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        },
+        body: JSON.stringify({
+          full_name: formData.name,
+          email: formData.email,
+          message: formData.message
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Enquiry submitted successfully:', data);
+        setSubmitSuccess(true);
+        
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          message: ''
+        });
+        
+        // Hide success message after 5 seconds
+        setTimeout(() => setSubmitSuccess(false), 5000);
+      } else {
+        console.error('Failed to submit enquiry');
+        setSubmitError(true);
+        
+        // Hide error message after 5 seconds
+        setTimeout(() => setSubmitError(false), 5000);
+      }
+    } catch (error) {
+      console.error('Error submitting enquiry:', error);
+      setSubmitError(true);
+      
+      // Hide error message after 5 seconds
+      setTimeout(() => setSubmitError(false), 5000);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Handle loading and error states
   if (loading) {
@@ -392,13 +466,15 @@ const Content = ({ detailId }) => {
                   <i className="fas fa-envelope me-2"></i>Get in Touch
                 </h5>
                 <div className="widget-inner">
-                  <form>
+                  <form onSubmit={handleSubmit}>
                     <div className="form-group">
                       <i className="fas fa-user" />
                       <input
                         type="text"
-                        name="fname"
+                        name="name"
                         placeholder="Name"
+                        value={formData.name}
+                        onChange={handleInputChange}
                         required
                       />
                     </div>
@@ -408,6 +484,8 @@ const Content = ({ detailId }) => {
                         type="email"
                         name="email"
                         placeholder="Email"
+                        value={formData.email}
+                        onChange={handleInputChange}
                         required
                       />
                     </div>
@@ -416,17 +494,44 @@ const Content = ({ detailId }) => {
                         name="message"
                         rows={5}
                         placeholder="Message"
+                        value={formData.message}
+                        onChange={handleInputChange}
                         required
                       />
                     </div>
                     <button
-                      type="button"
+                      type="submit"
                       className="sigma_btn btn-block btn-sm"
+                      disabled={isSubmitting}
                     >
-                      <i className="fas fa-paper-plane me-2"></i>
-                      Send Message
-                      <i className="fas fa-arrow-right ms-3" />
+                      {isSubmitting ? (
+                        <>
+                          <i className="fas fa-spinner fa-spin me-2"></i>
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-paper-plane me-2"></i>
+                          Send Message
+                          <i className="fas fa-arrow-right ms-3" />
+                        </>
+                      )}
                     </button>
+                    
+                    {/* Success and error messages */}
+                    {submitSuccess && (
+                      <div className="alert alert-success mt-3">
+                        <i className="fas fa-check-circle me-2"></i>
+                        Your message has been sent successfully!
+                      </div>
+                    )}
+                    
+                    {submitError && (
+                      <div className="alert alert-danger mt-3">
+                        <i className="fas fa-exclamation-circle me-2"></i>
+                        Failed to send your message. Please try again.
+                      </div>
+                    )}
                   </form>
                 </div>
               </div>

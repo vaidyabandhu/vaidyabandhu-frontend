@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import FloatingCallButton from "./helpline";
 import { Link } from "react-router-dom";
+
 // Dummy serviceblock data as we cannot access local JSON files
 const dummyServiceblock = [
   { title: "Consult a Doctor", path: "/services/consult-doctor" },
@@ -9,6 +10,7 @@ const dummyServiceblock = [
   { title: "Diagnostic Tests", path: "/services/diagnostic-tests" },
   { title: "One-Stop Solution", path: "/services/one-stop-solution" },
 ];
+
 // === POLICY TEXTS (as provided) ===
 const TERMS_TEXT = `Welcome to Vaidya Bandhu. These Terms and Conditions govern your access to and use of our website,
 www.vaidyabandhu.com, our mobile applications (if any), and the services provided through them, including membership
@@ -90,6 +92,7 @@ For questions about these terms, contact us at
 ● WhatsApp/Helpline: +91 8535853589
 ● Email: support@vaidyabandhu.com
 ● Website: www.vaidyabandhu.com`;
+
 const PRIVACY_TEXT = `At Vaidya Bandhu, we are dedicated to safeguarding your privacy and handling your personal data responsibly. This Privacy
 Policy explains our practices regarding the collection, use, processing, storage, disclosure, and protection of your personal
 information. We comply with the Digital Personal Data Protection Act, 2023 (DPDP Act), and other applicable Indian laws,
@@ -180,6 +183,7 @@ For questions, concerns, or to exercise rights, reach out:
 ● WhatsApp/Helpline: +91 8535853589
 ● Email: support@vaidyabandhu.com
 ● Website: www.vaidyabandhu.com`;
+
 const REFUND_TEXT = `At Vaidya Bandhu Healthcare Foundation, we are committed to providing quality and affordable healthcare services to our
 members. This Refund Policy outlines the conditions under which refunds may or may not be issued for payments related to
 our membership and services.
@@ -225,14 +229,30 @@ be requested by emailing us at payments@vaidyabandhu.com with the following deta
 ● WhatsApp/Helpline: +91 8535853589
 ● Email: payments@vaidyabandhu.com
 ● Website: www.vaidyabandhu.com`;
+
 const Footer = () => {
   const [animated, setAnimated] = useState(false);
   const [showModal, setShowModal] = useState(null); // 'terms', 'privacy', 'refund'
+  const [email, setEmail] = useState("");
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscriptionMessage, setSubscriptionMessage] = useState("");
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null); // 'success', 'error', null
+  const [token, setToken] = useState(null);
+
   useEffect(() => {
     const timer = setTimeout(() => setAnimated(true), 200);
+    
+    // Get token from localStorage
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+    }
+    
     return () => clearTimeout(timer);
   }, []);
+
   const baseTransition = "all 0.3s ease-in-out";
+  
   // Handlers for opening modals
   const openTerms = (e) => {
     e.preventDefault();
@@ -249,6 +269,61 @@ const Footer = () => {
   const closeModal = () => {
     setShowModal(null);
   };
+
+ const handleSubscribe = async (e) => {
+  e.preventDefault();
+  
+  // Validate email
+  if (!email || !email.includes('@')) {
+    setSubscriptionMessage("Please enter a valid email address");
+    setSubscriptionStatus("error");
+    return;
+  }
+  
+  // Check if token is available
+  if (!token) {
+    setSubscriptionMessage("Authentication required. Please log in to subscribe.");
+    setSubscriptionStatus("error");
+    return;
+  }
+  
+  setIsSubscribing(true);
+  setSubscriptionMessage("");
+  setSubscriptionStatus(null);
+  
+  try {
+    const response = await fetch('https://admin.vaidyabandhu.com/api/user/subscribe/', {
+      method: 'POST',
+      headers: {
+        'Authorization': token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: email
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      // Use the message from the API response
+      setSubscriptionMessage(data.message || "Thank you for subscribing! You'll receive our latest updates via email.");
+      setSubscriptionStatus("success");
+      setEmail(""); // Clear the email input
+    } else {
+      // Use the error message from the API response
+      setSubscriptionMessage(data.message || "Subscription failed. Please try again later.");
+      setSubscriptionStatus("error");
+    }
+  } catch (error) {
+    setSubscriptionMessage("An error occurred. Please check your connection and try again.");
+    setSubscriptionStatus("error");
+    console.error("Subscription error:", error);
+  } finally {
+    setIsSubscribing(false);
+  }
+};
+
   return (
     <footer
       style={{
@@ -646,10 +721,12 @@ const Footer = () => {
               >
                 Subscribe
               </h5>
-              <form>
+              <form onSubmit={handleSubscribe}>
                 <input
                   type="email"
                   name="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
                   required
                   style={{
@@ -666,7 +743,8 @@ const Footer = () => {
                   }}
                 />
                 <button
-                  type="button"
+                  type="submit"
+                  disabled={isSubscribing}
                   style={{
                     width: "100%",
                     padding: "12px 15px",
@@ -676,21 +754,40 @@ const Footer = () => {
                     fontFamily: "poppins",
                     background: "linear-gradient(to right, #007a7e, #004d4f)",
                     borderRadius: "8px",
-                    cursor: "pointer",
+                    cursor: isSubscribing ? "not-allowed" : "pointer",
                     fontSize: "16px",
                     fontWeight: "600",
                     transition: baseTransition,
                     boxShadow: "0 4px 15px rgba(0, 122, 126, 0.4)", // Darker shadow
+                    opacity: isSubscribing ? 0.7 : 1,
                   }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "#004d4f")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "#007a7e")
-                  }
+                  onMouseEnter={(e) => {
+                    if (!isSubscribing) {
+                      e.currentTarget.style.background = "#004d4f";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSubscribing) {
+                      e.currentTarget.style.background = "#007a7e";
+                    }
+                  }}
                 >
-                  Subscribe
+                  {isSubscribing ? "Subscribing..." : "Subscribe"}
                 </button>
+                {subscriptionMessage && (
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      fontFamily: "poppins",
+                      lineHeight: "1.5",
+                      marginTop: "15px",
+                      marginBottom: "0",
+                      color: subscriptionStatus === "success" ? "#4ade80" : "#f87171",
+                    }}
+                  >
+                    {subscriptionMessage}
+                  </p>
+                )}
                 <p
                   style={{
                     fontSize: "14px",
@@ -701,8 +798,7 @@ const Footer = () => {
                     marginBottom: "0",
                   }}
                 >
-                  Get The Latest Updates via email. Any time you may
-                  unsubscribe.
+                  Get The Latest Updates via email. Any time you may unsubscribe.
                 </p>
               </form>
               <div
@@ -1201,4 +1297,5 @@ const Footer = () => {
     </footer>
   );
 };
+
 export default Footer;
