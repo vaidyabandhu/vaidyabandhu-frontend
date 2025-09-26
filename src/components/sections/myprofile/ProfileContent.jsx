@@ -33,6 +33,16 @@ const MyProfile = () => {
   const [error, setError] = useState(null);
   const cardRef = useRef(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  // Update window width on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch user profile data
   useEffect(() => {
@@ -158,10 +168,37 @@ const MyProfile = () => {
     window.location.href = "/";
   };
 
+  // Helper function to format dates
+  const formatDate = (dateString) => {
+    if (!dateString) return " ";
+    return dateString
+      .split("T")[0]
+      .split("-")
+      .reverse()
+      .join("-");
+  };
+
+  // Responsive styles
+  const isMobile = windowWidth < 768;
+  const isTablet = windowWidth >= 768 && windowWidth < 1024;
+  
+  // Calculate responsive card width
+  const getCardWidth = () => {
+    if (isMobile) return Math.min(windowWidth - 40, 480);
+    if (isTablet) return 400;
+    return 480;
+  };
+  
+  // Calculate responsive card height
+  const getCardHeight = () => {
+    if (isMobile) return (getCardWidth() * 350) / 480;
+    return 350;
+  };
+
   // Inline styles — optimized for alignment and reusability
   const styles = {
     profilePage: {
-      padding: "30px",
+      padding: isMobile ? "15px" : "30px",
       backgroundColor: "#f8f9fa",
       minHeight: "100vh",
     },
@@ -169,15 +206,16 @@ const MyProfile = () => {
       maxWidth: "1200px",
       margin: "0 auto",
       display: "flex",
-      gap: "30px",
+      gap: isMobile ? "20px" : "30px",
       flexWrap: "wrap",
+      flexDirection: isMobile ? "column" : "row",
     },
     leftColumn: {
       flex: "1",
       minWidth: "300px",
     },
     rightColumn: {
-      flex: "0 0 480px",
+      flex: isMobile ? "1" : "0 0 480px",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -186,7 +224,7 @@ const MyProfile = () => {
       borderRadius: "15px",
       boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
       backgroundColor: "white",
-      padding: "24px",
+      padding: isMobile ? "16px" : "24px",
       height: "fit-content",
     },
     infoRow: {
@@ -198,20 +236,24 @@ const MyProfile = () => {
       width: "20px",
       marginRight: "12px",
       color: "#095D7E",
+      flexShrink: 0,
     },
     infoLabel: {
       fontWeight: 600,
       color: "#095D7E",
-      fontSize: "20px",
+      fontSize: isMobile ? "16px" : "20px",
       marginRight: "8px",
+      whiteSpace: "nowrap",
     },
     infoValue: {
       color: "#4A4A4A",
       fontWeight: 500,
-      fontSize: "18px",
+      fontSize: isMobile ? "14px" : "18px",
+      wordBreak: "break-word",
+      overflowWrap: "break-word",
     },
     sectionTitle: {
-      fontSize: "18px",
+      fontSize: isMobile ? "16px" : "18px",
       fontWeight: 600,
       color: "#095D7E",
       marginBottom: "20px",
@@ -219,8 +261,8 @@ const MyProfile = () => {
       borderBottom: "1px solid #eee",
     },
     healthCard: {
-      width: "480px",
-      height: "350px",
+      width: `${getCardWidth()}px`,
+      height: `${getCardHeight()}px`,
       borderRadius: "12px",
       margin: "0 auto",
       background: "#F5F9FA",
@@ -240,27 +282,27 @@ const MyProfile = () => {
     back: {
       background: "#fdfdfd",
       color: "#333",
-      fontSize: "12px",
+      fontSize: isMobile ? "10px" : "12px",
       lineHeight: "1.4",
-      padding: "15px",
+      padding: isMobile ? "10px" : "15px",
     },
     cardHeader: {
       display: "flex",
       alignItems: "center",
-      marginBottom: "15px",
-      marginTop: "20px",
+      marginBottom: isMobile ? "8px" : "15px",
+      marginTop: isMobile ? "10px" : "20px",
     },
     logoContainer: {
-      width: "40px",
-      height: "40px",
-      marginRight: "15px",
+      width: isMobile ? "25px" : "40px",
+      height: isMobile ? "25px" : "40px",
+      marginRight: isMobile ? "8px" : "15px",
     },
     verticalLine: {
       width: "1px",
-      height: "40px",
+      height: isMobile ? "25px" : "40px",
       borderLeft: "1px solid #00000038",
-      marginRight: "-30px",
-      marginLeft: "55px",
+      marginRight: isMobile ? "-15px" : "-30px",
+      marginLeft: isMobile ? "33px" : "55px",
     },
     titleContainer: {
       flex: 1,
@@ -268,7 +310,7 @@ const MyProfile = () => {
     titleText: {
       fontFamily: "Poppins, sans-serif",
       fontWeight: 600,
-      fontSize: "18px",
+      fontSize: isMobile ? "12px" : "18px",
       lineHeight: "100%",
       letterSpacing: "0%",
       color: "#095D7E",
@@ -278,29 +320,29 @@ const MyProfile = () => {
     subtitleText: {
       fontFamily: "Poppins, sans-serif",
       fontWeight: 500,
-      fontSize: "14px",
+      fontSize: isMobile ? "8px" : "14px",
       lineHeight: "100%",
       letterSpacing: "0%",
       color: "#095D7E",
-      margin: "4px 0 0 0",
+      margin: "2px 0 0 0",
       textAlign: "center",
     },
     horizontalLine: {
       width: "100%",
       height: "1px",
       backgroundColor: "#00000038",
-      margin: "10px 0",
+      margin: isMobile ? "3px 0" : "10px 0",
     },
     cardContent: {
       display: "flex",
-      marginTop: "10px",
-      marginLeft: "18px",
+      marginTop: isMobile ? "3px" : "10px",
+      marginLeft: isMobile ? "8px" : "18px",
       flex: 1,
     },
     cardDetails: {
       flex: 3,
-      paddingRight: "15px",
-      paddingLeft: "15px",
+      paddingRight: isMobile ? "3px" : "15px",
+      paddingLeft: isMobile ? "3px" : "15px",
     },
     cardPhoto: {
       flex: 2,
@@ -310,8 +352,8 @@ const MyProfile = () => {
       alignItems: "center",
     },
     photoContainer: {
-      width: "80px",
-      height: "100px",
+      width: isMobile ? "50px" : "80px",
+      height: isMobile ? "60px" : "100px",
       border: "1px solid #ddd",
       borderRadius: "4px",
       overflow: "hidden",
@@ -319,11 +361,11 @@ const MyProfile = () => {
       backgroundColor: "#ddd",
     },
     photoNameText: {
-      fontSize: "14px",
+      fontSize: isMobile ? "8px" : "14px",
       fontWeight: 600,
       color: "#095D7E",
       textAlign: "center",
-      marginTop: "10px",
+      marginTop: isMobile ? "3px" : "10px",
       whiteSpace: "nowrap",
       overflow: "hidden",
       textOverflow: "ellipsis",
@@ -335,14 +377,14 @@ const MyProfile = () => {
     detailRowAligned: {
       display: "flex",
       alignItems: "center",
-      marginBottom: "15px",
-      fontSize: "13px",
+      marginBottom: isMobile ? "5px" : "15px",
+      fontSize: isMobile ? "9px" : "13px",
       fontFamily: "Poppins, sans-serif",
     },
     labelText: {
       fontWeight: 600,
       color: "#095D7E",
-      marginRight: "5px",
+      marginRight: "3px",
       whiteSpace: "nowrap",
     },
     valueText: {
@@ -352,7 +394,7 @@ const MyProfile = () => {
       whiteSpace: "nowrap",
       overflow: "hidden",
       textOverflow: "ellipsis",
-      maxWidth: "200px",
+      maxWidth: isMobile ? "70px" : "200px",
     },
     bloodGroupText: {
       color: "#FF0000",
@@ -363,12 +405,12 @@ const MyProfile = () => {
     blueStrip: {
       backgroundColor: "#046877",
       color: "white",
-      padding: "10px 38px",
+      padding: isMobile ? "8px 12px" : "10px 38px",
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
       position: "absolute",
-      bottom: 0,
+      bottom: isMobile ? "0" : "0",
       left: 0,
       right: 0,
       borderBottomLeftRadius: "12px",
@@ -381,45 +423,47 @@ const MyProfile = () => {
       flex: 1,
     },
     stripLabel: {
-      fontSize: "10px",
+      fontSize: isMobile ? "6px" : "10px",
       fontWeight: 600,
       opacity: 0.9,
-      marginBottom: "2px",
+      marginBottom: "1px",
       color: "#E7E7E7",
+      textAlign: 'left',
     },
     stripValue: {
-      fontSize: "12px",
+      fontSize: isMobile ? "7px" : "12px",
       fontWeight: 500,
+      textAlign: 'left',
     },
     stripVerticalLine: {
       width: "1px",
-      height: "30px",
+      height: isMobile ? "15px" : "30px",
       backgroundColor: "rgba(255, 255, 255, 0.5)",
-      margin: "0 53px",
+      margin: isMobile ? "0 5px" : "0 53px",
     },
     // Back side styles
     backContainer: {
       height: "100%",
       display: "flex",
       flexDirection: "column",
-      fontSize: "7px",
+      fontSize: isMobile ? "6px" : "7px",
       color: "#333",
       position: "relative",
       padding: "0",
     },
     cashbackBadge: {
       position: "absolute",
-      top: "60px",
-      right: "15px",
+      top: isMobile ? "30px" : "60px",
+      right: isMobile ? "8px" : "15px",
       backgroundColor: "#046877",
       color: "white",
-      padding: "8px 12px",
+      padding: isMobile ? "4px 6px" : "8px 12px",
       borderRadius: "20px",
-      fontSize: "8px",
+      fontSize: isMobile ? "5px" : "8px",
       fontWeight: "bold",
       textAlign: "center",
       lineHeight: "1.1",
-      width: "140px",
+      width: isMobile ? "80px" : "140px",
       zIndex: 10,
     },
     benefitsSection: {
@@ -429,10 +473,10 @@ const MyProfile = () => {
       paddingRight: "0px",
     },
     benefitsTitle: {
-      fontSize: "12px",
+      fontSize: isMobile ? "8px" : "12px",
       fontWeight: "bold",
       color: "#095D7E",
-      marginBottom: "5px",
+      marginBottom: "3px",
       textTransform: "uppercase",
     },
     benefitsList: {
@@ -443,14 +487,14 @@ const MyProfile = () => {
     benefitItem: {
       display: "flex",
       alignItems: "flex-start",
-      marginBottom: "2px",
-      fontSize: "8px",
+      marginBottom: isMobile ? "0.5px" : "2px",
+      fontSize: isMobile ? "5px" : "8px",
       lineHeight: "1",
     },
     checkMark: {
       color: "#28a745",
-      marginRight: "6px",
-      fontSize: "8px",
+      marginRight: isMobile ? "2px" : "6px",
+      fontSize: isMobile ? "5px" : "8px",
       fontWeight: "bold",
       flexShrink: 0,
     },
@@ -458,7 +502,7 @@ const MyProfile = () => {
       width: "100%",
       height: "1px",
       backgroundColor: "#ccc",
-      margin: "6px 0",
+      margin: isMobile ? "2px 0" : "6px 0",
     },
     termsSection: {
       marginBottom: "0px",
@@ -466,10 +510,10 @@ const MyProfile = () => {
       paddingRight: "0px",
     },
     termsTitle: {
-      fontSize: "12px",
+      fontSize: isMobile ? "8px" : "12px",
       fontWeight: "bold",
       color: "#095D7E",
-      marginBottom: "5px",
+      marginBottom: "3px",
       textTransform: "uppercase",
     },
     termsList: {
@@ -480,14 +524,14 @@ const MyProfile = () => {
     termItem: {
       display: "flex",
       alignItems: "flex-start",
-      marginBottom: "1px",
-      fontSize: "7px",
+      marginBottom: isMobile ? "0.3px" : "1px",
+      fontSize: isMobile ? "4px" : "7px",
       lineHeight: "1.2",
     },
     bullet: {
       color: "#095D7E",
-      marginRight: "5px",
-      fontSize: "7px",
+      marginRight: isMobile ? "2px" : "5px",
+      fontSize: isMobile ? "4px" : "7px",
       flexShrink: 0,
     },
     instructionsSection: {
@@ -496,10 +540,10 @@ const MyProfile = () => {
       paddingRight: "0px",
     },
     instructionsTitle: {
-      fontSize: "12px",
+      fontSize: isMobile ? "8px" : "12px",
       fontWeight: "bold",
       color: "#095D7E",
-      marginBottom: "2px",
+      marginBottom: "1px",
       textTransform: "uppercase",
     },
     instructionsList: {
@@ -510,15 +554,15 @@ const MyProfile = () => {
     instructionItem: {
       display: "flex",
       alignItems: "flex-start",
-      marginBottom: "1px",
-      fontSize: "7px",
+      marginBottom: isMobile ? "0.3px" : "1px",
+      fontSize: isMobile ? "4px" : "7px",
       lineHeight: "1.2",
     },
     priceTag: {
       position: "absolute",
-      bottom: "20px",
-      right: "20px",
-      fontSize: "36px",
+      bottom: isMobile ? "12px" : "20px",
+      right: isMobile ? "12px" : "20px",
+      fontSize: isMobile ? "20px" : "36px",
       fontWeight: "bold",
       color: "#046877",
     },
@@ -529,19 +573,19 @@ const MyProfile = () => {
       right: 0,
       backgroundColor: "#046877",
       color: "white",
-      padding: "6px 0",
+      padding: isMobile ? "3px 0" : "6px 0",
       borderBottomLeftRadius: "12px",
       borderBottomRightRadius: "12px",
-      margin: "-17px",
+      margin: isMobile ? "-10px" : "-17px",
     },
     companyName: {
-      fontSize: "10px",
+      fontSize: isMobile ? "5px" : "10px",
       fontWeight: "bold",
       textAlign: "center",
       marginBottom: "1px",
     },
     tagline: {
-      fontSize: "8px",
+      fontSize: isMobile ? "4px" : "8px",
       textAlign: "center",
       fontStyle: "poppins",
     },
@@ -551,8 +595,8 @@ const MyProfile = () => {
       top: "55%",
       left: "54%",
       transform: "translate(-50%, -50%)",
-      width: "200px",
-      height: "72px",
+      width: isMobile ? "120px" : "200px",
+      height: isMobile ? "43px" : "72px",
       opacity: 1.2,
       zIndex: 0,
     },
@@ -563,10 +607,10 @@ const MyProfile = () => {
       backgroundColor: "#dc3545",
       color: "white",
       border: "none",
-      padding: "10px 20px",
+      padding: isMobile ? "8px 16px" : "10px 20px",
       borderRadius: "5px",
       cursor: "pointer",
-      fontSize: "16px",
+      fontSize: isMobile ? "14px" : "16px",
       fontWeight: "500",
       boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
       transition: "all 0.2s ease",
@@ -609,27 +653,27 @@ const MyProfile = () => {
     },
     modalContent: {
       background: "white",
-      padding: "20px",
+      padding: isMobile ? "15px" : "20px",
       borderRadius: "8px",
       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-      maxWidth: "400px",
+      maxWidth: isMobile ? "90%" : "400px",
       width: "90%",
       textAlign: "center",
     },
     modalTitle: {
-      fontSize: "18px",
+      fontSize: isMobile ? "16px" : "18px",
       fontWeight: "bold",
-      marginBottom: "15px",
+      marginBottom: isMobile ? "10px" : "15px",
       color: "#095D7E",
     },
     modalButtons: {
       display: "flex",
       justifyContent: "center",
       gap: "10px",
-      marginTop: "20px",
+      marginTop: isMobile ? "15px" : "20px",
     },
     modalButton: {
-      padding: "8px 16px",
+      padding: isMobile ? "6px 12px" : "8px 16px",
       borderRadius: "4px",
       border: "none",
       cursor: "pointer",
@@ -666,16 +710,6 @@ const MyProfile = () => {
       </div>
     );
   }
-
-  // Helper function to format dates
-  const formatDate = (dateString) => {
-    if (!dateString) return " ";
-    return dateString
-      .split("T")[0]
-      .split("-")
-      .reverse()
-      .join("-");
-  };
 
   return (
     <>
@@ -813,9 +847,9 @@ const MyProfile = () => {
                     src="assets/img/vb-logo.png"
                     alt="Vaidya Bandhu Logo"
                     style={{
-                      width: "40px",
-                      height: "40px",
-                      marginLeft: "28px",
+                      width: "100%",
+                      height: "100%",
+                      marginLeft: isMobile ? "10px" : "28px",
                     }}
                   />
                 </div>
@@ -830,42 +864,88 @@ const MyProfile = () => {
               {/* Horizontal Line */}
               <div style={styles.horizontalLine}></div>
               {/* Card Content */}
-              <div style={styles.cardContent}>
-                <div style={styles.cardDetails}>
+              <div style={{
+                ...styles.cardContent,
+                ...(isMobile && { 
+                  marginLeft: 0,
+                  alignItems: 'flex-start',
+                  paddingLeft: '10px',
+                  paddingRight: '10px'
+                })
+              }}>
+                <div style={{
+                  ...styles.cardDetails,
+                  ...(isMobile && { 
+                    flex: 1,
+                    paddingRight: '8px',
+                    paddingLeft: '0'
+                  })
+                }}>
                   <div style={styles.detailRowAligned}>
                     <span style={styles.labelText}>MEMBERSHIP ID:</span>
-                    <span style={styles.valueText}>
-                      {" "}
-                      {patient.membership_id || " "}
+                    <span style={{
+                      ...styles.valueText,
+                      maxWidth: isMobile ? "100px" : "200px",
+                      fontSize: isMobile ? "8px" : "13px"
+                    }}>
+                      {" "}{patient.membership_id || " "}
                     </span>
                   </div>
                   <div style={styles.detailRowAligned}>
                     <span style={styles.labelText}>VALIDITY:</span>
-                    <span style={styles.valueText}>
+                    <span style={{
+                      ...styles.valueText,
+                      maxWidth: isMobile ? "100px" : "200px",
+                      fontSize: isMobile ? "8px" : "13px",
+                      whiteSpace: isMobile ? "normal" : "nowrap"
+                    }}>
                       {formatDate(patient.start_date)} to {formatDate(patient.end_date)}
                     </span>
                   </div>
 
                   <div style={styles.detailRowAligned}>
                     <span style={styles.labelText}>CONTACT:</span>
-                    <span style={styles.valueText}>
+                    <span style={{
+                      ...styles.valueText,
+                      maxWidth: isMobile ? "100px" : "200px",
+                      fontSize: isMobile ? "8px" : "13px"
+                    }}>
                       {patient.mobile || " "}
                     </span>
                   </div>
                   <div style={styles.detailRowAligned}>
                     <span style={styles.labelText}>BLOOD GROUP:</span>
-                    <span style={styles.bloodGroupText}>
+                    <span style={{
+                      ...styles.bloodGroupText,
+                      fontSize: isMobile ? "8px" : "13px"
+                    }}>
                       {patient.blood_group || " "}
                     </span>
                   </div>
-                  <div style={styles.detailRowAligned}>
+                  <div style={{
+                    ...styles.detailRowAligned,
+                    marginBottom: isMobile ? "3px" : "15px"
+                  }}>
                     <span style={styles.labelText}>ADDRESS:</span>
-                    <span style={styles.valueText}>
+                    <span style={{
+                      ...styles.valueText,
+                      maxWidth: isMobile ? "100px" : "200px",
+                      fontSize: isMobile ? "8px" : "13px",
+                      whiteSpace: isMobile ? "normal" : "nowrap",
+                      lineHeight: isMobile ? "1.1" : "normal"
+                    }}>
                       {patient.address || " "}
                     </span>
                   </div>
                 </div>
-                <div style={styles.cardPhoto}>
+                <div style={{
+                  ...styles.cardPhoto,
+                  ...(isMobile && { 
+                    flex: 'none',
+                    width: '70px',
+                    marginLeft: '5px'
+                  })
+                }}>
                   <div style={styles.photoContainer}>
                     {patient.profile_image ? (
                       <img
@@ -888,11 +968,16 @@ const MyProfile = () => {
                           backgroundColor: "#f0f0f0",
                         }}
                       >
-                        <User size={24} color="#ccc" />
+                        <User size={isMobile ? 15 : 24} color="#ccc" />
                       </div>
                     )}
                   </div>
-                  <div style={styles.photoNameText}>
+                  <div style={{
+                    ...styles.photoNameText,
+                    fontSize: isMobile ? "8px" : "14px",
+                    maxWidth: isMobile ? "70px" : "100%",
+                    lineHeight: isMobile ? "1.1" : "normal"
+                  }}>
                     {patient.full_name || " "}
                   </div>
                 </div>
@@ -900,13 +985,19 @@ const MyProfile = () => {
               {/* Full-width Blue Strip at the Bottom */}
               <div style={styles.blueStrip}>
                 <div style={styles.stripItem}>
-                  <div style={styles.stripLabel}>WHATSAPP/HELPLINE</div>
-                  <div style={styles.stripValue}>+91 8535 8535 89</div>
+                  <div style={styles.stripLabel}>WHATSAPP HELPLINE</div>
+                  <div style={{
+                    ...styles.stripValue,
+                    fontSize: isMobile ? "7px" : "12px"
+                  }}>+91 8535 8535 89</div>
                 </div>
                 <div style={styles.stripVerticalLine}></div>
                 <div style={styles.stripItem}>
                   <div style={styles.stripLabel}>EMAIL ID</div>
-                  <div style={styles.stripValue}>support@vaidyabandhu.com</div>
+                  <div style={{
+                    ...styles.stripValue,
+                    fontSize: isMobile ? "7px" : "12px"
+                  }}>support@vaidyabandhu.com</div>
                 </div>
               </div>
             </div>
@@ -926,7 +1017,7 @@ const MyProfile = () => {
                   <br />
                   TOTAL HOSPITAL BILL
                   <br />
-                  <span style={{ fontSize: "5px" }}>
+                  <span style={{ fontSize: isMobile ? "3px" : "5px" }}>
                     EXCLUDING PHARMACY AND IMPLANTS
                   </span>
                 </div>
@@ -1107,6 +1198,7 @@ const MyProfile = () => {
                 gap: "10px",
                 justifyContent: "center",
                 marginTop: "20px",
+                flexDirection: isMobile ? "column" : "row",
               }}
             >
               <button
@@ -1114,9 +1206,10 @@ const MyProfile = () => {
                   backgroundColor: "#007bff",
                   color: "white",
                   border: "none",
-                  padding: "10px 20px",
+                  padding: isMobile ? "8px 16px" : "10px 20px",
                   borderRadius: "5px",
                   cursor: "pointer",
+                  fontSize: isMobile ? "14px" : "16px",
                 }}
                 onClick={handleDownload}
               >
@@ -1126,21 +1219,7 @@ const MyProfile = () => {
 
             {/* Logout Button */}
             <button
-              style={{
-                display: "flex",
-                alignItems: "center",
-                backgroundColor: "#dc3545",
-                color: "white",
-                border: "none",
-                padding: "10px 20px",
-                borderRadius: "5px",
-                cursor: "pointer",
-                fontSize: "16px",
-                fontWeight: "500",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                transition: "all 0.2s ease",
-                marginTop: "15px",
-              }}
+              style={styles.logoutButton}
               onClick={handleLogout}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = "#c82333";
@@ -1154,8 +1233,8 @@ const MyProfile = () => {
               <svg
                 style={{ marginRight: "8px" }}
                 xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
+                width={isMobile ? "16" : "20"}
+                height={isMobile ? "16" : "20"}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

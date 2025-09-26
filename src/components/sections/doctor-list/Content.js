@@ -90,6 +90,9 @@ const Content = () => {
   const [locationSearchTerm, setLocationSearchTerm] = useState("");
   // Added hospital name filter state
   const [hospitalName, setHospitalName] = useState("");
+  // State for mobile placeholder
+  const [isMobile, setIsMobile] = useState(false);
+  
   console.log({ selectedGender, selectedRating });
   // Static options
   const availabilityOptions = [
@@ -113,6 +116,19 @@ const Content = () => {
     { value: "female", label: "Female" },
     { value: "Nopreference", label: "No preference" },
   ];
+  
+  // Check if mobile view
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
   // Debounce search
   useEffect(() => {
     const timeoutId = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);
@@ -562,8 +578,8 @@ const Content = () => {
   );
 
   return (
-    <div className="sidebar-style-9 container-bg">
-      <div className="section section-padding">
+    <div className="sidebar-style-9 container-bg" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="section section-padding" style={{ flex: '1 0 auto' }}>
         <div className="container-fluid">
           {/* Top Search Bar - Centered */}
           <div className="row mb-4 justify-content-center">
@@ -583,7 +599,7 @@ const Content = () => {
                 >
                   <input
                     type="text"
-                    placeholder="Search for Doctors & Specialities...."
+                    placeholder={isMobile ? "Search Doctors & Specialities..." : "Search for Doctors & Specialities...."}
                     value={searchTerm}
                     onChange={handleSearchChange}
                     className="form-control border-0 bg-transparent"
@@ -594,6 +610,9 @@ const Content = () => {
                       outline: "none",
                       boxShadow: "none",
                       marginBottom: "0px",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
                     }}
                   />
                   {searchTerm && (
@@ -646,7 +665,7 @@ const Content = () => {
                       >
                         <i
                           className="fas fa-filter"
-                          style={{ fontSize: "16px" }}
+                          style={{ fontSize: "16px", color: "#fff" }}
                         ></i>
                         Filters
                         {hasActiveFilters && (
@@ -762,7 +781,7 @@ const Content = () => {
                       <div className="sigma_team style-17" key={item.id}>
                         <div className="row no-gutters">
                           <div className="col-md-3">
-                            <div className="sigma_team-thumb">
+                            <div className="sigma_team-thumb shadow-sm">
                               <img
                                 src={
                                   item?.photo && item.photo.trim() !== ""
@@ -774,6 +793,7 @@ const Content = () => {
                                   width: "100%",
                                   height: "auto",
                                   objectFit: "cover",
+                                  borderRadius: "8px",
                                 }}
                                 onError={(e) => {
                                   e.currentTarget.onerror = null; // prevent infinite loop
@@ -794,6 +814,7 @@ const Content = () => {
                           <div className="col-md-5 col-sm-6">
                             <div className="sigma_team-body">
                               <h5>
+                                <i className="fas fa-user-md me-2" style={{ color: "#555" }}></i>
                                 <Link to={`/doctor-details?id=${item.id}`}>
                                   {item.full_name}
                                 </Link>
@@ -814,7 +835,7 @@ const Content = () => {
                                     className="fal fa-hospital"
                                     style={{
                                       marginRight: "6px",
-                                      color: "#444",
+                                      color: "#555",
                                     }}
                                   ></i>
                                   {isNotEmptyArray(item?.hospital)
@@ -837,7 +858,7 @@ const Content = () => {
                                     className="fal fa-user-tie"
                                     style={{
                                       marginRight: "6px",
-                                      color: "#444",
+                                      color: "#555",
                                     }}
                                   ></i>
                                   {item.designation || "Not specified"}
@@ -863,7 +884,7 @@ const Content = () => {
                                       className="fal fa-layer-group"
                                       style={{
                                         marginRight: "6px",
-                                        color: "#444",
+                                        color: "#555",
                                       }}
                                     ></i>
                                     {item.department_name}
@@ -878,7 +899,7 @@ const Content = () => {
                               >
                                 <i
                                   className="fal fa-stethoscope"
-                                  style={{ marginRight: "6px", color: "#444" }}
+                                  style={{ marginRight: "6px", color: "#555" }}
                                 ></i>
                                 {item.speciality
                                   ?.slice(0, 3)
@@ -910,17 +931,17 @@ const Content = () => {
                             <div className="sigma_team-footer">
                               <div className="sigma_team-info">
                                 <span>
-                                  <i className="fal fa-calendar" />
+                                  <i className="fal fa-calendar" style={{ color: "#555" }} />
                                   {item.qualification}
                                 </span>
 
                                 <span>
-                                  <i className="fal fa-award" />
+                                  <i className="fal fa-award" style={{ color: "#555" }} />
                                   {item.experience} Yrs Experience
                                 </span>
 
                                 <span>
-                                  <i className="fal fa-map-marker-alt" />
+                                  <i className="fal fa-map-marker-alt" style={{ color: "#555" }} />
                                   {addressString}
                                 </span>
                               </div>
@@ -936,7 +957,7 @@ const Content = () => {
                     const totalPages = Math.ceil(totalCount / itemPerpage);
                     return (
                       totalPages > 1 && (
-                        <div style={{ textAlign: "center", margin: "60px 0" }}>
+                        <div style={{ textAlign: "center", margin: "40px 0 0" }}>
                           <button
                             disabled={page === 1}
                             onClick={() => setPage((p) => p - 1)}
@@ -976,6 +997,20 @@ const Content = () => {
             width: 70% !important;
             margin: 15px auto;
             display: block;
+          }
+          
+          /* Mobile-specific search wrapper styles */
+          .search-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 auto !important;
+          }
+          
+          /* Ensure text truncation with ellipsis on mobile */
+          .search-wrapper input {
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
           }
         }
       `}</style>

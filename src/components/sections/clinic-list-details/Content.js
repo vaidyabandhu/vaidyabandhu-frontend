@@ -3,6 +3,7 @@ import { Phone, MapPin, Star, Calendar } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Spinner } from "react-bootstrap";
 import ShowEnquireModal from "../clinic-list/showEnquireModal";
+import { toast } from "sonner";
 
 const DiagnosticCenterDetail = () => {
     const [searchParams] = useSearchParams();
@@ -12,6 +13,7 @@ const DiagnosticCenterDetail = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showEnquireModal, setShowEnquireModal] = useState(false);
+  const [enquiryLoading, setEnquiryLoading] = useState(false);
 
   const token = localStorage.getItem("token");
   const defaultImage =
@@ -41,6 +43,47 @@ const DiagnosticCenterDetail = () => {
 
   const handleEnquire = () => {
     setShowEnquireModal(true); // Open the Enquire Modal
+  };
+
+  // Handle enquiry submission after form is submitted in the modal
+  const handleEnquirySubmit = async (formData) => {
+    setEnquiryLoading(true);
+    try {
+      const response = await fetch("https://admin.vaidyabandhu.com/api/enquiry/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        body: JSON.stringify({
+          ...formData,
+          // Include center details if needed
+          center_id: id,
+          center_name: centerDetail?.name,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success("Enquiry submitted successfully!", {
+          position: "top-center",
+        });
+        console.log("Enquiry response:", data);
+        setShowEnquireModal(false); // Close modal on success
+      } else {
+        toast.error("Failed to submit enquiry. Please try again.", {
+          position: "top-center",
+        });
+        console.error("Enquiry submission failed");
+      }
+    } catch (error) {
+      toast.error("Error occurred while submitting enquiry.", {
+        position: "top-center",
+      });
+      console.error("Enquiry error:", error);
+    } finally {
+      setEnquiryLoading(false);
+    }
   };
 
   // const handleCall = () => {
@@ -104,7 +147,7 @@ const DiagnosticCenterDetail = () => {
           <p className="text-danger mb-4">{error}</p>
           <button
             className="btn btn-primary btn-lg rounded-pill px-5 shadow-sm modern-btn"
-            onClick={fetchCenterDetail}
+            onClick={() => fetchCenterDetail(id)}
           >
             <i className="fas fa-redo me-2"></i>
             Try Again
@@ -296,7 +339,7 @@ const DiagnosticCenterDetail = () => {
           </div>
 
           <div className="action-buttons">
-            <button className="buy-membership-btn" onClick={handleEnquire}>
+            <button className="modern-btn" onClick={handleEnquire}>
               <Calendar size={20} className="btn-icon" />
               <span className="btn-text">Make Enquiry</span>
             </button>
@@ -313,6 +356,8 @@ const DiagnosticCenterDetail = () => {
           onClose={() => setShowEnquireModal(false)}
           setShowSuccessMessage={(msg) => alert(msg)}
           token={token}
+          onSubmit={handleEnquirySubmit}
+          loading={enquiryLoading}
         />
       </div>
 
@@ -399,6 +444,15 @@ const DiagnosticCenterDetail = () => {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           position: relative;
           overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem 2rem;
+          border-radius: 50px;
+          font-size: 1.1rem;
+          min-width: 180px;
+          color: white;
+          box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
 
         .modern-btn::before {
@@ -422,8 +476,16 @@ const DiagnosticCenterDetail = () => {
         }
 
         .modern-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+          transform: translateY(-4px);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-icon {
+          margin-right: 0.75rem;
+        }
+
+        .btn-text {
+          font-weight: 600;
         }
 
         /* Hero Section */
@@ -776,67 +838,6 @@ const DiagnosticCenterDetail = () => {
           flex-wrap: wrap;
         }
 
-        .action-btn {
-          display: flex;
-          align-items: center;
-          padding: 1rem 2rem;
-          border: none;
-          border-radius: 50px;
-          font-size: 1.1rem;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          position: relative;
-          overflow: hidden;
-          min-width: 180px;
-          justify-content: center;
-        }
-
-        .primary-btn {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .secondary-btn {
-          background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-          color: white;
-          box-shadow: 0 10px 30px rgba(17, 153, 142, 0.3);
-        }
-
-        .action-btn::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.2),
-            transparent
-          );
-          transition: left 0.5s;
-        }
-
-        .action-btn:hover::before {
-          left: 100%;
-        }
-
-        .action-btn:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-icon {
-          margin-right: 0.75rem;
-        }
-
-        .btn-text {
-          font-weight: 600;
-        }
-
         /* Animations */
         @keyframes fadeInUp {
           from {
@@ -932,7 +933,7 @@ const DiagnosticCenterDetail = () => {
             align-items: center;
           }
 
-          .action-btn {
+          .modern-btn {
             width: 100%;
             max-width: 300px;
           }

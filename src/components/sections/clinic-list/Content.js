@@ -855,7 +855,7 @@ const DiagnosticCentersApp = () => {
                               </div>
 
                               <div className="d-flex gap-2 mt-auto">
-                                <button
+                                {/* <button
                                   className="btn btn-primary"
                                   style={{
                                     borderRadius: "8px",
@@ -867,7 +867,7 @@ const DiagnosticCentersApp = () => {
                                   }}
                                 >
                                   Enquiry
-                                </button>
+                                </button> */}
                                 <button
                                   style={{
                                     borderRadius: "8px",
@@ -888,7 +888,7 @@ const DiagnosticCentersApp = () => {
                 </div>
 
                 {/* Enhanced Pagination */}
-                <div className="d-flex justify-content-center mt-5">
+                {/* <div className="d-flex justify-content-center mt-5">
                   <nav>
                     <ul className="pagination pagination-lg">
                       <li
@@ -930,7 +930,7 @@ const DiagnosticCentersApp = () => {
                       </li>
                     </ul>
                   </nav>
-                </div>
+                </div> */}
               </div>
             )}
           </div>

@@ -15,7 +15,7 @@ function Counter(props) {
                     flex: '0 0 auto', 
                     width: '20%', 
                     minWidth: '200px', 
-                    marginBottom: '20px',
+                    // marginBottom: '20px',
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center'

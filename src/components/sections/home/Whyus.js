@@ -104,6 +104,7 @@ class Whyus extends Component {
                     <p
                       style={{
                         fontFamily: "Poppins", 
+                        fontSize: "22px",
                       }}
                     >
                       {item.text}

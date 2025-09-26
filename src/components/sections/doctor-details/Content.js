@@ -157,7 +157,7 @@ const Content = ({ detailId }) => {
             <div className="sigma_post-details-inner">
               <div className="entry-content">
                 {/* Doctor card */}
-                <div className="sigma_team style-17 mb-0">
+                <div className="sigma_team style-17 mb-0" style={{ fontSize: "18px" }}>
                   <div className="row no-gutters">
                     <div className="col-md-4">
                       <div className="sigma_team-thumb">
@@ -173,19 +173,20 @@ const Content = ({ detailId }) => {
                     </div>
 
                     <div className="col-md-8 d-flex flex-column justify-content-between">
-                      <div className="sigma_team-body ">
-                        <h5>
+                      <div className="sigma_team-body">
+                        <h5 style={{ fontSize: "18px" }}>
                           <Link
                             to={"/doctor-details?id=" + (item.id || "unknown")}
+                            style={{ fontSize: "18px" }}
                           >
-                            <i className="fas fa-user-md me-2"></i>
+                            <i className="fas fa-user-md me-2" style={{ color: "#555" }}></i>
                             {item.full_name}
                           </Link>
                         </h5>
 
                         <div className="mt-2">
                           <span style={{ fontSize: "18px", color: "#6c757d" }}>
-                            <i className="fas fa-hospital me-2"></i>
+                            <i className="fas fa-hospital me-2" style={{ color: "#555" }}></i>
                             {item.hospital && item.hospital.length > 0
                               ? item.hospital.map((h) => h.name).join(", ")
                               : "N/A"}
@@ -193,10 +194,10 @@ const Content = ({ detailId }) => {
                         </div>
 
                         <div className="qualifications mt-2">
-                          <small className="text-muted">
-                            <i className="fas fa-graduation-cap me-2"></i>
+                          <span style={{ fontSize: "18px", color: "#6c757d" }}>
+                            <i className="fas fa-graduation-cap me-2" style={{ color: "#555" }}></i>
                             <strong>{item.qualification}</strong>
-                          </small>
+                          </span>
                         </div>
 
                         <div
@@ -205,9 +206,9 @@ const Content = ({ detailId }) => {
                         >
                           <span
                             className="sigma_team-category"
-                            style={{ color: "#686A6F" }}
+                            style={{ color: "#686A6F", fontSize: "18px" }}
                           >
-                            <i className="fas fa-user-tie me-2"></i>
+                            <i className="fas fa-user-tie me-2" style={{ color: "#555" }}></i>
                             {item.designation}
                           </span>
                         </div>
@@ -217,7 +218,7 @@ const Content = ({ detailId }) => {
                             <span
                               style={{ fontSize: "18px", color: "#6c757d" }}
                             >
-                              <i className="fas fa-building me-2"></i>
+                              <i className="fas fa-building me-2" style={{ color: "#555" }}></i>
                               {item.department_name}
                             </span>
                           </div>
@@ -226,7 +227,7 @@ const Content = ({ detailId }) => {
                         <div className="sigma_team-categories">
                           <i
                             className="fas fa-stethoscope me-2"
-                            style={{ color: "#686A6F" }}
+                            style={{ color: "#555" }}
                           ></i>
                           {item.speciality
                             ?.slice(0, 3)
@@ -237,6 +238,7 @@ const Content = ({ detailId }) => {
                                 style={{
                                   color: "#686A6F",
                                   cursor: "default",
+                                  fontSize: "18px"
                                 }}
                               >
                                 {specialityItem.title}
@@ -250,14 +252,14 @@ const Content = ({ detailId }) => {
                         </div>
 
                         <div className="sigma_team-info mt-2">
-                          <span>
-                            <i className="fas fa-user-md me-2"></i>
+                          <span style={{ fontSize: "18px" }}>
+                            <i className="fas fa-user-md me-2" style={{ color: "#555" }}></i>
                             {item.experience || "N/A"} Years Experience
                           </span>
 
                           {/* Address section added here */}
-                          <span>
-                            <i className="fas fa-map-marker-alt me-2"></i>
+                          <span style={{ fontSize: "18px" }}>
+                            <i className="fas fa-map-marker-alt me-2" style={{ color: "#555" }}></i>
                             {addressString}
                           </span>
                         </div>
@@ -268,6 +270,7 @@ const Content = ({ detailId }) => {
                         <button
                           type="button"
                           className="sigma_btn btn-sm"
+                          style={{ fontSize: "18px" }}
                           onClick={async () => {
                             const token = window.localStorage.getItem("token");
                             if (!token) {
@@ -304,9 +307,9 @@ const Content = ({ detailId }) => {
                             }
                           }}
                         >
-                          <i className="fas fa-calendar-check me-2"></i>
+                          <i className="fas fa-calendar-check me-2" style={{ color: "#fff" }}></i>
                           Book Appointment
-                          <i className="fas fa-arrow-right ms-3" />
+                          <i className="fas fa-arrow-right ms-3" style={{ color: "#fff" }} />
                         </button>
                       </div>
                     </div>
@@ -359,7 +362,7 @@ const Content = ({ detailId }) => {
                                 key={`${index}-${subIndex}`}
                                 className="specialty-item d-flex align-items-start mb-1"
                               >
-                                <i className="fas fa-check-circle text-success me-2 mt-1"></i>
+                                <i className="fas fa-check-circle text-success me-2 mt-1" style={{ color: "#555" }}></i>
                                 <span>{point.trim()}</span>
                               </div>
                             ))}
@@ -381,7 +384,7 @@ const Content = ({ detailId }) => {
                       fellowshipItems.map((fellowship, index) => (
                         <div key={index} className="col-md-12 mb-3">
                           <div className="specialty-item d-flex align-items-start">
-                            <i className="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <i className="fas fa-check-circle text-success me-2 mt-1" style={{ color: "#555" }}></i>
                             <span> {fellowship}</span>
                           </div>
                         </div>
@@ -409,7 +412,7 @@ const Content = ({ detailId }) => {
                                 key={`${index}-${subIndex}`}
                                 className="specialty-item d-flex align-items-start mb-1"
                               >
-                                <i className="fas fa-check-circle text-success me-2 mt-1"></i>
+                                <i className="fas fa-check-circle text-success me-2 mt-1" style={{ color: "#555" }}></i>
                                 <span>{point.trim()}</span>
                               </div>
                             ))}
@@ -438,7 +441,7 @@ const Content = ({ detailId }) => {
                                 key={`${index}-${subIndex}`}
                                 className="specialty-item d-flex align-items-start mb-1"
                               >
-                                <i className="fas fa-check-circle text-success me-2 mt-1"></i>
+                                <i className="fas fa-check-circle text-success me-2 mt-1" style={{ color: "#555" }}></i>
                                 <span>{point.trim()}</span>
                               </div>
                             ))}
@@ -463,12 +466,12 @@ const Content = ({ detailId }) => {
               {/* Get in Touch Widget */}
               <div className="widget">
                 <h5 className="widget-title">
-                  <i className="fas fa-envelope me-2"></i>Get in Touch
+                  <i className="fas fa-envelope me-2" style={{ color: "#555" }}></i>Get in Touch
                 </h5>
                 <div className="widget-inner">
                   <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                      <i className="fas fa-user" />
+                      <i className="fas fa-user" style={{ color: "#555" }} />
                       <input
                         type="text"
                         name="name"
@@ -479,7 +482,7 @@ const Content = ({ detailId }) => {
                       />
                     </div>
                     <div className="form-group">
-                      <i className="fas fa-envelope" />
+                      <i className="fas fa-envelope" style={{ color: "#555" }} />
                       <input
                         type="email"
                         name="email"
@@ -506,14 +509,14 @@ const Content = ({ detailId }) => {
                     >
                       {isSubmitting ? (
                         <>
-                          <i className="fas fa-spinner fa-spin me-2"></i>
+                          <i className="fas fa-spinner fa-spin me-2" style={{ color: "#fff" }}></i>
                           Sending...
                         </>
                       ) : (
                         <>
-                          <i className="fas fa-paper-plane me-2"></i>
+                          <i className="fas fa-paper-plane me-2" style={{ color: "#fff" }}></i>
                           Send Message
-                          <i className="fas fa-arrow-right ms-3" />
+                          <i className="fas fa-arrow-right ms-3" style={{ color: "#fff" }} />
                         </>
                       )}
                     </button>
@@ -521,14 +524,14 @@ const Content = ({ detailId }) => {
                     {/* Success and error messages */}
                     {submitSuccess && (
                       <div className="alert alert-success mt-3">
-                        <i className="fas fa-check-circle me-2"></i>
+                        <i className="fas fa-check-circle me-2" style={{ color: "#fff" }}></i>
                         Your message has been sent successfully!
                       </div>
                     )}
                     
                     {submitError && (
                       <div className="alert alert-danger mt-3">
-                        <i className="fas fa-exclamation-circle me-2"></i>
+                        <i className="fas fa-exclamation-circle me-2" style={{ color: "#fff" }}></i>
                         Failed to send your message. Please try again.
                       </div>
                     )}
@@ -537,22 +540,22 @@ const Content = ({ detailId }) => {
               </div>
 
               {/* Contact Widget */}
-              <div className="widget">
-                <h5 className="widget-title">
-                  <i className="fas fa-address-book me-2"></i>Contact
+             <div className="widget">
+                <h5 className="widget-title" style={{ color: "#005963" }}>
+                  <i className="fas fa-address-book me-2" style={{ color: "#005963" }}></i>Contact
                 </h5>
                 <div className="widget-inner">
                   <div className="sigma_info style-24 p-0 shadow-none">
                     <div className="sigma_info-title">
-                      <span className="sigma_info-icon bg-primary-1 text-white">
+                      <span className="sigma_info-icon text-white" style={{ backgroundColor: "#005963" }}>
                         <i
                           className="fas fa-phone"
-                          style={{ transform: "scaleX(-1.5)" }}
+                          style={{ transform: "scaleX(-1.5)", color: "#fff" }}
                         />
                       </span>
                     </div>
                     <div className="sigma_info-description">
-                      <h5>Our Phone</h5>
+                      <h5 style={{ color: "#005963" }}>Our Phone</h5>
                       <p>
                         Phone No:{" "}
                         {item.hospital?.[0]?.mobile || "+91 8535853589"}
@@ -561,28 +564,31 @@ const Content = ({ detailId }) => {
                   </div>
                   <div className="sigma_info style-24 p-0 shadow-none">
                     <div className="sigma_info-title">
-                      <span className="sigma_info-icon bg-primary-1 text-white">
-                        <i className="fas fa-envelope-open-text" />
+                      <span className="sigma_info-icon text-white" style={{ backgroundColor: "#005963" }}>
+                        <i className="fas fa-envelope-open-text" style={{ color: "#fff" }} />
                       </span>
                     </div>
                     <div className="sigma_info-description">
-                      <h5>Our Email</h5>
+                      <h5 style={{ color: "#005963" }}>Our Email</h5>
                       <p>{item.email || "support@vaidyabandhu.com"}</p>
                     </div>
                   </div>
                   <div className="sigma_info style-24 p-0 shadow-none mb-0">
                     <div className="sigma_info-title">
-                      <span className="sigma_info-icon bg-primary-1 text-white">
-                        <i className="fas fa-map-marker-alt" />
+                      <span className="sigma_info-icon text-white" style={{ backgroundColor: "#005963" }}>
+                        <i className="fas fa-map-marker-alt" style={{ color: "#fff" }} />
                       </span>
                     </div>
                     <div className="sigma_info-description">
-                      <h5>Our Address</h5>
+                      <h5 style={{ color: "#005963" }}>Our Address</h5>
                       <p>{item.address || "Bangalore"}</p>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+          {/* Side
             </div>
           </div>
           {/* Sidebar End */}

@@ -439,6 +439,24 @@ const VaidyaBandhuForm = () => {
 
   return (
     <div className="container-fluid bg-light py-5 container-bg">
+      <style>
+        {`
+          @media (max-width: 768px) {
+            .mobile-heading {
+              font-size: 1.1rem !important;
+              text-align: center !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+            }
+            
+            .mobile-heading svg {
+              margin-right: 8px !important;
+            }
+          }
+        `}
+      </style>
+      
       <div className="container">
         <div className="d-flex justify-content-end">
           <div className="text-right mb-4" style={{ width: "200px" }}>
@@ -473,7 +491,7 @@ const VaidyaBandhuForm = () => {
           <Col md={4}>
             <Card className="mb-4 shadow-lg">
               <Card.Body>
-                <h4 className="h4 mb-4" style={{ fontFamily: "Poppins" }}>
+                <h4 className="h4 mb-4 mobile-heading" style={{ fontFamily: "Poppins" }}>
                   <Star className="h-6 w-6 text-yellow-500 me-1" />{" "}
                   {languagesType[selectedLanguage].membershipBenefits}
                 </h4>
@@ -494,14 +512,14 @@ const VaidyaBandhuForm = () => {
 
             <Card className="mb-4 shadow-lg">
               <Card.Body>
-                <h2 className="h4 mb-4" style={{ fontFamily: "Poppins" }}>
+                <h2 className="h4 mb-4 mobile-heading" style={{ fontFamily: "Poppins" }}>
                   <CreditCard className="h-6 w-6 secondary-color me-2" />{" "}
                   {languagesType[selectedLanguage].membershipCharges}
                 </h2>
                 <div className="text-center">
                   <div
-                    className="text-4xl font-bold mb-2 text-primary"
-                    style={{ fontSize: "27px" }}
+                    className="text-4xl font-bold mb-2"
+                    style={{ fontSize: "27px", color: "#007a7e" }}
                   >
                     ₹49
                   </div>
@@ -536,7 +554,7 @@ const VaidyaBandhuForm = () => {
                 boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                 transition: "all 0.2s ease",
                 marginTop: "15px",
-                margin: "15px auto 0",
+                margin: "15px auto 20px",
               }}
               onClick={handleLogout}
               onMouseEnter={(e) => {
@@ -943,7 +961,7 @@ const VaidyaBandhuForm = () => {
           <Col>
             <Card>
               <Card.Body>
-                <h2 className="h4 mb-4" style={{ fontFamily: "Poppins" }}>
+                <h2 className="h4 mb-4 mobile-heading" style={{ fontFamily: "Poppins" }}>
                   <Shield className="h-6 w-6 me-2" />{" "}
                   {languagesType[selectedLanguage].termsConditions}
                 </h2>
