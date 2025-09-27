@@ -34,96 +34,12 @@ class Content extends Component {
           dateofbirth: data.age ? String(data.age) : "",
           phoneno: data.mobile || "",
           gender: data.gender || "",
-          // Set default doctor and hospital IDs
-          doctorId: data.doctor || 245, // Default to 245 if not provided
-          hospitalId: data.hospital || 2, // Default to 2 if not provided
         });
-        
-        // Fetch available slots after setting doctor and hospital IDs
-        this.fetchAvailableSlots(data.doctor || 245, data.hospital || 2);
       }
     } catch (error) {
       console.error("Failed to fetch profile:", error);
     }
   }
-
-  // New method to fetch available slots
-  fetchAvailableSlots = async (doctorId, hospitalId) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Session expired. Please login again.");
-      window.location.href = "/basic-details";
-      return;
-    }
-
-    // Set default date range (today to 30 days from now)
-    const today = new Date();
-    const endDate = new Date();
-    endDate.setDate(today.getDate() + 30);
-    
-    const startDateStr = today.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
-
-    try {
-      const response = await fetch(
-        `https://admin.vaidyabandhu.com/api/slots/slot/?&start_date=${startDateStr}&end_date=${endDateStr}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-        }
-      );
-      
-      if (response.status === 401) {
-        localStorage.removeItem("token");
-        alert("Session expired. Please login again.");
-        window.location.href = "/basic-details";
-        return;
-      }
-      
-      const data = await response.json();
-      if (response.ok) {
-        // Process slots to extract time slots
-        const timeSlots = this.processSlots(data);
-        this.setState({ availableSlots: timeSlots });
-      } else {
-        console.error("Failed to fetch slots:", data);
-        this.setState({ availableSlots: [] });
-      }
-    } catch (error) {
-      console.error("Error fetching slots:", error);
-      this.setState({ availableSlots: [] });
-    }
-  };
-
-  // New method to process slots and extract time slots
-  processSlots = (slots) => {
-    if (!slots || slots.length === 0) return [];
-    
-    // Group slots by date
-    const slotsByDate = {};
-    slots.forEach(slot => {
-      const date = new Date(slot.start_time).toISOString().split('T')[0];
-      if (!slotsByDate[date]) {
-        slotsByDate[date] = [];
-      }
-      slotsByDate[date].push(slot);
-    });
-    
-    // For simplicity, we'll just extract time slots for the first date
-    const firstDate = Object.keys(slotsByDate)[0];
-    if (!firstDate) return [];
-    
-    return slotsByDate[firstDate].map(slot => {
-      const startTime = new Date(slot.start_time);
-      return {
-        id: slot.id,
-        time: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-    });
-  };
 
   constructor(props) {
     super(props);
@@ -143,12 +59,6 @@ class Content extends Component {
       expDate: "",
       cardCvv: "",
       condition: "",
-      // New state variables
-      doctorId: "", 
-      hospitalId: "", 
-      availableSlots: [], // To store available time slots
-      selectedSlot: null, // To store the selected slot
-      isBooking: false, // To track booking status
     };
     this.fullname = this.fullname.bind(this);
     this.email = this.email.bind(this);
@@ -166,137 +76,7 @@ class Content extends Component {
     this.cardCvv = this.cardCvv.bind(this);
     this.condition = this.condition.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    // Bind new methods
-    this.handleDateChange = this.handleDateChange.bind(this);
-    this.handleSlotSelect = this.handleSlotSelect.bind(this);
-    this.blockSlot = this.blockSlot.bind(this);
   }
-  
-  // New method to handle date change
-  handleDateChange(event) {
-    const selectedDate = event.target.value;
-    this.setState({ 
-      date: selectedDate,
-      selectedSlot: null // Reset selected slot when date changes
-    });
-    
-    // Fetch slots for the selected date
-    if (selectedDate && this.state.doctorId && this.state.hospitalId) {
-      this.fetchSlotsForDate(selectedDate);
-    }
-  }
-  
-  // New method to fetch slots for a specific date
-  fetchSlotsForDate = async (selectedDate) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Session expired. Please login again.");
-      window.location.href = "/basic-details";
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `https://admin.vaidyabandhu.com/api/slots/slot/?doctor_id=${this.state.doctorId}&hospital_id=${this.state.hospitalId}&start_date=${selectedDate}&end_date=${selectedDate}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-        }
-      );
-      
-      if (response.status === 401) {
-        localStorage.removeItem("token");
-        alert("Session expired. Please login again.");
-        window.location.href = "/basic-details";
-        return;
-      }
-      
-      const data = await response.json();
-      if (response.ok) {
-        // Process slots to extract time slots
-        const timeSlots = data.map(slot => {
-          const startTime = new Date(slot.start_time);
-          return {
-            id: slot.id,
-            time: startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          };
-        });
-        this.setState({ availableSlots: timeSlots });
-      } else {
-        console.error("Failed to fetch slots:", data);
-        this.setState({ availableSlots: [] });
-      }
-    } catch (error) {
-      console.error("Error fetching slots:", error);
-      this.setState({ availableSlots: [] });
-    }
-  };
-
-  // New method to handle slot selection
-  handleSlotSelect(slotId) {
-    this.setState({ selectedSlot: slotId });
-  }
-
-  // New method to block a slot
-  blockSlot = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Session expired. Please login again.");
-      window.location.href = "/basic-details";
-      return;
-    }
-
-    if (!this.state.selectedSlot) {
-      alert("Please select a time slot");
-      return;
-    }
-
-    this.setState({ isBooking: true });
-
-    try {
-      const response = await fetch(
-        "https://admin.vaidyabandhu.com/api/slots/slot/block/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-          body: JSON.stringify({
-            slot: this.state.selectedSlot
-          }),
-        }
-      );
-      
-      if (response.status === 401) {
-        localStorage.removeItem("token");
-        alert("Session expired. Please login again.");
-        window.location.href = "/basic-details";
-        return;
-      }
-      
-      const data = await response.json();
-      if (response.ok) {
-        alert("Slot booked successfully!");
-        this.resetForm();
-        // Refresh available slots after booking
-        if (this.state.date) {
-          this.fetchSlotsForDate(this.state.date);
-        }
-      } else {
-        console.error("Failed to book slot:", data);
-        alert("Failed to book slot. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error booking slot:", error);
-      alert("An error occurred. Please try again.");
-    } finally {
-      this.setState({ isBooking: false });
-    }
-  };
 
   fullname(event) {
     this.setState({ fullname: event.target.value });
@@ -345,30 +125,10 @@ class Content extends Component {
   }
   handleSubmit(e) {
     e.preventDefault();
-    // Call blockSlot instead of just logging
-    this.blockSlot();
+    console.log("Form submitted with data:", this.state);
+    // You can add form submission logic here if needed
   }
-  resetForm() {
-    this.setState({
-      fullname: "",
-      email: "",
-      dateofbirth: "",
-      phoneno: "",
-      gender: "",
-      hospital: "",
-      service: "",
-      date: "",
-      doctor: "",
-      remarks: "",
-      cardName: "",
-      cardNumber: "",
-      expDate: "",
-      cardCvv: "",
-      condition: "",
-      selectedSlot: null,
-      availableSlots: []
-    });
-  }
+
   render() {
     return (
       <div className="sidebar-style-9">
@@ -469,6 +229,7 @@ class Content extends Component {
                     {/* Booking Widget */}
                     <div className="widget widget-booking">
                       <h5 className="widget-title">Booking Summary</h5>
+                      <hr />
                       <form>
                         <label>Select Date</label>
                         <div className="form-group">
@@ -483,51 +244,38 @@ class Content extends Component {
                       </form>
                       {/* Available Slots */}
                       <label>Available Slots</label>
-                      <div className="form-group d-flex flex-wrap gap-2">
-                        {this.state.availableSlots.length > 0 ? (
-                          this.state.availableSlots.map((slot) => (
+                      <div className="form-group">
+                        {[
+                          "08:30 AM",
+                          "09:00 AM",
+                          "10:30 AM",
+                          "02:00 PM",
+                          "04:00 PM",
+                        ].map((slot, index) => (
+                          <div key={index}>
+                            <input
+                              type="radio"
+                              id={`slot-${index}`}
+                              name="slot"
+                              value={slot}
+                            />
                             <label
-                              key={slot.id}
-                              style={{
-                                cursor: "pointer",
-                                margin: "5px",
-                              }}
+                              htmlFor={`slot-${index}`}
+                              style={{ marginLeft: "5px" }}
                             >
-                              <input
-                                type="radio"
-                                name="slot"
-                                value={slot.id}
-                                checked={this.state.selectedSlot === slot.id}
-                                onChange={() => this.handleSlotSelect(slot.id)}
-                                style={{ display: "none" }}
-                              />
-                              <span
-                                style={{
-                                  display: "inline-block",
-                                  padding: "6px 12px",
-                                  border: "1px solid #ddd",
-                                  borderRadius: "6px",
-                                  background: this.state.selectedSlot === slot.id ? "#007bff" : "#f8f9fa",
-                                  color: this.state.selectedSlot === slot.id ? "white" : "black",
-                                }}
-                              >
-                                {slot.time}
-                              </span>
+                              {slot}
                             </label>
-                          ))
-                        ) : (
-                          <p>No available slots for the selected date.</p>
-                        )}
+                          </div>
+                        ))}
                       </div>
-                      <hr />
+
                       <ul>
                         <li className="d-flex align-items-center justify-content-between">
                           <button
                             type="submit"
                             className="sigma_btn btn-block btn-sm mt-4"
-                            disabled={this.state.isBooking}
                           >
-                            {this.state.isBooking ? "Booking..." : "Confirm"}
+                            Confirm
                             <i className="fal fa-arrow-right ms-3" />
                           </button>
                         </li>
