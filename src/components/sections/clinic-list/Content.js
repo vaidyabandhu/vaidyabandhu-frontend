@@ -88,7 +88,7 @@ const DiagnosticCentersApp = () => {
       // Updated: Changed 'address' to 'city' parameter
       city: selectedAddress,
       services: selectedServices.join(","),
-      sub_services: selectedSubServices.join(","),
+      category: selectedSubServices.join(","),
     },
   });
 
@@ -842,8 +842,8 @@ const DiagnosticCentersApp = () => {
                                 {/* Services Tags */}
                                 <DiagnosticCenterCategories
                                   categories={
-                                    isNotEmptyArray(center?.sub_category)
-                                      ? center.sub_category
+                                    isNotEmptyArray(center?.category)
+                                      ? center.category
                                       : []
                                   }
                                 />

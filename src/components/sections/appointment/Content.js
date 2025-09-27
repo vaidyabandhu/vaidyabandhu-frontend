@@ -66,7 +66,7 @@ class Content extends Component {
 
     try {
       const response = await fetch(
-        `https://admin.vaidyabandhu.com/api/slots/slot/?doctor_id=${doctorId}&hospital_id=${hospitalId}&start_date=${startDateStr}&end_date=${endDateStr}`,
+        `https://admin.vaidyabandhu.com/api/slots/slot/?&start_date=${startDateStr}&end_date=${endDateStr}`,
         {
           method: "GET",
           headers: {
