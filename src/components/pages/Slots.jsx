@@ -54,7 +54,7 @@ const updateSlotPatchApi = async (payload) => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: token
         },
         body: JSON.stringify({
           id: payload.id,
@@ -267,14 +267,13 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
         };
 
         console.log("Creating slot with payload:", payload);
+        
         const response = await addSlotApi(payload);
+        console.log("Create Slot API response:", response.status);
 
         if (response.status >= 200 && response.status < 300) {
-          if (response.data?.message?.toLowerCase().includes("success")) {
-            onSaved(); // refresh + close modal
-          } else {
-            setError(response.data?.message || "Unexpected response");
-          }
+           onSaved(); 
+         
         } else {
           throw new Error(response.data?.message || "Failed to save slot");
         }
@@ -315,7 +314,7 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
               )}
 
               {/* Doctor and Hospital Fields */}
-              <Row>
+              {/* <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label>Doctor ID</Form.Label>
@@ -326,9 +325,7 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
                       required
                       disabled
                     />
-                    {/* <Form.Text muted>
-                      Fetched from login credentials
-                    </Form.Text> */}
+                  
                   </Form.Group>
                 </Col>
                 <Col md={6}>
@@ -341,12 +338,10 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
                       required
                       disabled
                     />
-                    {/* <Form.Text muted>
-                      Fetched from login credentials
-                    </Form.Text> */}
+                   
                   </Form.Group>
                 </Col>
-              </Row>
+              </Row> */}
 
               <Row>
                 <Col md={6}>
@@ -458,9 +453,13 @@ const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {
   const { user } = useAuthContext();
   const [editingSlot, setEditingSlot] = useState(null);
 
+    const token = localStorage.getItem("token");
   const response = useFetch({
     method: "GET",
     request: "slots/slot/",
+    headers: {
+      Authorization: token,
+    },
     dontCall:
       !dateFilter.start_date ||
       !dateFilter.end_date ||
@@ -468,7 +467,7 @@ const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {
     params: {
       doctor_id: user?.id ?? "",
       hospital_id: user?.selectedHostiptal?.id,
-      is_blocked: true,
+      // is_blocked: true,
       ...dateFilter,
     },
   });

@@ -31,6 +31,11 @@ const HospitalsPage = () => {
   const [tooltip, setTooltip] = useState({ visible: false, text: "", x: 0, y: 0 });
   const itemPerpage = 6;
 
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pageNo]);
+
   // Debounce search input
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -154,8 +159,10 @@ const HospitalsPage = () => {
                     <div className={style.headerContent}>
                       <h5 className="mb-1 fw-bold">{hospital.name}</h5>
                       {hospital.address && (
-                        <div className="d-flex align-items-center mb-2">
-                          <MapPin size={16} className="me-2" />
+                        <div className="d-flex align-items-start mb-2">
+                          <div className="me-2 mt-1">
+                            <MapPin size={16} />
+                          </div>
                           <small>{hospital.address}</small>
                         </div>
                       )}

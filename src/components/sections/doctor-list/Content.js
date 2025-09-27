@@ -129,6 +129,11 @@ const Content = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
   
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [page]);
+  
   // Debounce search
   useEffect(() => {
     const timeoutId = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);

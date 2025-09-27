@@ -439,7 +439,7 @@ const MyProfile = () => {
       width: "1px",
       height: isMobile ? "15px" : "30px",
       backgroundColor: "rgba(255, 255, 255, 0.5)",
-      margin: isMobile ? "0 5px" : "0 53px",
+      margin: isMobile ? "0 25px" : "0 53px",
     },
     // Back side styles
     backContainer: {

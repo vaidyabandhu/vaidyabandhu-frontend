@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Rating } from "../../../helper/helper";
 import { useFetch } from "../../hooks/usefetch";
@@ -14,6 +14,31 @@ const Content = ({ detailId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  
+  const sectionRefs = {
+    overview: useRef(null),
+    expertise: useRef(null),
+    achievements: useRef(null),
+    awards: useRef(null)
+  };
+
+  // Get header height on component mount and window resize
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      const header = document.querySelector('header');
+      if (header) {
+        setHeaderHeight(header.offsetHeight);
+      }
+    };
+
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+    
+    return () => {
+      window.removeEventListener('resize', updateHeaderHeight);
+    };
+  }, []);
 
   const {
     data: doctorData,
@@ -85,6 +110,21 @@ const Content = ({ detailId }) => {
       setTimeout(() => setSubmitError(false), 5000);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Function to scroll to section with offset
+  const scrollToSection = (sectionId) => {
+    const ref = sectionRefs[sectionId];
+    if (ref && ref.current) {
+      // Calculate position with header offset
+      const elementPosition = ref.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 20; // 20px extra padding
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
     }
   };
 
@@ -334,9 +374,7 @@ const Content = ({ detailId }) => {
                             }`}
                             onClick={(e) => {
                               e.preventDefault();
-                              document
-                                .getElementById(menu.id)
-                                .scrollIntoView({ behavior: "smooth" });
+                              scrollToSection(menu.id);
                             }}
                           >
                             {menu.label}
@@ -348,7 +386,7 @@ const Content = ({ detailId }) => {
                 </div>
 
                 {/* Overview Section */}
-                <div id="overview" className="mb-5">
+                <div ref={sectionRefs.overview} className="mb-5 section-scroll-target">
                   <h4>Field expertise</h4>
                   <div className="row">
                     {fieldExpertiseItems.length > 0 ? (
@@ -377,7 +415,7 @@ const Content = ({ detailId }) => {
                 </div>
 
                 {/* Expertise Section */}
-                <div id="expertise" className="mb-5">
+                <div ref={sectionRefs.expertise} className="mb-5 section-scroll-target">
                   <h4>Fellowship & Memberships</h4>
                   <div className="row">
                     {fellowshipItems.length > 0 ? (
@@ -398,7 +436,7 @@ const Content = ({ detailId }) => {
                 </div>
 
                 {/* Achievements Section */}
-                <div id="achievements" className="mb-5">
+                <div ref={sectionRefs.achievements} className="mb-5 section-scroll-target">
                   <h4>Awards & Achievements</h4>
                   <div className="row">
                     {awardsAchievementsItems.length > 0 ? (
@@ -427,7 +465,7 @@ const Content = ({ detailId }) => {
                 </div>
 
                 {/* Awards Section */}
-                <div id="awards" className="mb-5">
+                <div ref={sectionRefs.awards} className="mb-5 section-scroll-target">
                   <h4>Talks & Publications</h4>
                   <div className="row">
                     {talksPublicationsItems.length > 0 ? (
@@ -588,14 +626,15 @@ const Content = ({ detailId }) => {
               </div>
             </div>
           </div>
-          {/* Side
-            </div>
-          </div>
           {/* Sidebar End */}
         </div>
       </div>
       {/* Inline style for visual tweaks */}
       <style>{`
+        .section-scroll-target {
+          padding-top: 20px;
+          position: relative;
+        }
         .achievement-card {
           transition: transform 0.3s ease;
         }

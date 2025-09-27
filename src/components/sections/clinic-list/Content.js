@@ -109,9 +109,9 @@ const DiagnosticCentersApp = () => {
   useEffect(() => {
     if (citiesData && citiesData.data) {
       // Transform the cities data to match the expected format with 'name' property
-      const transformedCities = citiesData.data.map(city => ({
+      const transformedCities = citiesData.data.map((city) => ({
         id: city.id,
-        name: city.city_name 
+        name: city.city_name,
       }));
       setAddresses(transformedCities);
     }
@@ -164,19 +164,22 @@ const DiagnosticCentersApp = () => {
     if (hasToken) {
       // Call the enquiry API with the token
       try {
-        const response = await fetch("https://admin.vaidyabandhu.com/api/enquiry/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-          body: JSON.stringify({
-            full_name: "test",
-            phone: "1234567898",
-            email: "email@email.com",
-            address: "Bangalore"
-          }),
-        });
+        const response = await fetch(
+          "https://admin.vaidyabandhu.com/api/enquiry/",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token,
+            },
+            body: JSON.stringify({
+              full_name: "test",
+              phone: "1234567898",
+              email: "email@email.com",
+              address: "Bangalore",
+            }),
+          }
+        );
 
         if (response.ok) {
           const data = await response.json();
@@ -774,14 +777,16 @@ const DiagnosticCentersApp = () => {
                       >
                         <div className="row g-0">
                           <div className="col-md-4">
-                            <div className="position-relative">
+                            <div
+                              className="position-relative"
+                              style={{ height: "300px" }}
+                            >
                               <img
                                 src={center.image || defaultImage}
                                 alt={center.name}
                                 className="img-fluid w-100 h-100"
                                 style={{
                                   objectFit: "cover",
-                                  minHeight: "250px",
                                   borderRadius: "20px 0 0 20px",
                                 }}
                               />
@@ -837,8 +842,8 @@ const DiagnosticCentersApp = () => {
                                 {/* Services Tags */}
                                 <DiagnosticCenterCategories
                                   categories={
-                                    isNotEmptyArray(center?.category)
-                                      ? center.category
+                                    isNotEmptyArray(center?.sub_category)
+                                      ? center.sub_category
                                       : []
                                   }
                                 />
@@ -872,7 +877,7 @@ const DiagnosticCentersApp = () => {
                                   style={{
                                     borderRadius: "8px",
                                     padding: "8px 30px",
-                                    background: '#727b85'
+                                    background: "#727b85",
                                   }}
                                   onClick={() => handleCenterClick(center)}
                                 >

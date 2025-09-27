@@ -1197,7 +1197,6 @@ const Footer = () => {
             
             /* Social media and contact info responsive styles */
             div[style*="justify-content: space-between"][style*="align-items: center"] {
-              flex-direction: column !important;
               align-items: center !important;
               text-align: center !important;
             }
