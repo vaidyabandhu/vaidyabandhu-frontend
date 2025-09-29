@@ -22,7 +22,7 @@ const MyProfile = () => {
     address: "",
     pin_code: "",
     mobile: "",
-    alternate_number: "",
+    // alternate_number: "",
     email: "",
     Aadhar_number: "",
     pan_number: "",
@@ -40,8 +40,8 @@ const MyProfile = () => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Fetch user profile data
@@ -171,24 +171,20 @@ const MyProfile = () => {
   // Helper function to format dates
   const formatDate = (dateString) => {
     if (!dateString) return " ";
-    return dateString
-      .split("T")[0]
-      .split("-")
-      .reverse()
-      .join("-");
+    return dateString.split("T")[0].split("-").reverse().join("-");
   };
 
   // Responsive styles
   const isMobile = windowWidth < 768;
   const isTablet = windowWidth >= 768 && windowWidth < 1024;
-  
+
   // Calculate responsive card width
   const getCardWidth = () => {
     if (isMobile) return Math.min(windowWidth - 40, 480);
     if (isTablet) return 400;
     return 480;
   };
-  
+
   // Calculate responsive card height
   const getCardHeight = () => {
     if (isMobile) return (getCardWidth() * 350) / 480;
@@ -370,9 +366,9 @@ const MyProfile = () => {
       overflow: "hidden",
       textOverflow: "ellipsis",
       maxWidth: "100%",
-      whiteSpace: "normal", 
-      wordBreak: "break-word", 
-      overflowWrap: "break-word", 
+      whiteSpace: "normal",
+      wordBreak: "break-word",
+      overflowWrap: "break-word",
     },
     detailRowAligned: {
       display: "flex",
@@ -428,12 +424,12 @@ const MyProfile = () => {
       opacity: 0.9,
       marginBottom: "1px",
       color: "#E7E7E7",
-      textAlign: 'left',
+      textAlign: "left",
     },
     stripValue: {
       fontSize: isMobile ? "7px" : "12px",
       fontWeight: 500,
-      textAlign: 'left',
+      textAlign: "left",
     },
     stripVerticalLine: {
       width: "1px",
@@ -745,9 +741,7 @@ const MyProfile = () => {
               <div style={styles.infoRow}>
                 <User style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Full Name:</span>
-                <span style={styles.infoValue}>
-                  {patient.full_name || " "}
-                </span>
+                <span style={styles.infoValue}>{patient.full_name || " "}</span>
               </div>
 
               <div style={styles.infoRow}>
@@ -773,17 +767,13 @@ const MyProfile = () => {
               <div style={styles.infoRow}>
                 <MapPin style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Address:</span>
-                <span style={styles.infoValue}>
-                  {patient.address || " "}
-                </span>
+                <span style={styles.infoValue}>{patient.address || " "}</span>
               </div>
 
               <div style={styles.infoRow}>
                 <MapPin style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Pincode:</span>
-                <span style={styles.infoValue}>
-                  {patient.pin_code || " "}
-                </span>
+                <span style={styles.infoValue}>{patient.pin_code || " "}</span>
               </div>
 
               <div style={styles.infoRow}>
@@ -792,13 +782,13 @@ const MyProfile = () => {
                 <span style={styles.infoValue}>{patient.mobile || " "}</span>
               </div>
 
-              <div style={styles.infoRow}>
+              {/* <div style={styles.infoRow}>
                 <Phone style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Alternate Number:</span>
                 <span style={styles.infoValue}>
                   {patient.alternate_number || " "}
                 </span>
-              </div>
+              </div> */}
 
               <div style={styles.infoRow}>
                 <Mail style={styles.infoIcon} />
@@ -809,17 +799,13 @@ const MyProfile = () => {
               <div style={styles.infoRow}>
                 <IdCard style={styles.infoIcon} />
                 <span style={styles.infoLabel}>Aadhar Number:</span>
-                <span style={styles.infoValue}>
-                  {patient.aadhaar_number}
-                </span>
+                <span style={styles.infoValue}>{patient.aadhaar_number}</span>
               </div>
 
               <div style={styles.infoRow}>
                 <CreditCard style={styles.infoIcon} />
                 <span style={styles.infoLabel}>PAN Number:</span>
-                <span style={styles.infoValue}>
-                  {patient.pan_number}
-                </span>
+                <span style={styles.infoValue}>{patient.pan_number}</span>
               </div>
             </div>
           </div>
@@ -864,88 +850,111 @@ const MyProfile = () => {
               {/* Horizontal Line */}
               <div style={styles.horizontalLine}></div>
               {/* Card Content */}
-              <div style={{
-                ...styles.cardContent,
-                ...(isMobile && { 
-                  marginLeft: 0,
-                  alignItems: 'flex-start',
-                  paddingLeft: '10px',
-                  paddingRight: '10px'
-                })
-              }}>
-                <div style={{
-                  ...styles.cardDetails,
-                  ...(isMobile && { 
-                    flex: 1,
-                    paddingRight: '8px',
-                    paddingLeft: '0'
-                  })
-                }}>
+              <div
+                style={{
+                  ...styles.cardContent,
+                  ...(isMobile && {
+                    marginLeft: 0,
+                    alignItems: "flex-start",
+                    paddingLeft: "10px",
+                    paddingRight: "10px",
+                  }),
+                }}
+              >
+                <div
+                  style={{
+                    ...styles.cardDetails,
+                    ...(isMobile && {
+                      flex: 1,
+                      paddingRight: "8px",
+                      paddingLeft: "0",
+                    }),
+                  }}
+                >
                   <div style={styles.detailRowAligned}>
                     <span style={styles.labelText}>MEMBERSHIP ID:</span>
-                    <span style={{
-                      ...styles.valueText,
-                      maxWidth: isMobile ? "100px" : "200px",
-                      fontSize: isMobile ? "8px" : "13px"
-                    }}>
-                      {" "}{patient.membership_id || " "}
+                    <span
+                      style={{
+                        ...styles.valueText,
+                        maxWidth: isMobile ? "100px" : "200px",
+                        fontSize: isMobile ? "8px" : "13px",
+                      }}
+                    >
+                      {" "}
+                      {patient.membership_id || " "}
                     </span>
                   </div>
                   <div style={styles.detailRowAligned}>
                     <span style={styles.labelText}>VALIDITY:</span>
-                    <span style={{
-                      ...styles.valueText,
-                      maxWidth: isMobile ? "100px" : "200px",
-                      fontSize: isMobile ? "8px" : "13px",
-                      whiteSpace: isMobile ? "normal" : "nowrap"
-                    }}>
-                      {formatDate(patient.start_date)} to {formatDate(patient.end_date)}
+                    <span
+                      style={{
+                        ...styles.valueText,
+                        maxWidth: isMobile ? "100px" : "200px",
+                        fontSize: isMobile ? "8px" : "13px",
+                        whiteSpace: isMobile ? "normal" : "nowrap",
+                      }}
+                    >
+                      {formatDate(patient.start_date)} to{" "}
+                      {formatDate(patient.end_date)}
                     </span>
                   </div>
 
                   <div style={styles.detailRowAligned}>
                     <span style={styles.labelText}>CONTACT:</span>
-                    <span style={{
-                      ...styles.valueText,
-                      maxWidth: isMobile ? "100px" : "200px",
-                      fontSize: isMobile ? "8px" : "13px"
-                    }}>
+                    <span
+                      style={{
+                        ...styles.valueText,
+                        maxWidth: isMobile ? "100px" : "200px",
+                        fontSize: isMobile ? "8px" : "13px",
+                      }}
+                    >
                       {patient.mobile || " "}
                     </span>
                   </div>
                   <div style={styles.detailRowAligned}>
                     <span style={styles.labelText}>BLOOD GROUP:</span>
-                    <span style={{
-                      ...styles.bloodGroupText,
-                      fontSize: isMobile ? "8px" : "13px"
-                    }}>
+                    <span
+                      style={{
+                        ...styles.bloodGroupText,
+                        fontSize: isMobile ? "8px" : "13px",
+                      }}
+                    >
                       {patient.blood_group || " "}
                     </span>
                   </div>
-                  <div style={{
-                    ...styles.detailRowAligned,
-                    marginBottom: isMobile ? "3px" : "15px"
-                  }}>
+                  <div
+                    style={{
+                      ...styles.detailRowAligned,
+                      marginBottom: isMobile ? "3px" : "15px",
+                    }}
+                  >
                     <span style={styles.labelText}>ADDRESS:</span>
-                    <span style={{
-                      ...styles.valueText,
-                      maxWidth: isMobile ? "100px" : "200px",
-                      fontSize: isMobile ? "8px" : "13px",
-                      whiteSpace: isMobile ? "normal" : "nowrap",
-                      lineHeight: isMobile ? "1.1" : "normal"
-                    }}>
+                    <span
+                      style={{
+                        ...styles.valueText,
+                        maxWidth: isMobile ? "100px" : "200px",
+                        fontSize: isMobile ? "8px" : "13px",
+                        whiteSpace: "normal", // ✅ allows wrapping
+                        lineHeight: isMobile ? "1.1" : "normal",
+                        overflow: "visible", // ✅ prevents clipping
+                        textOverflow: "unset", // ✅ no dots
+                        wordBreak: "break-word", // ✅ breaks long words if needed
+                      }}
+                    >
                       {patient.address || " "}
                     </span>
                   </div>
                 </div>
-                <div style={{
-                  ...styles.cardPhoto,
-                  ...(isMobile && { 
-                    flex: 'none',
-                    width: '70px',
-                    marginLeft: '5px'
-                  })
-                }}>
+                <div
+                  style={{
+                    ...styles.cardPhoto,
+                    ...(isMobile && {
+                      flex: "none",
+                      width: "70px",
+                      marginLeft: "5px",
+                    }),
+                  }}
+                >
                   <div style={styles.photoContainer}>
                     {patient.profile_image ? (
                       <img
@@ -972,12 +981,14 @@ const MyProfile = () => {
                       </div>
                     )}
                   </div>
-                  <div style={{
-                    ...styles.photoNameText,
-                    fontSize: isMobile ? "8px" : "14px",
-                    maxWidth: isMobile ? "70px" : "100%",
-                    lineHeight: isMobile ? "1.1" : "normal"
-                  }}>
+                  <div
+                    style={{
+                      ...styles.photoNameText,
+                      fontSize: isMobile ? "8px" : "14px",
+                      maxWidth: isMobile ? "70px" : "100%",
+                      lineHeight: isMobile ? "1.1" : "normal",
+                    }}
+                  >
                     {patient.full_name || " "}
                   </div>
                 </div>
@@ -986,18 +997,26 @@ const MyProfile = () => {
               <div style={styles.blueStrip}>
                 <div style={styles.stripItem}>
                   <div style={styles.stripLabel}>WHATSAPP HELPLINE</div>
-                  <div style={{
-                    ...styles.stripValue,
-                    fontSize: isMobile ? "7px" : "12px"
-                  }}>+91 8535 8535 89</div>
+                  <div
+                    style={{
+                      ...styles.stripValue,
+                      fontSize: isMobile ? "7px" : "12px",
+                    }}
+                  >
+                    +91 8535 8535 89
+                  </div>
                 </div>
                 <div style={styles.stripVerticalLine}></div>
                 <div style={styles.stripItem}>
                   <div style={styles.stripLabel}>EMAIL ID</div>
-                  <div style={{
-                    ...styles.stripValue,
-                    fontSize: isMobile ? "7px" : "12px"
-                  }}>support@vaidyabandhu.com</div>
+                  <div
+                    style={{
+                      ...styles.stripValue,
+                      fontSize: isMobile ? "7px" : "12px",
+                    }}
+                  >
+                    support@vaidyabandhu.com
+                  </div>
                 </div>
               </div>
             </div>
@@ -1182,7 +1201,8 @@ const MyProfile = () => {
                 {/* Bottom Banner */}
                 <div style={styles.bottomBanner}>
                   <div style={styles.companyName}>
-                    VAIDYA BANDHU (A UNIT OF MY COMPANYON HEALTHCARE PRIVATE LIMITED)
+                    VAIDYA BANDHU (A UNIT OF MY COMPANYON HEALTHCARE PRIVATE
+                    LIMITED)
                   </div>
                   <div style={styles.tagline}>
                     "SERVING WITH CARE & COMMITMENT"

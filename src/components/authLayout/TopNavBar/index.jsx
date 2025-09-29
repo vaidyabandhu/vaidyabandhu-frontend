@@ -11,7 +11,7 @@ const Topbar = () => {
         <div className="project-section">
           <span className="project-label">Hospital:</span>
           <span className="hospital-name">
-            {user?.hospital_name || user?.selectedHostiptal?.description || "Not available"}
+            {user?.hospital_name || user?.selectedHostiptal?.description }
           </span>
         </div>
       </div>

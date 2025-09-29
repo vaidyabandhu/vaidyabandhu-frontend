@@ -4,6 +4,7 @@ const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Appointments = lazy(() => import('../pages/Appointments'))
 const Slots = lazy(() => import('../pages/Slots'))
 const MyProfile = lazy(() => import('../pages/MyProfile'))
+const Patients = lazy(() => import('../pages/Patients'))
 
 const doctorRoutes = [
 	{
@@ -20,6 +21,11 @@ const doctorRoutes = [
 		path: "/doc-slots",
 		name: 'Slots',
 		element: <Slots />,
+	},
+	{
+		path: "/patient-list",
+		name: 'Patient List',
+		element: <Patients />,
 	},
 	{
 		path: "/myProfile",
