@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import {
-  // LayoutDashboard,
+  LayoutDashboard,
   ChevronLeft,
   ChevronRight,
   BetweenHorizontalEnd,
@@ -10,11 +10,6 @@ import { useState } from "react";
 import "../../../assets/css/LeftSidebar.css"; // or use Tailwind
 
 const menuItems = [
-  // {
-  //   name: "Dashboard",
-  //   path: "/dashboard",
-  //   icon: <LayoutDashboard size={20} />,
-  // },
   {
     name: "Slots",
     path: "/doc-slots",
@@ -24,6 +19,11 @@ const menuItems = [
     name: "Appointment",
     path: "/doc-appointment",
     icon: <Waypoints size={20} />,
+  },
+  {
+    name: "Patient List",
+    path: "/patient-list",
+    icon: <LayoutDashboard size={20} />,
   },
 ];
 

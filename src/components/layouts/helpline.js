@@ -4,7 +4,7 @@ const FloatingCallButton = () => {
   const [showMessage, setShowMessage] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const phoneNumber = "+91 8535853589";
-  const phoneNumberClean = "918535853589"; // For tel: links
+  const phoneNumberClean = "+91 8535853589"; // For tel: links
 
   useEffect(() => {
     // Detect if device can make calls (mobile or Mac)

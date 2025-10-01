@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import domtoimage from "dom-to-image-more";
 import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
 import {
   Mail,
   Phone,
@@ -99,54 +100,71 @@ const MyProfile = () => {
     }
 
     try {
-      // Convert both front and back into PNGs
       const frontImg = await domtoimage.toPng(front, {
         cacheBust: true,
         useCORS: true,
+        backgroundColor: null,
       });
       const backImg = await domtoimage.toPng(back, {
         cacheBust: true,
         useCORS: true,
+        backgroundColor: null,
       });
 
-      // Load them into Image objects
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const frontWidth = front.offsetWidth;
+      const frontHeight = front.offsetHeight;
+      const backWidth = back.offsetWidth;
+      const backHeight = back.offsetHeight;
+
+      const gap = 20;
+      canvas.width = Math.max(frontWidth, backWidth);
+      canvas.height = frontHeight + backHeight + gap;
+
+      ctx.fillStyle = "#F5F9FA";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
       const frontImage = new Image();
-      const backImage = new Image();
       frontImage.src = frontImg;
+      await new Promise((resolve) => {
+        frontImage.onload = resolve;
+      });
+      const frontX = (canvas.width - frontWidth) / 2;
+      ctx.drawImage(frontImage, frontX, 0, frontWidth, frontHeight);
+
+      const backImage = new Image();
       backImage.src = backImg;
+      await new Promise((resolve) => {
+        backImage.onload = resolve;
+      });
+      const backX = (canvas.width - backWidth) / 2;
+      ctx.drawImage(backImage, backX, frontHeight + gap, backWidth, backHeight);
 
-      frontImage.onload = () => {
-        backImage.onload = () => {
-          // Create canvas large enough for both with space between
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
+      // Final merged image
+      const combinedImg = canvas.toDataURL("image/png");
 
-          const width = Math.max(frontImage.width, backImage.width);
-          const gap = 30; // Space between cards in pixels
-          const height = frontImage.height + backImage.height + gap;
+      // --- FIX: PDF page size = image size (no extra white background) ---
+      // Convert px to mm (1 px ≈ 0.264583 mm)
+      const pxToMm = (px) => px * 0.264583;
+      const imgWidthMm = pxToMm(canvas.width);
+      const imgHeightMm = pxToMm(canvas.height);
 
-          canvas.width = width;
-          canvas.height = height;
+      // Create PDF with same size as the image
+      const pdf = new jsPDF({
+        orientation: imgWidthMm > imgHeightMm ? "landscape" : "portrait",
+        unit: "mm",
+        format: [imgWidthMm, imgHeightMm], // Custom size exactly matching the card
+      });
 
-          // Fill canvas with white background
-          ctx.fillStyle = "white";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Add image to fill the page
+      pdf.addImage(combinedImg, "PNG", 0, 0, imgWidthMm, imgHeightMm);
 
-          // Draw front card at the top
-          ctx.drawImage(frontImage, 0, 0);
-
-          // Draw back card below with gap
-          ctx.drawImage(backImage, 0, frontImage.height + gap);
-
-          // Save merged image
-          canvas.toBlob((blob) => {
-            saveAs(blob, `${patient.full_name || "user"}_HealthCard.png`);
-          });
-        };
-      };
+      pdf.save(`${patient.full_name || "user"}_HealthCard.pdf`);
     } catch (error) {
       console.error("Oops, something went wrong!", error);
-      alert("Failed to download merged card.");
+      alert("Failed to download PDF.");
     }
   };
 
@@ -156,7 +174,9 @@ const MyProfile = () => {
 
   const confirmLogout = () => {
     // Remove token from localStorage
+    localStorage.removeItem("authToken");
     localStorage.removeItem("token");
+
     // Remove all cookies
     document.cookie.split(";").forEach((c) => {
       document.cookie = c.replace(
@@ -176,20 +196,6 @@ const MyProfile = () => {
 
   // Responsive styles
   const isMobile = windowWidth < 768;
-  const isTablet = windowWidth >= 768 && windowWidth < 1024;
-
-  // Calculate responsive card width
-  const getCardWidth = () => {
-    if (isMobile) return Math.min(windowWidth - 40, 480);
-    if (isTablet) return 400;
-    return 480;
-  };
-
-  // Calculate responsive card height
-  const getCardHeight = () => {
-    if (isMobile) return (getCardWidth() * 350) / 480;
-    return 350;
-  };
 
   // Inline styles — optimized for alignment and reusability
   const styles = {
@@ -257,8 +263,8 @@ const MyProfile = () => {
       borderBottom: "1px solid #eee",
     },
     healthCard: {
-      width: `${getCardWidth()}px`,
-      height: `${getCardHeight()}px`,
+      width: isMobile ? "300px" : "480px",
+      height: isMobile ? "200px" : "350px",
       borderRadius: "12px",
       margin: "0 auto",
       background: "#F5F9FA",
@@ -569,10 +575,10 @@ const MyProfile = () => {
       right: 0,
       backgroundColor: "#046877",
       color: "white",
-      padding: isMobile ? "3px 0" : "6px 0",
+      padding: isMobile ? "5px 0" : "6px 0",
       borderBottomLeftRadius: "12px",
       borderBottomRightRadius: "12px",
-      margin: isMobile ? "-10px" : "-17px",
+      margin: isMobile ? "-12px" : "-17px",
     },
     companyName: {
       fontSize: isMobile ? "5px" : "10px",
@@ -1233,7 +1239,7 @@ const MyProfile = () => {
                 }}
                 onClick={handleDownload}
               >
-                Download Card
+                Download PDF
               </button>
             </div>
 

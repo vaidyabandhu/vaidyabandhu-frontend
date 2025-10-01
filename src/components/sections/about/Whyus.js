@@ -131,7 +131,7 @@ class Whyus extends Component {
                 src={process.env.PUBLIC_URL + "/assets/img/doc-6.jpg"}
                 alt="img"
                 className="rounded-lg shadow-lg w-[280px] h-auto object-cover hidden sm:block z-0"
-                style={{ marginTop: "-6%", marginLeft: "21%" }}
+                style={{ marginTop: "-6%", marginLeft: "15%" }}
               />
             </div>
           </div>
