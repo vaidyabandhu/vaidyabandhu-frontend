@@ -53,7 +53,7 @@ class Content extends Component {
     const token = userInfo?.token;
         console.log("testing the token", token);
     if (!token) {
-      alert("Session expired. Please login again abcdd.");
+      alert("Session expired. Please login again.");
       window.location.href = "/basic-details";
       return;
     }
@@ -79,7 +79,7 @@ class Content extends Component {
       );
 
       if (response.status === 401) {
-          alert("Session expired. Please login again 81.");
+          alert("Session expired. Please login again.");
         localStorage.removeItem("token");
         window.location.href = "/basic-details";
         return;
