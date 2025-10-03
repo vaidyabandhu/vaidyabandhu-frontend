@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 // Sample client logos data - replace with your actual logo paths
 const clientLogos = [
   { id: 1, src: "/assets/img/h1.png" },
-  { id: 2, src: "/assets/img/h2.png" },
+  // { id: 2, src: "/assets/img/h2.png" },
   { id: 3, src: "/assets/img/h3.png" },
   { id: 4, src: "/assets/img/h4.png" },
   { id: 5, src: "/assets/img/h5.png" },
@@ -12,6 +12,18 @@ const clientLogos = [
   { id: 8, src: "/assets/img/h8.png" },
   { id: 9, src: "/assets/img/h9.png" },
   { id: 10, src: "/assets/img/h10.png" },
+  { id: 11, src: "/assets/img/h11.png" },
+  { id: 12, src: "/assets/img/h12.png" },
+  { id: 13, src: "/assets/img/h13.png" },
+  { id: 14, src: "/assets/img/h14.png" },
+  { id: 15, src: "/assets/img/h15.png" },
+  { id: 16, src: "/assets/img/h16.png" },
+  { id: 17, src: "/assets/img/h17.png" },
+  { id: 18, src: "/assets/img/h18.png" },
+  { id: 19, src: "/assets/img/h19.png" },
+  { id: 20, src: "/assets/img/h20.png" },
+  { id: 21, src: "/assets/img/h21.png" },
+  { id: 22, src: "/assets/img/h22.png" },
 ];
 
 const ClientLogosCarousel = () => {
@@ -22,6 +34,7 @@ const ClientLogosCarousel = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Duplicate the logos to create a seamless loop
   const duplicatedLogos = [...clientLogos, ...clientLogos];
 
   return (
@@ -91,8 +104,8 @@ const ClientLogosCarousel = () => {
           className="logo-carousel-track"
           style={{
             display: "flex",
-            whiteSpace: "nowrap",
-            animation: "scrollLogos 30s linear infinite",
+            // Set explicit width to accommodate all logos
+            width: `${duplicatedLogos.length * 220}px`, // 180px width + 40px margin
             opacity: animated ? 1 : 0,
             transition: "opacity 1s ease-out 0.4s",
           }}
@@ -130,40 +143,41 @@ const ClientLogosCarousel = () => {
       </div>
 
       {/* Keyframes for the scrolling animation */}
-     <style>
-  {`
-    @keyframes scrollLogos {
-      0% {
-        transform: translateX(0%);
-      }
-      100% {
-        transform: translateX(-50%);
-      }
-    }
+      <style>
+        {`
+          @keyframes scrollLogos {
+            0% {
+              transform: translateX(0);
+            }
+            100% {
+              transform: translateX(-50%);
+            }
+          }
 
-    .logo-carousel-track {
-      animation: scrollLogos 30s linear infinite;
-    }
+          .logo-carousel-track {
+            animation: scrollLogos 60s linear infinite;
+            will-change: transform;
+          }
 
-    /* Speed up on smaller screens */
-    @media (max-width: 768px) {
-      .logo-carousel-track {
-        animation-duration: 15s;
-      }
-    }
+          /* Slower speed on medium screens */
+          @media (max-width: 768px) {
+            .logo-carousel-track {
+              animation-duration: 45s;
+            }
+          }
 
-    @media (max-width: 480px) {
-      .logo-carousel-track {
-        animation-duration: 6s;
-      }
-    }
+          /* Slower speed on small screens */
+          @media (max-width: 480px) {
+            .logo-carousel-track {
+              animation-duration: 30s;
+            }
+          }
 
-    .logo-carousel-track:hover {
-      animation-play-state: paused;
-    }
-  `}
-</style>
-
+          .logo-carousel-track:hover {
+            animation-play-state: paused;
+          }
+        `}
+      </style>
     </div>
   );
 };
