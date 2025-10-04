@@ -36,7 +36,7 @@ const services = [
     image: "/assets/img/icon4.png",
     title: "Your One-Stop Healthcare Solution",
     points: [
-      "Consult experts across 70+ departments",
+      "Consult experts across 80+ departments",
       "Find trusted doctors, hospitals, and labs",
       "Personalized medical support tailored to your needs",
     ],

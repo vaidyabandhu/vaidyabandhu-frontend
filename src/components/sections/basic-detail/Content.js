@@ -10,10 +10,12 @@ import {
   X,
   LogOut,
 } from "lucide-react";
-import { Form, Col, Row, Card, Image } from "react-bootstrap";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { Form, Col, Row, Card, Image, Modal } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import "../../../assets/css/BasicDetail.css";
 import languagesType from "./data.json";
+import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 const BLOOD_GROUPS = [
   "A+",
@@ -28,7 +30,7 @@ const BLOOD_GROUPS = [
 ];
 
 const VaidyaBandhuForm = () => {
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     full_name: "",
     age: "",
@@ -41,17 +43,26 @@ const VaidyaBandhuForm = () => {
     pin_code: "",
     aadhaar_number: "",
     pan_number: "",
-    photo: null, // Added photo field
+    photo: null,
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const token = localStorage.getItem("token");
   const [selectedLanguage, setSelectedLanguage] = useState("en");
-  const [photoPreview, setPhotoPreview] = useState(null); // For photo preview
+  const [photoPreview, setPhotoPreview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  
+  // Cropping state
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [imgSrc, setImgSrc] = useState(null);
+  const [crop, setCrop] = useState();
+  const [completedCrop, setCompletedCrop] = useState(null);
+  const imgRef = useRef(null);
+  const previewCanvasRef = useRef(null);
+  const [croppedFile, setCroppedFile] = useState(null);
 
   // Handle language change
   const handleLanguageChange = (e) => setSelectedLanguage(e.target.value);
@@ -60,7 +71,6 @@ const VaidyaBandhuForm = () => {
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.match("image.*")) {
         setErrors((prev) => ({
           ...prev,
@@ -69,7 +79,6 @@ const VaidyaBandhuForm = () => {
         return;
       }
 
-      // Validate file size (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
         setErrors((prev) => ({
           ...prev,
@@ -78,25 +87,12 @@ const VaidyaBandhuForm = () => {
         return;
       }
 
-      setFormData((prev) => ({
-        ...prev,
-        photo: file,
-      }));
-
-      // Create preview
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result);
+      reader.onload = () => {
+        setImgSrc(reader.result);
+        setCropModalOpen(true);
       };
       reader.readAsDataURL(file);
-
-      // Clear any existing photo error
-      if (errors.photo) {
-        setErrors((prev) => ({
-          ...prev,
-          photo: "",
-        }));
-      }
     }
   };
 
@@ -120,13 +116,11 @@ const VaidyaBandhuForm = () => {
         );
         if (response.ok) {
           const data = await response.json();
-          console.log("Fetched user profile:", data);
           setFormData(data);
+          if (data.photo) {
+            setPhotoPreview(data.photo);
+          }
         }
-        // if (!token) {
-        //   alert("Please log in to access your profile.");
-        //   navigate("/login");
-        // }
       } catch (err) {
         console.error("Error fetching user profile:", err);
       } finally {
@@ -144,6 +138,105 @@ const VaidyaBandhuForm = () => {
       photo: null,
     }));
     setPhotoPreview(null);
+    setCroppedFile(null);
+  };
+
+  // Crop functions
+  const onImageLoad = (e) => {
+    const { width, height } = e.currentTarget;
+    const crop = centerCrop(
+      makeAspectCrop(
+        {
+          unit: '%',
+          width: 90,
+        },
+        1,
+        width,
+        height
+      ),
+      width,
+      height
+    );
+    setCrop(crop);
+  };
+
+  const onCropComplete = (c) => {
+    setCompletedCrop(c);
+  };
+
+  const createCroppedImage = async () => {
+    if (!completedCrop || !imgRef.current) return;
+
+    const image = imgRef.current;
+    const canvas = previewCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    // Convert percentage values to pixel values
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    
+    const pixelCrop = {
+      x: completedCrop.x * scaleX,
+      y: completedCrop.y * scaleY,
+      width: completedCrop.width * scaleX,
+      height: completedCrop.height * scaleY,
+    };
+
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    ctx.drawImage(
+      image,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      pixelCrop.width,
+      pixelCrop.height
+    );
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          console.error('Failed to create blob');
+          return;
+        }
+        resolve(blob);
+      }, 'image/jpeg', 0.9);
+    });
+  };
+
+  const handleCropSave = async () => {
+    try {
+      const croppedBlob = await createCroppedImage();
+      if (!croppedBlob) return;
+      
+      const croppedFile = new File([croppedBlob], 'cropped_photo.jpg', {
+        type: 'image/jpeg',
+      });
+      
+      setCroppedFile(croppedFile);
+      setPhotoPreview(URL.createObjectURL(croppedBlob));
+      setFormData((prev) => ({
+        ...prev,
+        photo: croppedFile,
+      }));
+      
+      // Clear any existing photo error
+      if (errors.photo) {
+        setErrors((prev) => ({
+          ...prev,
+          photo: "",
+        }));
+      }
+    } catch (e) {
+      console.error('Error cropping image', e);
+    } finally {
+      setCropModalOpen(false);
+      setImgSrc(null);
+    }
   };
 
   const validateForm = () => {
@@ -280,7 +373,6 @@ const VaidyaBandhuForm = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // Create user profile using FormData
       const formDataToSend = new FormData();
       formDataToSend.append("full_name", formData.full_name);
       formDataToSend.append("age", formData.age);
@@ -308,7 +400,6 @@ const VaidyaBandhuForm = () => {
         }
       );
 
-      // Create payment order
       const createOrder = await fetch(
         "https://admin.vaidyabandhu.com/api/payment/create_order/",
         {
@@ -332,7 +423,6 @@ const VaidyaBandhuForm = () => {
         return;
       }
 
-      // Razorpay payment integration
       const order_id = createOrderData.order_id || "order_RI9lDcv6o4vXni";
       const razorpay_key =
         createOrderData.razorpay_key || "rzp_live_RBDq4cloXLAvYR";
@@ -357,14 +447,13 @@ const VaidyaBandhuForm = () => {
           try {
             console.log("Payment successful:", response);
 
-            // ✅ Call backend callback API ONLY after success
             const callbackResponse = await fetch(
               "https://admin.vaidyabandhu.com/api/payment/callback/",
               {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: token, // plain token, since your backend doesn't expect Bearer
+                  Authorization: token,
                 },
                 body: JSON.stringify({
                   razorpay_order_id: response.razorpay_order_id,
@@ -375,10 +464,8 @@ const VaidyaBandhuForm = () => {
             );
 
             if (callbackResponse.ok) {
-              // ✅ Payment verified successfully
               navigate("/myprofile");
             } else {
-              // ❌ Payment verification failed
               const errorData = await callbackResponse.json();
               console.error("Callback API error:", errorData);
               alert("Payment verification failed. Please contact support.");
@@ -421,9 +508,7 @@ const VaidyaBandhuForm = () => {
   };
 
   const confirmLogout = () => {
-    // Remove token from localStorage
     localStorage.removeItem("token");
-    // Remove all cookies
     document.cookie.split(";").forEach((c) => {
       document.cookie = c.replace(
         /=.*/,
@@ -538,7 +623,6 @@ const VaidyaBandhuForm = () => {
                 </div>
               </Card.Body>
             </Card>
-            {/* Logout Button */}
             <button
               style={{
                 display: "flex",
@@ -664,6 +748,7 @@ const VaidyaBandhuForm = () => {
                     </Col>
                   </Row>
 
+                  {/* Rest of the form fields remain unchanged */}
                   <Row>
                     <Col md={12}>
                       <Form.Group controlId="formFullName" className="mb-3">
@@ -743,7 +828,6 @@ const VaidyaBandhuForm = () => {
                       </Form.Group>
                     </Col>
                   </Row>
-                  {/* Blood Group - select */}
                   <Row>
                     <Col md={6}>
                       <Form.Group controlId="formBloodGroup" className="mb-3">
@@ -774,7 +858,6 @@ const VaidyaBandhuForm = () => {
                     </Col>
                   </Row>
 
-                  {/* Address and Pin code */}
                   <Row>
                     <Col md={8}>
                       <Form.Group controlId="formAddress" className="mb-3">
@@ -847,38 +930,7 @@ const VaidyaBandhuForm = () => {
                         </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
-                    {/* <Col>
-                      <Form.Group
-                        controlId="formAlternateNumber"
-                        className="mb-3"
-                      >
-                        <Form.Label>
-                          {
-                            languagesType[selectedLanguage].form
-                              .alternate_mobile
-                          }
-                        </Form.Label>
-                        <Form.Control
-                          type="tel"
-                          name="alternate_mobile"
-                          value={formData.alternate_mobile}
-                          onChange={(e) =>
-                            handleNumberChange(e, "alternate_mobile")
-                          }
-                          isInvalid={!!errors.alternate_mobile}
-                          placeholder={
-                            languagesType[selectedLanguage].form.placeholders
-                              .alternate_mobile
-                          }
-                          maxLength="10"
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.alternate_mobile}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col> */}
                   </Row>
-                  {/* Email ID */}
                   <Form.Group controlId="formEmailId" className="mb-3">
                     <Form.Label>
                       {languagesType[selectedLanguage].form.email}
@@ -898,7 +950,6 @@ const VaidyaBandhuForm = () => {
                     </Form.Control.Feedback>
                   </Form.Group>
 
-                  {/* Aadhaar Number */}
                   <Form.Group controlId="formAadhaarNumber" className="mb-3">
                     <Form.Label>
                       {languagesType[selectedLanguage].form.aadhaar_number}
@@ -920,7 +971,6 @@ const VaidyaBandhuForm = () => {
                     </Form.Control.Feedback>
                   </Form.Group>
 
-                  {/* PAN Number */}
                   <Form.Group controlId="formPanNumber" className="mb-3">
                     <Form.Label>
                       {languagesType[selectedLanguage].form.pan_number}
@@ -1063,6 +1113,53 @@ const VaidyaBandhuForm = () => {
           </div>
         </div>
       )}
+
+      {/* Crop Modal */}
+      <Modal show={cropModalOpen} onHide={() => setCropModalOpen(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Crop Photo</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="d-flex justify-content-center">
+            {imgSrc && (
+              <ReactCrop
+                crop={crop}
+                onChange={(_, percentCrop) => setCrop(percentCrop)}
+                onComplete={(c) => setCompletedCrop(c)}
+                aspect={1}
+                circularCrop
+              >
+                <img
+                  ref={imgRef}
+                  alt="Crop preview"
+                  src={imgSrc}
+                  onLoad={onImageLoad}
+                  style={{ maxHeight: '500px', maxWidth: '100%' }}
+                />
+              </ReactCrop>
+            )}
+          </div>
+          <canvas
+            ref={previewCanvasRef}
+            style={{ display: 'none' }}
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setCropModalOpen(false)}
+          >
+            Cancel
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={handleCropSave}
+            disabled={!completedCrop?.width || !completedCrop?.height}
+          >
+            Upload Photo
+          </button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
