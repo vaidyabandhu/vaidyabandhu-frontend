@@ -24,6 +24,14 @@ const clientLogos = [
   { id: 20, src: "/assets/img/h20.png" },
   { id: 21, src: "/assets/img/h21.png" },
   { id: 22, src: "/assets/img/h22.png" },
+  { id: 23, src: "/assets/img/h23.jpg" },
+  { id: 24, src: "/assets/img/h24.jpg" },
+  { id: 25, src: "/assets/img/h25.jpg" },
+  { id: 26, src: "/assets/img/h26.jpg" },
+  { id: 27, src: "/assets/img/h27.jpg" },
+  { id: 28, src: "/assets/img/h28.jpg" },
+  { id: 29, src: "/assets/img/h29.jpg" },
+
 ];
 
 const ClientLogosCarousel = () => {
