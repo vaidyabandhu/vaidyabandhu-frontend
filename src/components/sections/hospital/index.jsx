@@ -28,7 +28,12 @@ const HospitalsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   const [pageNo, setPageNo] = useState(1);
-  const [tooltip, setTooltip] = useState({ visible: false, text: "", x: 0, y: 0 });
+  const [tooltip, setTooltip] = useState({
+    visible: false,
+    text: "",
+    x: 0,
+    y: 0,
+  });
   const itemPerpage = 6;
 
   // Scroll to top when page changes
@@ -154,64 +159,70 @@ const HospitalsPage = () => {
                     }}
                   ></div>
 
-                  <Card.Body className="p-3">
-                    {/* Hospital Info */}
-                    <div className={style.headerContent}>
-                      <h5 className="mb-1 fw-bold">{hospital.name}</h5>
-                      {hospital.address && (
-                        <div className="d-flex align-items-start mb-2">
-                          <div className="me-2 mt-1">
-                            <MapPin size={16} />
+                  <Card.Body className="p-3 d-flex flex-column">
+                    {/* Content that can grow */}
+                    <div className="flex-grow-1">
+                      {/* Hospital Info */}
+                      <div className={style.headerContent}>
+                        <h5 className="mb-1 fw-bold">{hospital.name}</h5>
+                        {hospital.address && (
+                          <div className="d-flex align-items-start mb-2">
+                            <div className="me-2 mt-1">
+                              <MapPin size={16} />
+                            </div>
+                            <small>{hospital.address}</small>
                           </div>
-                          <small>{hospital.address}</small>
+                        )}
+                      </div>
+
+                      {/* Contact Buttons */}
+                      <div className={`${style.contactActions} mb-3`}>
+                        <button
+                          className={`${style.contactBtn} ${style.emailBtn}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyToClipboard("support@vaidyabandhu.com");
+                          }}
+                          onMouseEnter={(e) =>
+                            showTooltip(e, "Click to copy email")
+                          }
+                          onMouseLeave={hideTooltip}
+                        >
+                          <Mail size={14} />
+                        </button>
+                        <button
+                          className={`${style.contactBtn} ${style.phoneBtn}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyToClipboard("+91 8535 8535 89");
+                          }}
+                          onMouseEnter={(e) =>
+                            showTooltip(e, "Click to copy phone number")
+                          }
+                          onMouseLeave={hideTooltip}
+                        >
+                          <Phone size={14} />
+                        </button>
+                      </div>
+
+                      {/* Verification Badge */}
+                      {hospital.allow_refund_on_cancellation && (
+                        <div className="border-top pt-3">
+                          <div className="d-flex align-items-center">
+                            <CheckCircle
+                              size={14}
+                              className="text-success me-1"
+                            />
+                            <small className="text-success fw-medium">
+                              Verified
+                            </small>
+                          </div>
                         </div>
                       )}
                     </div>
 
-                    {/* Contact Buttons */}
-                    <div className={`${style.contactActions} mb-3`}>
-                      <button
-                        className={`${style.contactBtn} ${style.emailBtn}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyToClipboard("support@vaidyabandhu.com");
-                        }}
-                        onMouseEnter={(e) => showTooltip(e, "Click to copy email")}
-                        onMouseLeave={hideTooltip}
-                      >
-                        <Mail size={14} />
-                        {/* <span>Email</span> */}
-                      </button>
-                      <button
-                        className={`${style.contactBtn} ${style.phoneBtn}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyToClipboard("+91 8535 8535 89");
-                        }}
-                        onMouseEnter={(e) => showTooltip(e, "Click to copy phone number")}
-                        onMouseLeave={hideTooltip}
-                      >
-                        <Phone size={14} />
-                        {/* <span>Phone</span> */}
-                      </button>
-                    </div>
-
-                    {/* Verification Badge */}
-                    {hospital.allow_refund_on_cancellation && (
-                      <div className="border-top pt-3 mb-3">
-                        <div className="d-flex align-items-center">
-                          <CheckCircle
-                            size={14}
-                            className="text-success me-1"
-                          />
-                          <small className="text-success fw-medium">
-                            Verified
-                          </small>
-                        </div>
-                      </div>
-                    )}
-
-                    <Button className="w-100" size="sm">
+                    {/* Button that stays at the bottom */}
+                    <Button className="w-100 mt-3" size="sm">
                       View Doctors
                     </Button>
                   </Card.Body>
@@ -222,7 +233,9 @@ const HospitalsPage = () => {
         )}
 
         {/* Pagination */}
-        {!loading && !error && data?.pagination_data && (
+        {!loading &&
+          !error &&
+          data?.pagination_data &&
           (() => {
             const totalCount = data.pagination_data.total_count || 0;
             const totalPages = Math.ceil(totalCount / itemPerpage);
@@ -247,8 +260,7 @@ const HospitalsPage = () => {
                 </div>
               )
             );
-          })()
-        )}
+          })()}
       </Container>
 
       {/* Custom Tooltip */}

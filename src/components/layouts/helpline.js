@@ -5,6 +5,7 @@ const FloatingCallButton = () => {
   const [isMobile, setIsMobile] = useState(false);
   const phoneNumber = "+91 8535853589";
   const phoneNumberClean = "+91 8535853589"; // For tel: links
+  const formattedNumber = "+91 8535 8535 89"; // Formatted for display
 
   useEffect(() => {
     // Detect if device can make calls (mobile or Mac)
@@ -77,7 +78,7 @@ const FloatingCallButton = () => {
           e.currentTarget.style.backgroundColor = "#007a7e";
         }}
       >
-        {/* Phone Icon */}
+        {/* Phone Icon - shown on desktop */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -88,9 +89,17 @@ const FloatingCallButton = () => {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          className="desktop-icon"
         >
           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-1.18 2.19l-.7.35a18.33 18.33 0 0 0 6 6l.35-.7a2 2 0 0 1 2.19-1.18 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
         </svg>
+        
+        {/* Phone Number - shown on mobile */}
+        <span className="mobile-number" style={{ display: 'none', color: '#ffffff', fontSize: '12px', fontWeight: 'bold' }}>
+          {formattedNumber} <br/>
+          Helpine Number
+        </span>
+
       </div>
 
       {/* Helpline Text Tooltip */}
@@ -207,16 +216,30 @@ const FloatingCallButton = () => {
 
                     /* Mobile responsiveness */
                     @media (max-width: 768px) {
+                        /* Hide desktop icon and show mobile number */
+                        .desktop-icon {
+                            display: none !important;
+                        }
+                        
+                        .mobile-number {
+                            display: block !important;
+                        }
+                        
+                        /* Adjust button to fit text */
                         div[style*="bottom: 20px"][style*="right: 20px"] {
                             bottom: 15px !important;
                             right: 15px !important;
-                            width: 55px !important;
-                            height: 55px !important;
+                            width: auto !important;
+                            min-width: 150px !important;
+                            height: 45px !important;
+                            border-radius: 25px !important;
+                            padding: 0 15px !important;
                         }
                         
+                        /* Adjust tooltip position */
                         div[style*="bottom: 30px"][style*="right: 90px"] {
                             bottom: 25px !important;
-                            right: 80px !important;
+                            right: 180px !important;
                             font-size: 12px !important;
                             padding: 6px 10px !important;
                         }

@@ -38,11 +38,6 @@ const MedicalDepartments = () => {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Scroll to top when page changes
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [page]);
-
   // debounce
   useEffect(() => {
     const timeoutId = setTimeout(() => {

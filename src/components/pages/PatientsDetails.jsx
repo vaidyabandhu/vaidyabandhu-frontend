@@ -1,47 +1,86 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 
 const PatientsDetails = () => {
-  // Sample membership data with only required fields
-  const membershipData = {
-    membershipId: 'PT-2023-001',
-    name: 'patient1',
-    mobileNo: '1234568790',
-    emailId: 'abc@example.com',
-    gender: 'Male',
-    membershipStatus: 'Active'
-  };
+  const { id } = useParams(); // Get patient ID from URL
+  const [patientData, setPatientData] = useState(null);
+  const [appointmentHistory, setAppointmentHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Sample appointment history data
-  const appointmentHistory = [
-    {
-      id: 'APT-001',
-      time: '2023-11-15 10:30 AM',
-      doctorName: 'Dr. one',
-      hospitalName: 'City General Hospital',
-      status: 'Completed'
-    },
-    {
-      id: 'APT-002',
-      time: '2023-12-01 2:15 PM',
-      doctorName: 'Dr. two',
-      hospitalName: 'Metro Medical Center',
-      status: 'Confirmed'
-    },
-    {
-      id: 'APT-003',
-      time: '2023-12-20 9:00 AM',
-      doctorName: 'Dr. three',
-      hospitalName: 'City General Hospital',
-      status: 'Pending'
-    },
-    {
-      id: 'APT-004',
-      time: '2023-10-05 3:45 PM',
-      doctorName: 'Dr. four',
-      hospitalName: 'Westside Clinic',
-      status: 'Rejected'
-    }
-  ];
+  // Fetch patient data and appointment history
+  useEffect(() => {
+    const fetchPatientData = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        
+        if (!token) {
+          throw new Error('Authentication token not found');
+        }
+
+        // Fetch patient list to get the specific patient's membership information
+        const listResponse = await fetch('https://admin.vaidyabandhu.com/api/appointment/patient_list/', {
+          method: 'GET',
+          headers: {
+            'Authorization': token,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!listResponse.ok) {
+          throw new Error(`HTTP error! Status: ${listResponse.status}`);
+        }
+
+        const listData = await listResponse.json();
+        
+        // Extract the array of patients from the response
+        let patientsArray = [];
+        if (listData && Array.isArray(listData.slots)) {
+          patientsArray = listData.slots;
+        } else if (Array.isArray(listData)) {
+          patientsArray = listData;
+        } else if (listData && Array.isArray(listData.results)) {
+          patientsArray = listData.results;
+        } else if (listData && Array.isArray(listData.data)) {
+          patientsArray = listData.data;
+        }
+
+        // Find the patient with the matching ID
+        const patient = patientsArray.find(p => 
+          (p.id && p.id.toString() === id) || 
+          (p.membership_id && p.membership_id.toString() === id)
+        );
+
+        if (!patient) {
+          throw new Error('Patient not found');
+        }
+
+        setPatientData(patient);
+
+        const appointmentsResponse = await fetch(`https://admin.vaidyabandhu.com/api/appointment/appointment_history/?user=${id}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': token,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!appointmentsResponse.ok) {
+          throw new Error(`HTTP error! Status: ${appointmentsResponse.status}`);
+        }
+
+        const appointments = await appointmentsResponse.json();
+        setAppointmentHistory(appointments);
+      } catch (err) {
+        setError(err.message);
+        console.error('Error fetching patient details:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatientData();
+  }, [id]);
 
   // Function to get status style
   const getStatusStyle = (status) => {
@@ -59,7 +98,7 @@ const PatientsDetails = () => {
     }
   };
 
-  // Main container style
+  // Style objects
   const containerStyle = {
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
     maxWidth: '1200px',
@@ -177,6 +216,27 @@ const PatientsDetails = () => {
     fontWeight: '500'
   };
 
+  // Render loading state
+  if (loading) {
+    return (
+      <div style={containerStyle}>
+        <h1 style={titleStyle}>Patient Details</h1>
+        <div>Loading patient data...</div>
+      </div>
+    );
+  }
+
+  // Render error state
+  if (error) {
+    return (
+      <div style={containerStyle}>
+        <h1 style={titleStyle}>Patient Details</h1>
+        <div style={{ color: 'red' }}>Error: {error}</div>
+      </div>
+    );
+  }
+
+  // Render patient data
   return (
     <div style={containerStyle}>
       <h1 style={titleStyle}>Patient Details</h1>
@@ -186,9 +246,9 @@ const PatientsDetails = () => {
         <h2 style={sectionTitleStyle}>Membership Information</h2>
         <div style={cardStyle}>
           <div style={headerStyle}>
-            <div style={patientIdStyle}>Membership ID: {membershipData.membershipId}</div>
-            <div style={{...membershipTypeStyle, ...activeStyle}}>
-              {membershipData.membershipStatus}
+            <div style={patientIdStyle}>Membership ID: {patientData?.membership_id || 'N/A'}</div>
+            <div style={{...membershipTypeStyle, ...(patientData?.is_active ? activeStyle : {})}}>
+              {patientData?.is_active ? 'Active' : 'Inactive'}
             </div>
           </div>
           
@@ -196,22 +256,59 @@ const PatientsDetails = () => {
             <div style={rowStyle}>
               <div style={groupStyle}>
                 <label style={labelStyle}>Name</label>
-                <div style={valueStyle}>{membershipData.name}</div>
+                <div style={valueStyle}>{patientData?.full_name || 'N/A'}</div>
               </div>
               <div style={groupStyle}>
                 <label style={labelStyle}>Mobile No.</label>
-                <div style={valueStyle}>{membershipData.mobileNo}</div>
+                <div style={valueStyle}>{patientData?.mobile || 'N/A'}</div>
               </div>
             </div>
             
             <div style={rowStyle}>
               <div style={groupStyle}>
                 <label style={labelStyle}>Email ID</label>
-                <div style={valueStyle}>{membershipData.emailId}</div>
+                <div style={valueStyle}>{patientData?.email || 'N/A'}</div>
               </div>
               <div style={groupStyle}>
                 <label style={labelStyle}>Gender</label>
-                <div style={valueStyle}>{membershipData.gender}</div>
+                <div style={valueStyle}>{patientData?.gender || 'N/A'}</div>
+              </div>
+            </div>
+            
+            <div style={rowStyle}>
+              <div style={groupStyle}>
+                <label style={labelStyle}>Age</label>
+                <div style={valueStyle}>{patientData?.age || 'N/A'}</div>
+              </div>
+              <div style={groupStyle}>
+                <label style={labelStyle}>Blood Group</label>
+                <div style={valueStyle}>{patientData?.blood_group || 'N/A'}</div>
+              </div>
+            </div>
+            
+            <div style={rowStyle}>
+              <div style={groupStyle}>
+                <label style={labelStyle}>Address</label>
+                <div style={valueStyle}>{patientData?.address || 'N/A'}</div>
+              </div>
+              <div style={groupStyle}>
+                <label style={labelStyle}>Pin Code</label>
+                <div style={valueStyle}>{patientData?.pin_code || 'N/A'}</div>
+              </div>
+            </div>
+            
+            <div style={rowStyle}>
+              <div style={groupStyle}>
+                <label style={labelStyle}>Membership Start Date</label>
+                <div style={valueStyle}>
+                  {patientData?.start_date ? new Date(patientData.start_date).toLocaleDateString() : 'N/A'}
+                </div>
+              </div>
+              <div style={groupStyle}>
+                <label style={labelStyle}>Membership End Date</label>
+                <div style={valueStyle}>
+                  {patientData?.end_date ? new Date(patientData.end_date).toLocaleDateString() : 'N/A'}
+                </div>
               </div>
             </div>
           </div>
@@ -232,18 +329,28 @@ const PatientsDetails = () => {
               </tr>
             </thead>
             <tbody>
-              {appointmentHistory.map((appointment) => (
-                <tr key={appointment.id}>
-                  <td style={tdStyle}>{appointment.time}</td>
-                  <td style={tdStyle}>{appointment.doctorName}</td>
-                  <td style={tdStyle}>{appointment.hospitalName}</td>
-                  <td style={tdStyle}>
-                    <span style={{...statusBadgeStyle, ...getStatusStyle(appointment.status)}}>
-                      {appointment.status}
-                    </span>
+              {appointmentHistory.length > 0 ? (
+                appointmentHistory.map((appointment) => (
+                  <tr key={appointment.id}>
+                    <td style={tdStyle}>
+                      {appointment.date_time ? new Date(appointment.date_time).toLocaleString() : 'N/A'}
+                    </td>
+                    <td style={tdStyle}>{appointment.doctor_name || 'N/A'}</td>
+                    <td style={tdStyle}>{appointment.hospital_name || 'N/A'}</td>
+                    <td style={tdStyle}>
+                      <span style={{...statusBadgeStyle, ...getStatusStyle(appointment.status)}}>
+                        {appointment.status || 'N/A'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" style={{textAlign: 'center', padding: '20px'}}>
+                    No appointment history found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

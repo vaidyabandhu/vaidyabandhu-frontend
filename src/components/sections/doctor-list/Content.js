@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import Pagination from "react-js-pagination";
 import { useLocation } from "react-router-dom";
 import { isNotEmptyArray } from "../../utiles/utils";
 import { useFetch } from "../../hooks/usefetch";
@@ -74,6 +73,7 @@ const Content = () => {
   const params = new URLSearchParams(search);
   const specialtyParam = params.get("specialty");
   const id = params.get("id");
+
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
@@ -88,12 +88,11 @@ const Content = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [specialtySearchTerm, setSpecialtySearchTerm] = useState("");
   const [locationSearchTerm, setLocationSearchTerm] = useState("");
-  // Added hospital name filter state
   const [hospitalName, setHospitalName] = useState("");
-  // State for mobile placeholder
   const [isMobile, setIsMobile] = useState(false);
-  
+
   console.log({ selectedGender, selectedRating });
+
   // Static options
   const availabilityOptions = [
     "Monday",
@@ -116,35 +115,51 @@ const Content = () => {
     { value: "female", label: "Female" },
     { value: "Nopreference", label: "No preference" },
   ];
-  
+
   // Check if mobile view
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-  
+
   // Scroll to top when page changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [page]);
-  
+
   // Debounce search
   useEffect(() => {
     const timeoutId = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
+
+  // 🔑 CRITICAL FIX: Reset page to 1 whenever any filter or search changes
+  useEffect(() => {
+    setPage(1);
+  }, [
+    debouncedSearchTerm,
+    selectedSpecialties,
+    selectedLocations,
+    selectedAvailability,
+    selectedRating,
+    selectedGender,
+    sortBy,
+    hospitalName,
+  ]);
+
   // Fetch specialties
   const {
     data: specialtiesData,
     loading: specialtiesLoading,
     error: specialtiesError,
   } = useFetch({ method: "GET", request: "specialty/" });
+
   // Fetch cities using the new API
   const token = localStorage.getItem("token");
   const {
@@ -159,6 +174,7 @@ const Content = () => {
       Authorization: token,
     },
   });
+
   useEffect(() => {
     if (citiesData && citiesData.data) {
       const transformedCities = citiesData.data.map(city => ({
@@ -177,6 +193,7 @@ const Content = () => {
       ]);
     }
   }, [citiesData, citiesError]);
+
   // Fetch doctors
   const {
     data,
@@ -193,7 +210,6 @@ const Content = () => {
     params: {
       search: debouncedSearchTerm.trim(),
       specialties: selectedSpecialties.join(","),
-      // Updated: Changed 'locations' to 'city' parameter
       city: selectedLocations.join(","),
       availability: selectedAvailability.join(","),
       rating: selectedRating,
@@ -205,7 +221,9 @@ const Content = () => {
       name: hospitalName,
     },
   });
+
   console.log({ loader, data }, "test");
+
   // Filter Handlers
   const handlePageChange = (pageNumber) => setPage(pageNumber);
   const handleSearchChange = (e) => setSearchTerm(e.target.value);
@@ -229,7 +247,6 @@ const Content = () => {
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
-  // Added handler for hospital name change
   const handleHospitalNameChange = (e) => setHospitalName(e.target.value);
   const handleReset = () => {
     setSearchTerm("");
@@ -241,9 +258,9 @@ const Content = () => {
     setSortBy("");
     setSpecialtySearchTerm("");
     setLocationSearchTerm("");
-    // Reset hospital name
     setHospitalName("");
   };
+
   const hasActiveFilters =
     searchTerm ||
     selectedSpecialties.length > 0 ||
@@ -252,14 +269,17 @@ const Content = () => {
     selectedRating ||
     selectedGender ||
     sortBy ||
-    hospitalName; // Added hospitalName to active filters check
-  // Filtered - Fixed the toLowerCase() error by adding null checks
+    hospitalName;
+
+  // Filtered lists
   const filteredSpecialties = specialtiesData?.data?.filter((specialty) =>
     specialty.title && specialty.title.toLowerCase().includes(specialtySearchTerm.toLowerCase())
-  );
+  ) || [];
+
   const filteredLocations = locations.filter((location) =>
     location.name && location.name.toLowerCase().includes(locationSearchTerm.toLowerCase())
   );
+
   // Filter chips
   const getActiveFilters = () => {
     const filters = [];
@@ -300,7 +320,6 @@ const Content = () => {
           label: gender.label,
         });
     }
-    // Added hospital name to active filters
     if (hospitalName) {
       filters.push({
         type: "hospital_name",
@@ -310,6 +329,7 @@ const Content = () => {
     }
     return filters;
   };
+
   const removeFilter = (filterType, filterId) => {
     switch (filterType) {
       case "specialty":
@@ -329,7 +349,6 @@ const Content = () => {
       case "gender":
         setSelectedGender("");
         break;
-      // Added case for hospital name
       case "hospital_name":
         setHospitalName("");
         break;
@@ -337,8 +356,10 @@ const Content = () => {
         break;
     }
   };
+
   const activeFilters = getActiveFilters();
-  // Filters sidebar content (single instance, used twice)
+
+  // Filters sidebar content
   const filtersContent = (
     <>
       {/* Specialities */}
@@ -380,7 +401,7 @@ const Content = () => {
           </div>
         </div>
         <div style={{ maxHeight: "200px", overflowY: "auto" }}>
-          {!isNotEmptyArray(filteredSpecialties) ? (
+          {filteredSpecialties.length === 0 ? (
             <p className="text-muted small">No specialties found</p>
           ) : (
             filteredSpecialties.map((specialty) => (
@@ -403,6 +424,7 @@ const Content = () => {
           )}
         </div>
       </div>
+
       {/* Location */}
       <div className="mb-4">
         <h6 className="font-weight-bold mb-3">City</h6>
@@ -465,45 +487,7 @@ const Content = () => {
           )}
         </div>
       </div>
-      {/* Hospital Name - Added new filter section */}
-      {/* <div className="mb-4">
-        <h6 className="font-weight-bold mb-3">Hospital Name</h6>
-        <div className="form-group">
-          <div className="position-relative">
-            <input
-              type="text"
-              className="form-control form-control-sm mb-3"
-              placeholder="Search Hospital"
-              value={hospitalName}
-              onChange={handleHospitalNameChange}
-              style={{ paddingRight: hospitalName ? "35px" : "12px" }}
-            />
-            {hospitalName && (
-              <button
-                onClick={() => setHospitalName("")}
-                className="btn btn-link p-0"
-                style={{
-                  position: "absolute",
-                  right: "8px",
-                  top: "20px",
-                  fontSize: "18px",
-                  color: "#6c757d",
-                  textDecoration: "none",
-                  lineHeight: "1",
-                  width: "20px",
-                  height: "20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  zIndex: 10,
-                }}
-              >
-                ×
-              </button>
-            )}
-          </div>
-        </div>
-      </div> */}
+
       {/* Availability */}
       <div className="mb-4">
         <h6 className="font-weight-bold mb-3">Availability</h6>
@@ -529,56 +513,6 @@ const Content = () => {
           ))}
         </div>
       </div>
-      {/* Rating  */}
-      {/* <div className="mb-4">
-        <h6 className="font-weight-bold mb-3">Rating</h6>
-        {ratingOptions.map((rating) => (
-          <div key={rating.value} className="form-check mb-2">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id={`rating-${rating.value}`}
-              checked={selectedRating === rating.value}
-              onChange={() =>
-                setSelectedRating(
-                  selectedRating === rating.value ? "" : rating.value
-                )
-              }
-            />
-            <label
-              className="form-check-label small"
-              htmlFor={`rating-${rating.value}`}
-            >
-              {rating.label}
-            </label>
-          </div>
-        ))}
-      </div> */}
-      {/* Gender */}
-      {/* <div className="mb-4">
-        <h6 className="font-weight-bold mb-3">Gender</h6>
-        {genderOptions.map((gender) => (
-          <div key={gender.value} className="form-check mb-2">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id={`gender-${gender.value}`}
-              checked={selectedGender === gender.value}
-              onChange={() =>
-                setSelectedGender(
-                  selectedGender === gender.value ? "" : gender.value
-                )
-              }
-            />
-            <label
-              className="form-check-label small"
-              htmlFor={`gender-${gender.value}`}
-            >
-              {gender.label}
-            </label>
-          </div>
-        ))}
-      </div> */}
     </>
   );
 
@@ -736,6 +670,7 @@ const Content = () => {
               </div>
             </div>
           </div>
+
           <div className="row">
             {/* Filters Sidebar */}
             <div className="col-lg-3 col-md-4 mb-4">
@@ -745,6 +680,7 @@ const Content = () => {
                 setShowMobileFilters={setShowMobileFilters}
               />
             </div>
+
             {/* Doctor List */}
             <div className="col-lg-9 col-md-8">
               {error ? (
@@ -772,7 +708,6 @@ const Content = () => {
               ) : (
                 <>
                   {data.data.map((item) => {
-                    // Extract hospital addresses
                     const hospitalAddresses =
                       item?.hospital
                         ?.map((h) => h.address)
@@ -801,12 +736,9 @@ const Content = () => {
                                   borderRadius: "8px",
                                 }}
                                 onError={(e) => {
-                                  e.currentTarget.onerror = null; // prevent infinite loop
-                                  e.currentTarget.src =
-                                    "/assets/img/default-img.jpg"; // fallback
-                                  e.currentTarget.classList.add(
-                                    "default-doctor-img"
-                                  ); // Add class when fallback is used
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src = "/assets/img/default-img.jpg";
+                                  e.currentTarget.classList.add("default-doctor-img");
                                 }}
                                 className={
                                   !(item?.photo && item.photo.trim() !== "")
@@ -825,7 +757,6 @@ const Content = () => {
                                 </Link>
                               </h5>
 
-                              {/* Hospital Info */}
                               <div
                                 className="hospital-info"
                                 style={{
@@ -833,71 +764,42 @@ const Content = () => {
                                   marginBottom: "8px",
                                 }}
                               >
-                                <span
-                                  style={{ fontSize: "18px", color: "#6c757d" }}
-                                >
+                                <span style={{ fontSize: "18px", color: "#6c757d" }}>
                                   <i
                                     className="fal fa-hospital"
-                                    style={{
-                                      marginRight: "6px",
-                                      color: "#555",
-                                    }}
+                                    style={{ marginRight: "6px", color: "#555" }}
                                   ></i>
                                   {isNotEmptyArray(item?.hospital)
-                                    ? item.hospital
-                                        .map((el) => el.name)
-                                        .join(", ")
+                                    ? item.hospital.map((el) => el.name).join(", ")
                                     : "Not specified"}
                                 </span>
                               </div>
 
-                              {/* Designation */}
-                              <div
-                                className="designation-info"
-                                style={{ marginBottom: "8px" }}
-                              >
-                                <span
-                                  style={{ fontSize: "18px", color: "#6c757d" }}
-                                >
+                              <div className="designation-info" style={{ marginBottom: "8px" }}>
+                                <span style={{ fontSize: "18px", color: "#6c757d" }}>
                                   <i
                                     className="fal fa-user-tie"
-                                    style={{
-                                      marginRight: "6px",
-                                      color: "#555",
-                                    }}
+                                    style={{ marginRight: "6px", color: "#555" }}
                                   ></i>
                                   {item.designation || "Not specified"}
                                 </span>
                               </div>
 
-                              {/* Department */}
                               {item.department_name && (
                                 <div
                                   className="department-info"
-                                  style={{
-                                    marginTop: "4px",
-                                    marginBottom: "8px",
-                                  }}
+                                  style={{ marginTop: "4px", marginBottom: "8px" }}
                                 >
-                                  <span
-                                    style={{
-                                      fontSize: "18px",
-                                      color: "#6c757d",
-                                    }}
-                                  >
+                                  <span style={{ fontSize: "18px", color: "#6c757d" }}>
                                     <i
                                       className="fal fa-layer-group"
-                                      style={{
-                                        marginRight: "6px",
-                                        color: "#555",
-                                      }}
+                                      style={{ marginRight: "6px", color: "#555" }}
                                     ></i>
                                     {item.department_name}
                                   </span>
                                 </div>
                               )}
 
-                              {/* Speciality Tags */}
                               <div
                                 className="sigma_team-categories"
                                 style={{ color: "#686A6F", cursor: "default" }}
@@ -911,17 +813,12 @@ const Content = () => {
                                   .map((specialityItem, index) => (
                                     <span key={index}>
                                       {specialityItem.title}
-                                      {index !==
-                                        Math.min(
-                                          2,
-                                          item.speciality.length - 1
-                                        ) && ", "}
+                                      {index !== Math.min(2, item.speciality.length - 1) && ", "}
                                     </span>
                                   ))}
                                 {item.speciality?.length > 3 && " ..."}
                               </div>
 
-                              {/* View More Button */}
                               <div className="d-flex align-items-center mt-4">
                                 <Link
                                   to={`/doctor-details?id=${item.id}`}
@@ -956,7 +853,8 @@ const Content = () => {
                       </div>
                     );
                   })}
-                  {/* Pagination (custom, from doctor-grid) */}
+
+                  {/* Pagination */}
                   {(() => {
                     const totalCount = data?.pagination_data?.total_count || 0;
                     const totalPages = Math.ceil(totalCount / itemPerpage);
@@ -989,7 +887,7 @@ const Content = () => {
         </div>
       </div>
 
-      {/* Mobile pagination styles */}
+      {/* Mobile styles */}
       <style jsx>{`
         @media (max-width: 767px) {
           .pagination .page-link {
@@ -1004,14 +902,12 @@ const Content = () => {
             display: block;
           }
           
-          /* Mobile-specific search wrapper styles */
           .search-wrapper {
             width: 100% !important;
             max-width: 100% !important;
             margin: 0 auto !important;
           }
           
-          /* Ensure text truncation with ellipsis on mobile */
           .search-wrapper input {
             text-overflow: ellipsis !important;
             white-space: nowrap !important;

@@ -1,41 +1,68 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Patients = () => {
   const navigate = useNavigate();
+  const [patientsData, setPatientsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Sample patient data
-  const patientsData = [
-    {
-      id: 'MB001',
-      name: 'patient1',
-      mobile: '9876543210',
-      email: 'abc@example.com',
-      gender: 'Male',
-      status: 'Active'
-    },
-    {
-      id: 'MB002',
-      name: 'patient2',
-      mobile: '8765432109',
-      email: 'def@example.com',
-      gender: 'Female',
-      status: 'Inactive'
-    },
-    {
-      id: 'MB003',
-      name: 'patient3',
-      mobile: '7654321098',
-      email: 'xyz@example.com',
-      gender: 'Male',
-      status: 'Active'
-    }
-  ];
+  // Fetch patient data from API
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        
+        if (!token) {
+          throw new Error('Authentication token not found');
+        }
+
+        const response = await fetch('https://admin.vaidyabandhu.com/api/appointment/patient_list/', {
+          method: 'GET',
+          headers: {
+            'Authorization': token,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('API Response:', data); // Log the response for debugging
+        
+        // Handle the specific API response structure with "slots" array
+        if (data && Array.isArray(data.slots)) {
+          setPatientsData(data.slots);
+        } else if (Array.isArray(data)) {
+          setPatientsData(data);
+        } else if (data && Array.isArray(data.results)) {
+          setPatientsData(data.results);
+        } else if (data && Array.isArray(data.data)) {
+          setPatientsData(data.data);
+        } else if (data && typeof data === 'object') {
+          // Handle single patient object
+          setPatientsData([data]);
+        } else {
+          console.warn('Unexpected API response format:', data);
+          setPatientsData([]); // Default to empty array if format is unexpected
+        }
+      } catch (err) {
+        setError(err.message);
+        console.error('Error fetching patients:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatients();
+  }, []);
 
   // Handle view details button click
-  const handleViewDetails = () => {
-    console.log("View Details clicked");
-    navigate(`/patient-details`);
+  const handleViewDetails = (patientId) => {
+    console.log("View Details clicked for patient:", patientId);
+    navigate(`/patient-details/${patientId}`);
   };
 
   // Style objects
@@ -89,7 +116,7 @@ const Patients = () => {
     backgroundColor: '#0b7dda'
   };
 
-  const getStatusStyle = (status) => {
+  const getStatusStyle = (isActive) => {
     const baseStyle = {
       padding: '4px 8px',
       borderRadius: '4px',
@@ -97,7 +124,7 @@ const Patients = () => {
       display: 'inline-block'
     };
     
-    if (status.toLowerCase() === 'active') {
+    if (isActive) {
       return {
         ...baseStyle,
         backgroundColor: '#e6f7e6',
@@ -112,53 +139,80 @@ const Patients = () => {
     }
   };
 
+  // Render loading state
+  if (loading) {
+    return (
+      <div style={containerStyle}>
+        <h2>Patient List</h2>
+        <div>Loading patient data...</div>
+      </div>
+    );
+  }
+
+  // Render error state
+  if (error) {
+    return (
+      <div style={containerStyle}>
+        <h2>Patient List</h2>
+        <div style={{ color: 'red' }}>Error: {error}</div>
+      </div>
+    );
+  }
+
+  // Ensure patientsData is always an array before rendering
+  const patientArray = Array.isArray(patientsData) ? patientsData : [];
+
   return (
     <div style={containerStyle}>
       <h2>Patient List</h2>
-      <table style={tableStyle}>
-        <thead>
-          <tr>
-            <th style={thStyle}>Membership ID</th>
-            <th style={thStyle}>Name</th>
-            <th style={thStyle}>Mobile No.</th>
-            <th style={thStyle}>Email ID</th>
-            <th style={thStyle}>Gender</th>
-            <th style={thStyle}>Membership Status</th>
-            <th style={thStyle}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {patientsData.map((patient) => (
-            <tr 
-              key={patient.id} 
-              style={trStyle}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = trHoverStyle.backgroundColor}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = trStyle.backgroundColor}
-            >
-              <td style={tdStyle}>{patient.id}</td>
-              <td style={tdStyle}>{patient.name}</td>
-              <td style={tdStyle}>{patient.mobile}</td>
-              <td style={tdStyle}>{patient.email}</td>
-              <td style={tdStyle}>{patient.gender}</td>
-              <td style={tdStyle}>
-                <span style={getStatusStyle(patient.status)}>
-                  {patient.status}
-                </span>
-              </td>
-              <td style={tdStyle}>
-                <button 
-                  style={buttonStyle}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = buttonHoverStyle.backgroundColor}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = buttonStyle.backgroundColor}
-                  onClick={handleViewDetails}
-                >
-                  View Details
-                </button>
-              </td>
+      {patientArray.length === 0 ? (
+        <div>No patients found</div>
+      ) : (
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Membership ID</th>
+              <th style={thStyle}>Name</th>
+              <th style={thStyle}>Mobile No.</th>
+              <th style={thStyle}>Email ID</th>
+              <th style={thStyle}>Gender</th>
+              <th style={thStyle}>Membership Status</th>
+              <th style={thStyle}>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {patientArray.map((patient) => (
+              <tr 
+                key={patient.id || patient.membership_id || Math.random()} 
+                style={trStyle}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = trHoverStyle.backgroundColor}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = trStyle.backgroundColor}
+              >
+                <td style={tdStyle}>{patient.membership_id || patient.id || 'N/A'}</td>
+                <td style={tdStyle}>{patient.full_name || patient.name || 'N/A'}</td>
+                <td style={tdStyle}>{patient.mobile || patient.phone || 'N/A'}</td>
+                <td style={tdStyle}>{patient.email || 'N/A'}</td>
+                <td style={tdStyle}>{patient.gender || 'N/A'}</td>
+                <td style={tdStyle}>
+                  <span style={getStatusStyle(patient.is_active)}>
+                    {patient.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                <td style={tdStyle}>
+                  <button 
+                    style={buttonStyle}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = buttonHoverStyle.backgroundColor}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = buttonStyle.backgroundColor}
+                    onClick={() => handleViewDetails(patient.id || patient.membership_id || '')}
+                  >
+                    View Details
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };

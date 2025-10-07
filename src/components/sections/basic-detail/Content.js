@@ -54,6 +54,7 @@ const VaidyaBandhuForm = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false); // New state for welcome modal
   
   // Cropping state
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -464,7 +465,8 @@ const VaidyaBandhuForm = () => {
             );
 
             if (callbackResponse.ok) {
-              navigate("/myprofile");
+              // Show welcome modal instead of navigating immediately
+              setShowWelcomeModal(true);
             } else {
               const errorData = await callbackResponse.json();
               console.error("Callback API error:", errorData);
@@ -1108,6 +1110,75 @@ const VaidyaBandhuForm = () => {
                 onClick={confirmLogout}
               >
                 Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Welcome Modal */}
+      {showWelcomeModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: "0",
+            left: "0",
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              padding: "30px",
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              maxWidth: "400px",
+              width: "90%",
+              textAlign: "center",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "20px",
+                fontWeight: "bold",
+                marginBottom: "20px",
+                color: "#095D7E",
+              }}
+            >
+              Welcome to VaidyaBandhu Family
+            </h3>
+            <p style={{ marginBottom: "25px", fontSize: "16px" }}>
+              The complete healthcare solution.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <button
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "4px",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: "500",
+                  backgroundColor: "#007a7e",
+                  color: "white",
+                  fontSize: "16px",
+                }}
+                onClick={() => {
+                  setShowWelcomeModal(false);
+                  navigate("/myprofile");
+                }}
+              >
+                OK
               </button>
             </div>
           </div>

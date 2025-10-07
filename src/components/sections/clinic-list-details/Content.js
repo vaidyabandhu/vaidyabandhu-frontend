@@ -203,6 +203,7 @@ const DiagnosticCenterDetail = () => {
                   src={centerDetail?.image || defaultImage}
                   alt={centerDetail.name}
                   className="hero-image"
+                  style={{ width: "100%", height: "100%" }}
                 />
                 <div className="hero-overlay"></div>
                 <div className="hero-content">

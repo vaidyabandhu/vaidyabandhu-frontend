@@ -1,6 +1,6 @@
 import React, { Fragment, useState, useEffect, useCallback } from "react";
 import Mobilemenu from "./Mobilemenu";
-import { Link, useLocation } from "react-router-dom"; 
+import { Link, useLocation, useNavigate } from "react-router-dom"; 
 import navigation from "../../data/navigation.json";
 import MembershipModal from "./MembershipModal";
 import "../../assets/css/Header.css";
@@ -156,7 +156,9 @@ const isActiveItem = (item, currentPath) => {
 const Header = () => {
   const { navMethod, toggleNav } = useNavHelper();
   const [userPhone, setUserPhone] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
   const location = useLocation(); 
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   
   useEffect(() => {
@@ -164,11 +166,83 @@ const Header = () => {
     if (storedUserPhone) {
       setUserPhone(storedUserPhone);
     }
+    
+    // Check if user is logged in by checking for token
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+    
+    // Listen for login state changes
+    const handleLoginStateChange = (event) => {
+      setIsLoggedIn(event.detail.isLoggedIn);
+      if (event.detail.isLoggedIn) {
+        const storedUserPhone = localStorage.getItem("userPhone");
+        setUserPhone(storedUserPhone);
+      } else {
+        setUserPhone(null);
+      }
+    };
+    
+    window.addEventListener("login-state-changed", handleLoginStateChange);
+    
+    return () => {
+      window.removeEventListener("login-state-changed", handleLoginStateChange);
+    };
   }, []);
   
+  // Handle profile icon click
+  const handleIconClick = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/basic-details");
+      return;
+    }
+    try {
+      const response = await fetch(
+        "https://admin.vaidyabandhu.com/api/user/profile/",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        if (data?.is_active === true) {
+          navigate("/myprofile");
+        } else {
+          navigate("/basic-details");
+        }
+      } else {
+        navigate("/basic-details");
+      }
+    } catch (error) {
+      console.error("Error in handleIconClick:", error);
+      navigate("/basic-details");
+    }
+  };
+  
   const handleLogout = () => {
+    // Remove userPhone from localStorage
     localStorage.removeItem("userPhone");
-    window.location.reload();
+    
+    // Remove token from localStorage
+    localStorage.removeItem("token");
+    
+    // Clear all cookies
+    document.cookie.split(";").forEach(function(c) { 
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    });
+    
+    // Update login state
+    setIsLoggedIn(false);
+    
+    // Dispatch custom event to notify other components about logout
+    window.dispatchEvent(new CustomEvent("login-state-changed", { detail: { isLoggedIn: false } }));
+    
+    // Navigate to home page
+    navigate("/");
   };
 
   return (
@@ -177,12 +251,86 @@ const Header = () => {
       <aside className={navMethod ? "sigma_aside aside-open" : "sigma_aside"}>
         <Mobilemenu />
         {/* Added membership button in mobile menu */}
-        {!userPhone && (
+        {!isLoggedIn ? (
           <div className="p-3 text-center">
             <MembershipModal />
             {/* Added login button in mobile menu */}
             <div className="mt-2">
               <LoginModal />
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 text-center">
+            {/* User icon */}
+            <div className="mb-3">
+              <button 
+                className="user-icon-btn" 
+                onClick={handleIconClick}
+                style={{
+                  // background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  borderRadius: '50%',
+                  transition: 'background-color 0.3s',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </button>
+            </div>
+            
+            {/* Membership button */}
+            <div className="mb-2">
+              <MembershipModal />
+            </div>
+            
+            {/* Logout button */}
+            <div>
+              <button
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "#dc3545",
+                  color: "white",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  fontWeight: "500",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  transition: "all 0.2s ease",
+                  width: "100%",
+                }}
+                onClick={handleLogout}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = "#c82333";
+                  e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = "#dc3545";
+                  e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+                }}
+              >
+                <svg style={{ marginRight: "8px" }} xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" /></svg>
+                Logout
+              </button>
             </div>
           </div>
         )}
@@ -558,6 +706,27 @@ const Header = () => {
             .mobile-hamburger {
               order: 1;
             }
+            
+            /* Style for user icon button in mobile menu */
+            .user-icon-btn {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              width: 60px;
+              height: 60px;
+              border-radius: 50%;
+              background-color: #f8f9fa;
+              border: 2px solid #dee2e6;
+              margin: 0 auto;
+              transition: all 0.3s ease;
+            }
+            
+            .user-icon-btn:hover {
+              background-color: #e9ecef;
+              border-color: #adb5bd;
+            }
+            
+       
           }
           /* Hide hamburger on desktop */
           .sigma_header-controls-inner .aside-toggle {
@@ -581,7 +750,7 @@ const Header = () => {
             transition: background-color 0.3s ease !important;
           }
           .sigma_close.aside-trigger:hover {
-            background-color: #007a7e !important;
+            background-color: "#007a7e !important;
           }
           .sigma_close.aside-trigger span {
             position: absolute !important;
