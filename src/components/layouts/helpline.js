@@ -126,7 +126,7 @@ const FloatingCallButton = () => {
       >
         {isMobile
           ? "Tap to Call Helpline Number"
-          : "Click to Copy Number the Helpline Number"}
+          : "Click to Copy the Helpline Number"}
         <div
           style={{
             position: "absolute",

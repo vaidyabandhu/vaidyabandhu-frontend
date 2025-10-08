@@ -127,7 +127,7 @@ const ServicesPreview = () => {
     padding: "60px 20px",
     background: "linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%)",
     textAlign: "center",
-    fontFamily: "'Poppins', sans-serif",
+    fontFamily: "'Poppins",
     position: "relative",
     overflow: "hidden",
   };
@@ -155,7 +155,7 @@ const ServicesPreview = () => {
   };
 
   const subHeadingStyle = {
-    fontSize: "clamp(16px, 2vw, 20px)",
+    fontSize: "clamp(16px, 2vw, 22px)",
     color: "#4a5568",
     maxWidth: "900px",
     margin: "25px auto 50px",

@@ -203,7 +203,7 @@ const DiagnosticCenterDetail = () => {
                   src={centerDetail?.image || defaultImage}
                   alt={centerDetail.name}
                   className="hero-image"
-                  style={{ width: "100%", height: "100%" }}
+                  style={{ width: "100%", height: "175%" }}
                 />
                 <div className="hero-overlay"></div>
                 <div className="hero-content">
@@ -529,7 +529,7 @@ const DiagnosticCenterDetail = () => {
           left: 0;
           right: 0;
           padding: 2.5rem;
-          color: white;
+          color: black;
           animation: slideUpFade 1s ease-out 0.3s both;
         }
 

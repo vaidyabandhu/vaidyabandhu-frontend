@@ -29,8 +29,14 @@ const DoctorLogin = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
+    const userType = localStorage.getItem("userType");
+    
     if (token) {
-      navigate("/doc-slots");
+      if (userType === "frontdesk") {
+        navigate("/patient-list");
+      } else {
+        navigate("/doc-slots");
+      }
     }
   }, [navigate]);
 
@@ -69,7 +75,14 @@ const DoctorLogin = () => {
         localStorage.setItem("authToken", response.data.data.token);
         localStorage.setItem("refreshToken", response.data.data.refresh_token);
         localStorage.setItem("userInfo", JSON.stringify(response.data.data));
-        navigate("/doc-slots");
+        localStorage.setItem("userType", loginType); // Store user type
+        
+        // Navigate based on user type
+        if (loginType === "doctor") {
+          navigate("/doc-slots");
+        } else {
+          navigate("/patient-list");
+        }
       } else {
         console.log("Login failed:", response.data);
         alert(response.data?.message || "Login failed. Please check credentials.");

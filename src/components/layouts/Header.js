@@ -515,16 +515,22 @@ const Header = () => {
                   />{" "}
                   Bangalore
                 </Link>
-                <a
-                  href="tel:+918535853589"
-                  style={{ color: "#fff", textDecoration: "none" }}
-                >
-                  <i
-                    className="fal fa-mobile"
-                    style={{ marginRight: "5px" }}
-                  />{" "}
-                  +91 8535 8535 89
-                </a>
+               <a
+  href="tel:+918535853589"
+  style={{
+    color: "#fff",
+    textDecoration: "none",
+    fontSize: "18px", // 🔹 increased font size
+    fontWeight: "500",
+  }}
+>
+  <i
+    className="fal fa-mobile"
+    style={{ marginRight: "5px", fontSize: "20px" }} 
+  />
+  +91 8535 8535 89
+</a>
+
               </div>
             </div>
           </div>

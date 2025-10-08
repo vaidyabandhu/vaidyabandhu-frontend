@@ -98,12 +98,14 @@ const HealthcareReality = () => {
         {/* Subtitle/Intro Paragraph */}
         <p
           style={{
-            fontSize: "clamp(16px, 2.5vw, 22px)", // Responsive font size
+            fontSize: "clamp(16px, 2.5vw, 24px)", // Responsive font size
             color: "#4a5568",
             lineHeight: "1.3",
-            fontWeight: "400",
-            fontFamily: "Poppins", // Ensure Poppins is applied globally
+            fontWeight: "600",
+            fontFamily: "Poppins", 
             marginBottom: "10px",
+            marginLeft: "50px",
+            marginRight: "50px",
             opacity: animated ? 1 : 0,
             transform: animated ? "translateY(0)" : "translateY(30px)",
             transition:
@@ -120,8 +122,8 @@ const HealthcareReality = () => {
             transform: animated ? "translateY(0)" : "translateY(20px)",
             transition:
               "opacity 0.8s ease-out 0.4s, transform 0.8s ease-out 0.4s",
-            padding: "0 10px", // Slight horizontal padding for text blocks
-            textAlign: "left", // Ensure text is left-aligned
+            padding: "0 10px", 
+            textAlign: "left",
           }}
         >
           <p

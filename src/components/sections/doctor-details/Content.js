@@ -348,7 +348,7 @@ const Content = ({ detailId }) => {
                           }}
                         >
                           <i className="fas fa-calendar-check me-2" style={{ color: "#fff" }}></i>
-                          Book Appointment
+                          Book Doctor Appointment
                           <i className="fas fa-arrow-right ms-3" style={{ color: "#fff" }} />
                         </button>
                       </div>
