@@ -56,10 +56,11 @@ const FloatingCallButton = () => {
           position: "fixed",
           bottom: "20px",
           right: "20px",
-          width: "60px",
-          height: "60px",
+          width: "auto",
+          minWidth: "180px", // Adjusted for desktop
+          height: "60px", // Same height as before
           backgroundColor: "#007a7e",
-          borderRadius: "50%",
+          borderRadius: "30px", // Changed to pill shape
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -68,9 +69,10 @@ const FloatingCallButton = () => {
           zIndex: 1000,
           transition: "all 0.3s ease",
           animation: "pulse 2s infinite",
+          padding: "0 20px", // Added padding
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "scale(1.1)";
+          e.currentTarget.style.transform = "scale(1.05)";
           e.currentTarget.style.backgroundColor = "#004d4f";
         }}
         onMouseLeave={(e) => {
@@ -78,7 +80,7 @@ const FloatingCallButton = () => {
           e.currentTarget.style.backgroundColor = "#007a7e";
         }}
       >
-        {/* Phone Icon - shown on desktop */}
+        {/* Phone Icon - now shown on both desktop and mobile */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -89,17 +91,22 @@ const FloatingCallButton = () => {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="desktop-icon"
+          style={{ marginRight: "10px" }} // Added margin between icon and text
         >
           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-1.18 2.19l-.7.35a18.33 18.33 0 0 0 6 6l.35-.7a2 2 0 0 1 2.19-1.18 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
         </svg>
         
-        {/* Phone Number - shown on mobile */}
-        <span className="mobile-number" style={{ display: 'none', color: '#ffffff', fontSize: '12px', fontWeight: 'bold' }}>
-          {formattedNumber} <br/>
-          Helpine Number
+        {/* Phone Number - now shown on both desktop and mobile */}
+        <span style={{ 
+          color: '#ffffff', 
+          fontSize: '14px', 
+          fontWeight: 'bold',
+          textAlign: 'left',
+          lineHeight: '1.2'
+        }}>
+          <span style={{ fontSize: '15px', fontWeight: 'normal' }}>Helpline Number</span> <br/>
+           {formattedNumber}
         </span>
-
       </div>
 
       {/* Helpline Text Tooltip */}
@@ -107,7 +114,7 @@ const FloatingCallButton = () => {
         style={{
           position: "fixed",
           bottom: "30px",
-          right: "90px",
+          right: "220px", // Adjusted for wider button
           backgroundColor: "#1a202c",
           color: "#ffffff",
           padding: "8px 12px",
@@ -216,32 +223,38 @@ const FloatingCallButton = () => {
 
                     /* Mobile responsiveness */
                     @media (max-width: 768px) {
-                        /* Hide desktop icon and show mobile number */
-                        .desktop-icon {
-                            display: none !important;
-                        }
-                        
-                        .mobile-number {
-                            display: block !important;
-                        }
-                        
-                        /* Adjust button to fit text */
+                        /* Adjust button for mobile */
                         div[style*="bottom: 20px"][style*="right: 20px"] {
                             bottom: 15px !important;
                             right: 15px !important;
-                            width: auto !important;
-                            min-width: 150px !important;
+                            minWidth: 150px !important;
                             height: 45px !important;
                             border-radius: 25px !important;
                             padding: 0 15px !important;
                         }
                         
+                        /* Adjust text size for mobile */
+                        span[style*="fontSize: '14px'"] {
+                            font-size: 12px !important;
+                        }
+                        
+                        span[style*="fontSize: '12px'"] {
+                            font-size: 10px !important;
+                        }
+                        
                         /* Adjust tooltip position */
-                        div[style*="bottom: 30px"][style*="right: 90px"] {
+                        div[style*="bottom: 30px"][style*="right: 220px"] {
                             bottom: 25px !important;
                             right: 180px !important;
                             font-size: 12px !important;
                             padding: 6px 10px !important;
+                        }
+                        
+                        /* Adjust icon size */
+                        svg[style*="marginRight: '10px'"] {
+                            width: 20px !important;
+                            height: 20px !important;
+                            margin-right: 8px !important;
                         }
                     }
                 `}

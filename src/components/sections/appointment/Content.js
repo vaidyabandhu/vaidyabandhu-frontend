@@ -34,9 +34,8 @@ class Content extends Component {
           dateofbirth: data.age ? String(data.age) : "",
           phoneno: data.mobile || "",
           gender: data.gender || "",
-          // Set default doctor and hospital IDs
-          doctorId: data.doctor || 245, // Default to 245 if not provided
-          hospitalId: data.hospital || 2, // Default to 2 if not provided
+          doctorId: data.doctor || 245,
+          hospitalId: data.hospital || 2,
         });
 
         // Fetch available slots after setting doctor and hospital IDs
@@ -47,11 +46,10 @@ class Content extends Component {
     }
   }
 
-  // New method to fetch available slots
   fetchAvailableSlots = async (doctorId, hospitalId) => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const token = userInfo?.token;
-        console.log("testing the token", token);
+    console.log("testing the token", token);
     if (!token) {
       alert("Session expired. Please login again.");
       window.location.href = "/basic-details";
@@ -65,7 +63,7 @@ class Content extends Component {
 
     const startDateStr = today.toISOString().split("T")[0];
     const endDateStr = endDate.toISOString().split("T")[0];
-    // localStorage.getItem("authToken");
+
     try {
       const response = await fetch(
         `https://admin.vaidyabandhu.com/api/slots/slot/?start_date=${startDateStr}&end_date=${endDateStr}`,
@@ -79,7 +77,7 @@ class Content extends Component {
       );
 
       if (response.status === 401) {
-          alert("Session expired. Please login again.");
+        alert("Session expired. Please login again.");
         localStorage.removeItem("token");
         window.location.href = "/basic-details";
         return;
@@ -87,9 +85,10 @@ class Content extends Component {
 
       const data = await response.json();
       if (response.ok) {
-        // Process slots to extract time slots
-        const timeSlots = this.processSlots(data);
-        this.setState({ availableSlots: timeSlots });
+        // Store all slots data in state
+        this.setState({ allSlotsData: data });
+        // Process slots for the current date
+        this.processSlotsForDate(this.state.date);
       } else {
         console.error("Failed to fetch slots:", data);
         this.setState({ availableSlots: [] });
@@ -100,38 +99,38 @@ class Content extends Component {
     }
   };
 
-  // New method to process slots and extract time slots
-  processSlots = (slots) => {
-    if (!slots || slots.length === 0) return [];
+  processSlotsForDate = (selectedDate) => {
+    const { allSlotsData } = this.state;
+    
+    if (!allSlotsData || allSlotsData.length === 0) {
+      this.setState({ availableSlots: [] });
+      return;
+    }
 
-    // Group slots by date
-    const slotsByDate = {};
-    slots.forEach((slot) => {
-      const date = new Date(slot.start_time).toISOString().split("T")[0];
-      if (!slotsByDate[date]) {
-        slotsByDate[date] = [];
-      }
-      slotsByDate[date].push(slot);
-    });
-
-    // For simplicity, we'll just extract time slots for the first date
-    const firstDate = Object.keys(slotsByDate)[0];
-    if (!firstDate) return [];
-
-    return slotsByDate[firstDate].map((slot) => {
-      const startTime = new Date(slot.start_time);
-      return {
-        id: slot.id,
-        time: startTime.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-    });
+    // Find the date object that matches the selected date
+    const dateData = allSlotsData.find(item => item.date === selectedDate);
+    
+    if (dateData && dateData.slots) {
+      // Process slots for the selected date
+      const timeSlots = dateData.slots.map(slot => {
+        const startTime = new Date(slot.start_time);
+        return {
+          id: slot.id,
+          time: startTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+      });
+      this.setState({ availableSlots: timeSlots });
+    } else {
+      this.setState({ availableSlots: [] });
+    }
   };
 
   constructor(props) {
     super(props);
+    const today = new Date().toISOString().split('T')[0]; // Set today as default date
     this.state = {
       fullname: "",
       email: "",
@@ -140,7 +139,7 @@ class Content extends Component {
       gender: "",
       hospital: "",
       service: "",
-      date: "",
+      date: today, // Set default date to today
       doctor: "",
       remarks: "",
       cardName: "",
@@ -148,13 +147,15 @@ class Content extends Component {
       expDate: "",
       cardCvv: "",
       condition: "",
-      // New state variables
       doctorId: "",
       hospitalId: "",
-      availableSlots: [], // To store available time slots
-      selectedSlot: null, // To store the selected slot
-      isBooking: false, // To track booking status
+      availableSlots: [],
+      selectedSlot: null,
+      isBooking: false,
+      allSlotsData: [], // Store all slots data
     };
+    
+    // Bind all methods
     this.fullname = this.fullname.bind(this);
     this.email = this.email.bind(this);
     this.dateofbirth = this.dateofbirth.bind(this);
@@ -171,30 +172,27 @@ class Content extends Component {
     this.cardCvv = this.cardCvv.bind(this);
     this.condition = this.condition.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    // Bind new methods
     this.handleDateChange = this.handleDateChange.bind(this);
     this.handleSlotSelect = this.handleSlotSelect.bind(this);
     this.blockSlot = this.blockSlot.bind(this);
+    this.resetForm = this.resetForm.bind(this);
   }
 
-  // New method to handle date change
   handleDateChange(event) {
     const selectedDate = event.target.value;
     this.setState({
       date: selectedDate,
       selectedSlot: null, // Reset selected slot when date changes
+    }, () => {
+      // Process slots for the new date after state update
+      this.processSlotsForDate(selectedDate);
     });
-
-    // Fetch slots for the selected date
-    if (selectedDate && this.state.doctorId && this.state.hospitalId) {
-      this.fetchSlotsForDate(selectedDate);
-    }
   }
+
   handleSlotSelect(slotId) {
     this.setState({ selectedSlot: slotId });
   }
 
-  // New method to block a slot
   blockSlot = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -211,14 +209,13 @@ class Content extends Component {
     this.setState({ isBooking: true });
 
     try {
-      // In blockSlot
       const response = await fetch(
         "https://admin.vaidyabandhu.com/api/slots/slot/block/",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // ✅ FIXED
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             slot: this.state.selectedSlot,
@@ -238,9 +235,7 @@ class Content extends Component {
         alert("Slot booked successfully!");
         this.resetForm();
         // Refresh available slots after booking
-        if (this.state.date) {
-          this.fetchSlotsForDate(this.state.date);
-        }
+        this.fetchAvailableSlots(this.state.doctorId, this.state.hospitalId);
       } else {
         console.error("Failed to book slot:", data);
         alert("Failed to book slot. Please try again.");
@@ -253,56 +248,73 @@ class Content extends Component {
     }
   };
 
+  // Form field handlers
   fullname(event) {
     this.setState({ fullname: event.target.value });
   }
+  
   email(event) {
     this.setState({ email: event.target.value });
   }
+  
   dateofbirth(event) {
     this.setState({ dateofbirth: event.target.value });
   }
+  
   phoneno(event) {
     this.setState({ phoneno: event.target.value });
   }
+  
   gender(event) {
     this.setState({ gender: event.target.value });
   }
+  
   hospital(event) {
     this.setState({ hospital: event.target.value });
   }
+  
   service(event) {
     this.setState({ service: event.target.value });
   }
+  
   date(event) {
     this.setState({ date: event.target.value });
   }
+  
   doctor(event) {
     this.setState({ doctor: event.target.value });
   }
+  
   remarks(event) {
     this.setState({ remarks: event.target.value });
   }
+  
   cardName(event) {
     this.setState({ cardName: event.target.value });
   }
+  
   cardNumber(event) {
     this.setState({ cardNumber: event.target.value });
   }
+  
   expDate(event) {
     this.setState({ expDate: event.target.value });
   }
+  
   cardCvv(event) {
     this.setState({ cardCvv: event.target.value });
   }
+  
   condition(event) {
     this.setState({ condition: event.target.value });
   }
+
   handleSubmit(e) {
     e.preventDefault();
     // Call blockSlot instead of just logging
     this.blockSlot();
   }
+
   resetForm() {
     this.setState({
       fullname: "",
@@ -312,7 +324,7 @@ class Content extends Component {
       gender: "",
       hospital: "",
       service: "",
-      date: "",
+      date: new Date().toISOString().split('T')[0], // Reset to today
       doctor: "",
       remarks: "",
       cardName: "",
@@ -324,6 +336,7 @@ class Content extends Component {
       availableSlots: [],
     });
   }
+
   render() {
     return (
       <div className="sidebar-style-9">
@@ -421,7 +434,6 @@ class Content extends Component {
                 </div>
                 <div className="col-lg-4">
                   <div className="sidebar style-10 mt-5 mt-lg-0">
-                    {/* Booking Widget */}
                     <div className="widget widget-booking">
                       <h5 className="widget-title">Booking Summary</h5>
                       <form>
@@ -433,10 +445,10 @@ class Content extends Component {
                             placeholder="Select Date"
                             value={this.state.date}
                             onChange={this.handleDateChange}
+                            min={new Date().toISOString().split('T')[0]} // Prevent past dates
                           />
                         </div>
                       </form>
-                      {/* Available Slots */}
                       <label>Available Slots</label>
                       <div className="form-group d-flex flex-wrap gap-2">
                         {this.state.availableSlots.length > 0 ? (
@@ -486,7 +498,7 @@ class Content extends Component {
                           <button
                             type="submit"
                             className="sigma_btn btn-block btn-sm mt-4"
-                            disabled={this.state.isBooking}
+                            disabled={this.state.isBooking || !this.state.selectedSlot}
                           >
                             {this.state.isBooking ? "Booking..." : "Confirm"}
                             <i className="fal fa-arrow-right ms-3" />

@@ -123,16 +123,22 @@ const HealthcareReality = () => {
             transition:
               "opacity 0.8s ease-out 0.4s, transform 0.8s ease-out 0.4s",
             padding: "0 10px", 
-            textAlign: "left",
+            textAlign: "center", // Changed from left to center
+            display: "flex", // Added for centering
+            justifyContent: "center", // Added for centering
           }}
         >
           <p
             style={{
-              fontSize: "clamp(16px, 2.5vw, 22px)", // Same responsive font size
-              fontFamily: "Poppins", // Ensure Poppins is applied globally
-
-              color: "#4a5568", // Same color
-              lineHeight: "1.3",
+              fontSize: "clamp(16px, 2vw, 20px)",
+    color: "#4a5568",
+    maxWidth: "900px",
+    margin: "8px auto 50px",
+    lineHeight: "1.5",
+    fontWeight: "400",
+    opacity: animated ? 1 : 0,
+    transform: animated ? "translateY(0)" : "translateY(20px)",
+    transition: "opacity 0.8s ease, transform 0.8s ease",
             }}
           >
             Thousands of families face financial burden during medical

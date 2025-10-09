@@ -26,7 +26,7 @@ const services = [
   },
   {
     image: "/assets/img/icon3.png",
-    title: "10% Cashback on Medical Bills",
+    title: "10% Cashback\non Medical Bills", // Added \n for line break
     points: [
       "Send bills via WhatsApp or Email",
       "Cashback credited within 7 working days",
@@ -123,6 +123,20 @@ const ServicesPreview = () => {
     setIsEnd(swiper.isEnd);
   };
 
+  // Handle mouse enter to pause autoplay
+  const handleCardMouseEnter = () => {
+    if (swiperInstance && swiperInstance.autoplay) {
+      swiperInstance.autoplay.stop();
+    }
+  };
+
+  // Handle mouse leave to resume autoplay
+  const handleCardMouseLeave = () => {
+    if (swiperInstance && swiperInstance.autoplay) {
+      swiperInstance.autoplay.start();
+    }
+  };
+
   const sectionStyle = {
     padding: "60px 20px",
     background: "linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%)",
@@ -155,7 +169,7 @@ const ServicesPreview = () => {
   };
 
   const subHeadingStyle = {
-    fontSize: "clamp(16px, 2vw, 22px)",
+    fontSize: "clamp(16px, 2vw, 20px)",
     color: "#4a5568",
     maxWidth: "900px",
     margin: "25px auto 50px",
@@ -218,6 +232,7 @@ const ServicesPreview = () => {
     transition: "all 0.3s ease",
     position: "relative",
     paddingBottom: "10px",
+    whiteSpace: "pre-line", // Added to respect line breaks
   });
 
   const titleUnderline = (index) => ({
@@ -384,8 +399,14 @@ const ServicesPreview = () => {
               <SwiperSlide key={idx}>
                 <div
                   style={cardStyle(idx)}
-                  onMouseEnter={() => setHoveredIndex(idx)}
-                  onMouseLeave={() => setHoveredIndex(null)}
+                  onMouseEnter={() => {
+                    setHoveredIndex(idx);
+                    handleCardMouseEnter();
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredIndex(null);
+                    handleCardMouseLeave();
+                  }}
                 >
                   <div style={iconContainerStyle}>
                     <img 
