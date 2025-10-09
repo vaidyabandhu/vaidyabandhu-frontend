@@ -203,7 +203,7 @@ const DiagnosticCenterDetail = () => {
                   src={centerDetail?.image || defaultImage}
                   alt={centerDetail.name}
                   className="hero-image"
-                  style={{ width: "100%", height: "175%" }}
+                  style={{ objectFit: "cover", objectFit: "contain" }}
                 />
                 <div className="hero-overlay"></div>
                 <div className="hero-content">
@@ -236,62 +236,39 @@ const DiagnosticCenterDetail = () => {
         </div>
 
         {/* Info Cards */}
-        <div className="row mb-5">
-          <div className="col-md-4 mb-4">
-            <div className="info-card contact-card">
-              <div className="info-card-icon">
-                <Phone size={24} />
-              </div>
-              <div className="info-card-content">
-                <h5 className="info-card-title secondary-color">
-                  Contact Information
-                </h5>
-                <p className="info-card-subtitle">Get in touch with us</p>
-                <p className="info-card-value">
-                  {centerDetail.contact_number || "No contact number available"}
-                </p>
-              </div>
-            </div>
-          </div>
+      {/* Info Cards */}
+<div className="row mb-5 justify-content-center">
+  <div className="col-md-4 mb-4">
+    <div className="info-card contact-card">
+      <div className="info-card-icon">
+        <Phone size={24} />
+      </div>
+      <div className="info-card-content">
+        <h5 className="info-card-title secondary-color">
+          Contact Information
+        </h5>
+        <p className="info-card-subtitle">Get in touch with us</p>
+        <p className="info-card-value">
+          {centerDetail.contact_number || "No contact number available"}
+        </p>
+      </div>
+    </div>
+  </div>
 
-          {/* <div className="col-md-4 mb-4">
-            <div className="info-card rating-card">
-              <div className="info-card-icon">
-                <Star size={24} />
-              </div>
-              <div className="info-card-content">
-                <h5 className="info-card-title secondary-color">
-                  Patient Rating
-                </h5>
-                <p className="info-card-subtitle">Customer satisfaction</p>
-                <div className="rating-display">
-                  <Star size={16} className="rating-star-small" />
-                  <span className="rating-number">
-                    {centerDetail.rating || "4.5"}
-                  </span>
-                  <span className="rating-text">
-                    ({centerDetail.reviews || "150"} reviews)
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div> */}
+  <div className="col-md-4 mb-4">
+    <div className="info-card hours-card">
+      <div className="info-card-icon">
+        <Calendar size={24} />
+      </div>
+      <div className="info-card-content">
+        <h5 className="info-card-title secondary-color">Operating Hours</h5>
+        <p className="info-card-subtitle">When we're available</p>
+        <p className="info-card-value">Mon - Sat: 8:00 AM - 8:00 PM</p>
+      </div>
+    </div>
+  </div>
+</div>
 
-          <div className="col-md-4 mb-4">
-            <div className="info-card hours-card">
-              <div className="info-card-icon">
-                <Calendar size={24} />
-              </div>
-              <div className="info-card-content">
-                <h5 className="info-card-title secondary-color">
-                  Operating Hours
-                </h5>
-                <p className="info-card-subtitle">When we're available</p>
-                <p className="info-card-value">Mon - Sat: 8:00 AM - 8:00 PM</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Diagnostic Services Section */}
         <div className="services-section mb-5">
