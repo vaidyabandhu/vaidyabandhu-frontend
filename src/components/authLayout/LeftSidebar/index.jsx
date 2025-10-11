@@ -26,18 +26,24 @@ const menuItems = [
     name: "Patient List",
     path: "/patient-list",
     icon: <LayoutDashboard size={20} />,
-    allowedUserTypes: ["front_desk"], 
+    allowedUserTypes: ["front_desk"],
+  },
+  {
+    name: "Appointment List",
+    path: "/appointment-list",
+    icon: <Waypoints size={20} />,
+    allowedUserTypes: ["front_desk"],
   },
 ];
 
 const LeftSidebar = () => {
   const [expanded, setExpanded] = useState(true);
-    const [userType, setUserType] = useState(null);
+  const [userType, setUserType] = useState(null);
 
   useEffect(() => {
     const userType = localStorage.getItem("userInfo");
     if (userType) {
-        try {
+      try {
         const parsed = JSON.parse(userType);
         console.log("User Type from localStorage:", parsed.user_type);
         setUserType(parsed.user_type);
@@ -45,10 +51,9 @@ const LeftSidebar = () => {
         console.error("Error parsing userInfo:", err);
       }
     }
-
   }, []);
 
-    // ✅ Filter menu items based on user type
+  // ✅ Filter menu items based on user type
   const filteredMenuItems = menuItems.filter(
     (item) => userType && item.allowedUserTypes.includes(userType)
   );
@@ -62,7 +67,8 @@ const LeftSidebar = () => {
           width={expanded ? 200 : 32}
         />
       </div>
-        <nav className="sidebar-menu">
+
+      <nav className="sidebar-menu">
         {filteredMenuItems.map((item) => (
           <NavLink
             to={item.path}
@@ -76,6 +82,7 @@ const LeftSidebar = () => {
           </NavLink>
         ))}
       </nav>
+
       <div className="sidebar-bottom">
         <button className="collapse-btn" onClick={() => setExpanded((e) => !e)}>
           {expanded ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}

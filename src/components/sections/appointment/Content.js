@@ -6,7 +6,7 @@ class Content extends Component {
     const token = localStorage.getItem("token");
     if (!token) {
       alert("Session expired or not logged in. Please login again.");
-      window.location.href = "/basic-details";
+      window.location.href = "/doctor-list";
       return;
     }
     try {
@@ -23,7 +23,7 @@ class Content extends Component {
       if (response.status === 401) {
         localStorage.removeItem("token");
         alert("Session expired. Please login again testing.");
-        window.location.href = "/basic-details";
+        window.location.href = "/doctor-list";
         return;
       }
       const data = await response.json();
@@ -51,8 +51,8 @@ class Content extends Component {
     const token = userInfo?.token;
     console.log("testing the token", token);
     if (!token) {
-      alert("Session expired. Please login again.");
-      window.location.href = "/basic-details";
+      alert("Session expired. Please login again. 54");
+      window.location.href = "/doctor-list";
       return;
     }
 
@@ -71,15 +71,15 @@ class Content extends Component {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: token
+            Authorization: token,
           },
         }
       );
 
       if (response.status === 401) {
-        alert("Session expired. Please login again.");
+        alert("doctor is not logged in for appointment"); // Updated message
         localStorage.removeItem("token");
-        window.location.href = "/basic-details";
+        window.location.href = "/doctor-list"; // Updated redirect path
         return;
       }
 
@@ -101,18 +101,18 @@ class Content extends Component {
 
   processSlotsForDate = (selectedDate) => {
     const { allSlotsData } = this.state;
-    
+
     if (!allSlotsData || allSlotsData.length === 0) {
       this.setState({ availableSlots: [] });
       return;
     }
 
     // Find the date object that matches the selected date
-    const dateData = allSlotsData.find(item => item.date === selectedDate);
-    
+    const dateData = allSlotsData.find((item) => item.date === selectedDate);
+
     if (dateData && dateData.slots) {
       // Process slots for the selected date
-      const timeSlots = dateData.slots.map(slot => {
+      const timeSlots = dateData.slots.map((slot) => {
         const startTime = new Date(slot.start_time);
         return {
           id: slot.id,
@@ -130,7 +130,7 @@ class Content extends Component {
 
   constructor(props) {
     super(props);
-    const today = new Date().toISOString().split('T')[0]; // Set today as default date
+    const today = new Date().toISOString().split("T")[0]; // Set today as default date
     this.state = {
       fullname: "",
       email: "",
@@ -154,7 +154,7 @@ class Content extends Component {
       isBooking: false,
       allSlotsData: [], // Store all slots data
     };
-    
+
     // Bind all methods
     this.fullname = this.fullname.bind(this);
     this.email = this.email.bind(this);
@@ -180,24 +180,27 @@ class Content extends Component {
 
   handleDateChange(event) {
     const selectedDate = event.target.value;
-    this.setState({
-      date: selectedDate,
-      selectedSlot: null, // Reset selected slot when date changes
-    }, () => {
-      // Process slots for the new date after state update
-      this.processSlotsForDate(selectedDate);
-    });
+    this.setState(
+      {
+        date: selectedDate,
+        selectedSlot: null, // Reset selected slot when date changes
+      },
+      () => {
+        // Process slots for the new date after state update
+        this.processSlotsForDate(selectedDate);
+      }
+    );
   }
 
   handleSlotSelect(slotId) {
     this.setState({ selectedSlot: slotId });
   }
-
   blockSlot = async () => {
-    const token = localStorage.getItem("token");
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    const token = userInfo?.token; // ✅ same as fetchAvailableSlots
     if (!token) {
-      alert("Session expired. Please login again.");
-      window.location.href = "/basic-details";
+      alert("Session expired. Please login again. 199");
+      window.location.href = "/doctor-list";
       return;
     }
 
@@ -215,7 +218,7 @@ class Content extends Component {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: token, // ✅ uses same token as slots API
           },
           body: JSON.stringify({
             slot: this.state.selectedSlot,
@@ -224,9 +227,9 @@ class Content extends Component {
       );
 
       if (response.status === 401) {
-        localStorage.removeItem("token");
-        alert("Session expired. Please login again.");
-        window.location.href = "/basic-details";
+        localStorage.removeItem("userInfo");
+        alert("Session expired. Please login again. 228");
+        window.location.href = "/appointment";
         return;
       }
 
@@ -234,7 +237,6 @@ class Content extends Component {
       if (response.ok) {
         alert("Slot booked successfully!");
         this.resetForm();
-        // Refresh available slots after booking
         this.fetchAvailableSlots(this.state.doctorId, this.state.hospitalId);
       } else {
         console.error("Failed to book slot:", data);
@@ -252,59 +254,59 @@ class Content extends Component {
   fullname(event) {
     this.setState({ fullname: event.target.value });
   }
-  
+
   email(event) {
     this.setState({ email: event.target.value });
   }
-  
+
   dateofbirth(event) {
     this.setState({ dateofbirth: event.target.value });
   }
-  
+
   phoneno(event) {
     this.setState({ phoneno: event.target.value });
   }
-  
+
   gender(event) {
     this.setState({ gender: event.target.value });
   }
-  
+
   hospital(event) {
     this.setState({ hospital: event.target.value });
   }
-  
+
   service(event) {
     this.setState({ service: event.target.value });
   }
-  
+
   date(event) {
     this.setState({ date: event.target.value });
   }
-  
+
   doctor(event) {
     this.setState({ doctor: event.target.value });
   }
-  
+
   remarks(event) {
     this.setState({ remarks: event.target.value });
   }
-  
+
   cardName(event) {
     this.setState({ cardName: event.target.value });
   }
-  
+
   cardNumber(event) {
     this.setState({ cardNumber: event.target.value });
   }
-  
+
   expDate(event) {
     this.setState({ expDate: event.target.value });
   }
-  
+
   cardCvv(event) {
     this.setState({ cardCvv: event.target.value });
   }
-  
+
   condition(event) {
     this.setState({ condition: event.target.value });
   }
@@ -324,7 +326,7 @@ class Content extends Component {
       gender: "",
       hospital: "",
       service: "",
-      date: new Date().toISOString().split('T')[0], // Reset to today
+      date: new Date().toISOString().split("T")[0], // Reset to today
       doctor: "",
       remarks: "",
       cardName: "",
@@ -445,7 +447,7 @@ class Content extends Component {
                             placeholder="Select Date"
                             value={this.state.date}
                             onChange={this.handleDateChange}
-                            min={new Date().toISOString().split('T')[0]} // Prevent past dates
+                            min={new Date().toISOString().split("T")[0]} // Prevent past dates
                           />
                         </div>
                       </form>
@@ -498,7 +500,9 @@ class Content extends Component {
                           <button
                             type="submit"
                             className="sigma_btn btn-block btn-sm mt-4"
-                            disabled={this.state.isBooking || !this.state.selectedSlot}
+                            disabled={
+                              this.state.isBooking || !this.state.selectedSlot
+                            }
                           >
                             {this.state.isBooking ? "Booking..." : "Confirm"}
                             <i className="fal fa-arrow-right ms-3" />

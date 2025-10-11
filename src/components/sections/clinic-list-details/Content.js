@@ -6,8 +6,8 @@ import ShowEnquireModal from "../clinic-list/showEnquireModal";
 import { toast } from "sonner";
 
 const DiagnosticCenterDetail = () => {
-    const [searchParams] = useSearchParams();
-    const id = searchParams.get("id");
+  const [searchParams] = useSearchParams();
+  const id = searchParams.get("id");
   const navigate = useNavigate();
   const [centerDetail, setCenterDetail] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -35,7 +35,7 @@ const DiagnosticCenterDetail = () => {
     } finally {
       setLoading(false);
     }
-  },[]);
+  }, []);
 
   useEffect(() => {
     fetchCenterDetail(id);
@@ -49,19 +49,22 @@ const DiagnosticCenterDetail = () => {
   const handleEnquirySubmit = async (formData) => {
     setEnquiryLoading(true);
     try {
-      const response = await fetch("https://admin.vaidyabandhu.com/api/enquiry/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
-        },
-        body: JSON.stringify({
-          ...formData,
-          // Include center details if needed
-          center_id: id,
-          center_name: centerDetail?.name,
-        }),
-      });
+      const response = await fetch(
+        "https://admin.vaidyabandhu.com/api/enquiry/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+          body: JSON.stringify({
+            ...formData,
+            // Include center details if needed
+            center_id: id,
+            center_name: centerDetail?.name,
+          }),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -201,10 +204,15 @@ const DiagnosticCenterDetail = () => {
               <div className="hero-image-wrapper">
                 <img
                   src={centerDetail?.image || defaultImage}
-                  alt={centerDetail.name}
+                  alt={centerDetail?.name}
                   className="hero-image"
-                  style={{ objectFit: "cover", objectFit: "contain" }}
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    objectFit: "cover",
+                  }}
                 />
+
                 <div className="hero-overlay"></div>
                 <div className="hero-content">
                   <div className="hero-badge mb-3">
@@ -236,39 +244,40 @@ const DiagnosticCenterDetail = () => {
         </div>
 
         {/* Info Cards */}
-      {/* Info Cards */}
-<div className="row mb-5 justify-content-center">
-  <div className="col-md-4 mb-4">
-    <div className="info-card contact-card">
-      <div className="info-card-icon">
-        <Phone size={24} />
-      </div>
-      <div className="info-card-content">
-        <h5 className="info-card-title secondary-color">
-          Contact Information
-        </h5>
-        <p className="info-card-subtitle">Get in touch with us</p>
-        <p className="info-card-value">
-          {centerDetail.contact_number || "No contact number available"}
-        </p>
-      </div>
-    </div>
-  </div>
+        {/* Info Cards */}
+        <div className="row mb-5 justify-content-center">
+          <div className="col-md-4 mb-4">
+            <div className="info-card contact-card">
+              <div className="info-card-icon">
+                <Phone size={24} />
+              </div>
+              <div className="info-card-content">
+                <h5 className="info-card-title secondary-color">
+                  Contact Information
+                </h5>
+                <p className="info-card-subtitle">Get in touch with us</p>
+                <p className="info-card-value">
+                  {centerDetail.contact_number || "No contact number available"}
+                </p>
+              </div>
+            </div>
+          </div>
 
-  <div className="col-md-4 mb-4">
-    <div className="info-card hours-card">
-      <div className="info-card-icon">
-        <Calendar size={24} />
-      </div>
-      <div className="info-card-content">
-        <h5 className="info-card-title secondary-color">Operating Hours</h5>
-        <p className="info-card-subtitle">When we're available</p>
-        <p className="info-card-value">Mon - Sat: 8:00 AM - 8:00 PM</p>
-      </div>
-    </div>
-  </div>
-</div>
-
+          <div className="col-md-4 mb-4">
+            <div className="info-card hours-card">
+              <div className="info-card-icon">
+                <Calendar size={24} />
+              </div>
+              <div className="info-card-content">
+                <h5 className="info-card-title secondary-color">
+                  Operating Hours
+                </h5>
+                <p className="info-card-subtitle">When we're available</p>
+                <p className="info-card-value">Mon - Sat: 8:00 AM - 8:00 PM</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Diagnostic Services Section */}
         <div className="services-section mb-5">
