@@ -33,6 +33,7 @@ const Appointments = () => {
         const token = localStorage.getItem('authToken');
         const response = await fetch('https://admin.vaidyabandhu.com/api/appointment/patient_list/?key=appointment', {
           method: 'GET',
+          credentials: "include",
           headers: {
             'Content-Type': 'application/json',
             'Authorization': token
@@ -299,9 +300,9 @@ const Appointments = () => {
                     <div className="text-muted" style={{ fontSize: "1.2rem" }}>
                       📅 No patients found
                     </div>
-                    <small className="text-muted">
+                    {/* <small className="text-muted">
                       Try adjusting your search or filter criteria
-                    </small>
+                    </small> */}
                   </td>
                 </tr>
               ) : (

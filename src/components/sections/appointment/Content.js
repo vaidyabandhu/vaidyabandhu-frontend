@@ -51,7 +51,7 @@ class Content extends Component {
     const token = userInfo?.token;
     console.log("testing the token", token);
     if (!token) {
-      alert("Session expired. Please login again. 54");
+      alert("Session expired. Please login again.");
       window.location.href = "/doctor-list";
       return;
     }
@@ -197,9 +197,9 @@ class Content extends Component {
   }
   blockSlot = async () => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    const token = userInfo?.token; // ✅ same as fetchAvailableSlots
+    const token = userInfo?.token; 
     if (!token) {
-      alert("Session expired. Please login again. 199");
+      alert("Session expired. Please login again.");
       window.location.href = "/doctor-list";
       return;
     }
@@ -218,7 +218,7 @@ class Content extends Component {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: token, // ✅ uses same token as slots API
+            Authorization: token, 
           },
           body: JSON.stringify({
             slot: this.state.selectedSlot,
@@ -228,19 +228,19 @@ class Content extends Component {
 
       if (response.status === 401) {
         localStorage.removeItem("userInfo");
-        alert("Session expired. Please login again. 228");
+        alert("Session expired. Please login again.");
         window.location.href = "/appointment";
         return;
       }
 
       const data = await response.json();
       if (response.ok) {
-        alert("Slot booked successfully!");
+        alert("Slot booked successfully! Please wait, the doctor is reviewing your appointment. The status is currently in progress.");
         this.resetForm();
         this.fetchAvailableSlots(this.state.doctorId, this.state.hospitalId);
       } else {
         console.error("Failed to book slot:", data);
-        alert("Failed to book slot. Please try again.");
+        alert("Your slot is already booked. Please select a different slot.");
       }
     } catch (error) {
       console.error("Error booking slot:", error);

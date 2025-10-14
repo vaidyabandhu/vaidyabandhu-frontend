@@ -508,15 +508,15 @@ const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {
     });
   };
 
-  if (response?.loading) {
-    return (
-      <div className="text-center py-4">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
-  }
+  // if (response?.loading) {
+  //   return (
+  //     <div className="text-center py-4">
+  //       <div className="spinner-border" role="status">
+  //         <span className="visually-hidden">Loading...</span>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
@@ -547,7 +547,7 @@ const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {
                           className="bg-light p-3 rounded-top border"
                           style={{ background: "#f2f6fa" }}
                         >
-                          <h5>{formatDate(date)}</h5>
+                          {/* <h5>{formatDate(date)}</h5> */}
                           <small className="text-muted">
                             {dateSlots.length} slot
                             {dateSlots.length !== 1 ? "s" : ""}
@@ -589,7 +589,8 @@ const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {
                                         lineHeight: "1.1",
                                       }}
                                     >
-                                      {formatTime(slot.start_time)
+                                      SLOT
+                                      {/* {formatTime(slot.start_time)
                                         .replace(/:\d{2}/, "")
                                         .replace(" ", "")
                                         .toLowerCase()}
@@ -597,11 +598,11 @@ const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {
                                       {formatTime(slot.end_time)
                                         .replace(/:\d{2}/, "")
                                         .replace(" ", "")
-                                        .toLowerCase()}
+                                        .toLowerCase()} */}
                                     </div>
                                     {/* Duration and Edit */}
                                     <div className="d-flex align-items-center justify-content-between">
-                                      <small
+                                      {/* <small
                                         className="text-muted"
                                         style={{ fontSize: "0.7rem" }}
                                       >
@@ -610,8 +611,8 @@ const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {
                                             new Date(slot.start_time)) /
                                             (1000 * 60)
                                         )}
-                                        m
-                                      </small>
+                                        
+                                      </small> */}
                                       <button
                                         className="btn p-0 text-primary"
                                         onClick={() => handleEditSlot(slot)}
