@@ -1,7 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import domtoimage from "dom-to-image-more";
 import { saveAs } from "file-saver";
-import jsPDF from "jspdf";
 import {
   Mail,
   Phone,
@@ -31,9 +29,9 @@ const MyProfile = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const cardRef = useRef(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [downloading, setDownloading] = useState(false);
 
   // Update window width on resize
   useEffect(() => {
@@ -76,57 +74,45 @@ const MyProfile = () => {
     fetchUserProfile();
   }, []);
 
-  // Helper: convert image URL to Base64
-  const getBase64ImageFromUrl = async (url) => {
-    const res = await fetch(url, { mode: "cors" });
-    const blob = await res.blob();
-
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
+  // membership card download handler
   const handleDownload = async () => {
-    const front = document.getElementById("card-front-download");
-    const back = document.getElementById("card-back-download");
-
-    if (!front || !back) {
-      alert("Both sides of the card not found!");
-      return;
-    }
-
+    setDownloading(true);
     try {
-      const frontImg = await domtoimage.toPng(front, {
-        cacheBust: true,
-        useCORS: true,
-        backgroundColor: null,
-      });
-      const backImg = await domtoimage.toPng(back, {
-        cacheBust: true,
-        useCORS: true,
-        backgroundColor: null,
-      });
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        "https://admin.vaidyabandhu.com/api/user/card/pdf/",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }
+      );
 
-      // Create PDF with dimensions matching the card
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: [127, 190] // 127mm wide (480px), 190mm tall (720px)
-      });
+      if (!response.ok) {
+        throw new Error("Failed to download membership card");
+      }
 
-      // Add front card at top
-      pdf.addImage(frontImg, 'PNG', 0, 0, 127, 92.5); // 92.5mm = 350px
+      // Get the filename from the response headers or use a default
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = `${patient.full_name || "user"}_HealthCard.pdf`;
       
-      // Add back card below with small gap
-      pdf.addImage(backImg, 'PNG', 0, 97.5, 127, 92.5); // 97.5mm = 92.5mm + 5mm gap
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
 
-      pdf.save(`${patient.full_name || "user"}_HealthCard.pdf`);
+      // Convert the response to a blob and save it
+      const blob = await response.blob();
+      saveAs(blob, filename);
     } catch (error) {
-      console.error("Oops, something went wrong!", error);
-      alert("Failed to download PDF.");
+      console.error("Error downloading membership card:", error);
+      alert("Failed to download membership card. Please try again later.");
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -649,6 +635,19 @@ const MyProfile = () => {
       backgroundColor: "#dc3545",
       color: "white",
     },
+    downloadButton: {
+      backgroundColor: downloading ? "#6c757d" : "#007bff",
+      color: "white",
+      border: "none",
+      padding: isMobile ? "8px 16px" : "10px 20px",
+      borderRadius: "5px",
+      cursor: downloading ? "not-allowed" : "pointer",
+      fontSize: isMobile ? "14px" : "16px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      opacity: downloading ? 0.7 : 1,
+    },
   };
 
   // Show loading state while fetching data
@@ -672,172 +671,6 @@ const MyProfile = () => {
       </div>
     );
   }
-
-  // Desktop-specific styles for PDF generation
-  const desktopStyles = {
-    ...styles,
-    healthCard: {
-      ...styles.healthCard,
-      width: '480px',
-      height: '350px',
-    },
-    cardHeader: {
-      ...styles.cardHeader,
-      marginBottom: '15px',
-      marginTop: '20px',
-    },
-    logoContainer: {
-      ...styles.logoContainer,
-      width: '40px',
-      height: '40px',
-    },
-    verticalLine: {
-      ...styles.verticalLine,
-      height: '40px',
-      marginLeft: '55px',
-      marginRight: '-30px',
-    },
-    titleText: {
-      ...styles.titleText,
-      fontSize: '18px',
-    },
-    subtitleText: {
-      ...styles.subtitleText,
-      fontSize: '14px',
-    },
-    horizontalLine: {
-      ...styles.horizontalLine,
-      margin: '10px 0',
-    },
-    cardContent: {
-      ...styles.cardContent,
-      marginTop: '10px',
-      marginLeft: '18px',
-    },
-    cardDetails: {
-      ...styles.cardDetails,
-      paddingRight: '15px',
-      paddingLeft: '15px',
-    },
-    cardPhoto: {
-      ...styles.cardPhoto,
-      flex: '2',
-    },
-    photoContainer: {
-      ...styles.photoContainer,
-      width: '80px',
-      height: '100px',
-    },
-    photoNameText: {
-      ...styles.photoNameText,
-      fontSize: '14px',
-    },
-    detailRowAligned: {
-      ...styles.detailRowAligned,
-      fontSize: '13px',
-      marginBottom: '15px',
-    },
-    valueText: {
-      ...styles.valueText,
-      maxWidth: '200px',
-    },
-    bloodGroupText: {
-      ...styles.bloodGroupText,
-      fontSize: '13px',
-    },
-    blueStrip: {
-      ...styles.blueStrip,
-      padding: '10px 38px',
-    },
-    stripValue: {
-      ...styles.stripValue,
-      fontSize: '12px',
-    },
-    stripVerticalLine: {
-      ...styles.stripVerticalLine,
-      height: '30px',
-      margin: '0 53px',
-    },
-    back: {
-      ...styles.back,
-      fontSize: '12px',
-      padding: '15px',
-    },
-    backContainer: {
-      ...styles.backContainer,
-      fontSize: '7px',
-    },
-    cashbackBadge: {
-      ...styles.cashbackBadge,
-      top: '60px',
-      right: '15px',
-      width: '140px',
-      fontSize: '8px',
-    },
-    benefitsTitle: {
-      ...styles.benefitsTitle,
-      fontSize: '12px',
-    },
-    benefitItem: {
-      ...styles.benefitItem,
-      fontSize: '8px',
-      marginBottom: '2px',
-    },
-    checkMark: {
-      ...styles.checkMark,
-      fontSize: '8px',
-      marginRight: '6px',
-    },
-    sectionDivider: {
-      ...styles.sectionDivider,
-      margin: '6px 0',
-    },
-    termsTitle: {
-      ...styles.termsTitle,
-      fontSize: '12px',
-    },
-    termItem: {
-      ...styles.termItem,
-      fontSize: '7px',
-      marginBottom: '1px',
-    },
-    bullet: {
-      ...styles.bullet,
-      fontSize: '7px',
-      marginRight: '5px',
-    },
-    instructionsTitle: {
-      ...styles.instructionsTitle,
-      fontSize: '12px',
-    },
-    instructionItem: {
-      ...styles.instructionItem,
-      fontSize: '7px',
-      marginBottom: '1px',
-    },
-    priceTag: {
-      ...styles.priceTag,
-      fontSize: '36px',
-    },
-    bottomBanner: {
-      ...styles.bottomBanner,
-      padding: '6px 0',
-      margin: '-17px',
-    },
-    companyName: {
-      ...styles.companyName,
-      fontSize: '10px',
-    },
-    tagline: {
-      ...styles.tagline,
-      fontSize: '8px',
-    },
-    backgroundImage: {
-      ...styles.backgroundImage,
-      width: '200px',
-      height: '72px',
-    },
-  };
 
   return (
     <>
@@ -864,246 +697,6 @@ const MyProfile = () => {
         </div>
       )}
       
-      {/* Hidden cards for download - always desktop size */}
-      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-        {/* Front Card */}
-        <div
-          id="card-front-download"
-          style={{
-            ...desktopStyles.healthCard,
-            ...desktopStyles.front,
-            overflow: 'hidden',
-          }}
-        >
-          <img
-            src="assets/img/vb-background.png"
-            alt="Vaidya Bandhu Background"
-            style={desktopStyles.backgroundImage}
-          />
-          <div style={desktopStyles.cardHeader}>
-            <div style={desktopStyles.logoContainer}>
-              <img
-                src="assets/img/vb-logo.png"
-                alt="Vaidya Bandhu Logo"
-                style={{ width: '100%', height: '100%', marginLeft: '28px' }}
-              />
-            </div>
-            <div style={desktopStyles.verticalLine}></div>
-            <div style={desktopStyles.titleContainer}>
-              <div style={desktopStyles.titleText}>VAIDYA BANDHU</div>
-              <div style={desktopStyles.subtitleText}>
-                HEALTHCARE MEMBERSHIP CARD
-              </div>
-            </div>
-          </div>
-          <div style={desktopStyles.horizontalLine}></div>
-          <div style={desktopStyles.cardContent}>
-            <div style={desktopStyles.cardDetails}>
-              <div style={desktopStyles.detailRowAligned}>
-                <span style={desktopStyles.labelText}>MEMBERSHIP ID:</span>
-                <span style={desktopStyles.valueText}>
-                  {patient.membership_id || " "}
-                </span>
-              </div>
-              <div style={desktopStyles.detailRowAligned}>
-                <span style={desktopStyles.labelText}>VALIDITY:</span>
-                <span style={{...desktopStyles.valueText, whiteSpace: 'nowrap'}}>
-                  {formatDate(patient.start_date)} to {formatDate(patient.end_date)}
-                </span>
-              </div>
-              <div style={desktopStyles.detailRowAligned}>
-                <span style={desktopStyles.labelText}>CONTACT:</span>
-                <span style={desktopStyles.valueText}>
-                  {patient.mobile || " "}
-                </span>
-              </div>
-              <div style={desktopStyles.detailRowAligned}>
-                <span style={desktopStyles.labelText}>BLOOD GROUP:</span>
-                <span style={desktopStyles.bloodGroupText}>
-                  {patient.blood_group || " "}
-                </span>
-              </div>
-              <div style={{...desktopStyles.detailRowAligned, marginBottom: '15px'}}>
-                <span style={desktopStyles.labelText}>ADDRESS:</span>
-                <span style={{
-                  ...desktopStyles.valueText,
-                  whiteSpace: 'normal',
-                  lineHeight: 'normal',
-                  overflow: 'visible',
-                  textOverflow: 'unset',
-                  wordBreak: 'break-word',
-                }}>
-                  {patient.address || " "}
-                </span>
-              </div>
-            </div>
-            <div style={desktopStyles.cardPhoto}>
-              <div style={desktopStyles.photoContainer}>
-                {patient.profile_image ? (
-                  <img
-                    src={patient.profile_image}
-                    alt={patient.full_name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f0f0f0' }}>
-                    <User size={24} color="#ccc" />
-                  </div>
-                )}
-              </div>
-              <div style={desktopStyles.photoNameText}>
-                {patient.full_name || " "}
-              </div>
-            </div>
-          </div>
-          <div style={desktopStyles.blueStrip}>
-            <div style={desktopStyles.stripItem}>
-              <div style={desktopStyles.stripLabel}>WHATSAPP HELPLINE</div>
-              <div style={desktopStyles.stripValue}>
-                +91 8535 8535 89
-              </div>
-            </div>
-            <div style={desktopStyles.stripVerticalLine}></div>
-            <div style={desktopStyles.stripItem}>
-              <div style={desktopStyles.stripLabel}>EMAIL ID</div>
-              <div style={desktopStyles.stripValue}>
-                support@vaidyabandhu.com
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Back Card */}
-        <div
-          id="card-back-download"
-          style={{
-            ...desktopStyles.healthCard,
-            ...desktopStyles.back,
-            overflow: 'hidden',
-          }}
-        >
-          <div style={desktopStyles.backContainer}>
-            <div style={desktopStyles.cashbackBadge}>
-              10% CASHBACK ON YOUR
-              <br />
-              TOTAL HOSPITAL BILL
-              <br />
-              <span style={{ fontSize: '5px' }}>
-                EXCLUDING PHARMACY AND IMPLANTS
-              </span>
-            </div>
-            <div style={desktopStyles.benefitsSection}>
-              <div style={desktopStyles.benefitsTitle}>BENEFITS OF THIS CARD</div>
-              <ul style={desktopStyles.benefitsList}>
-                <li style={desktopStyles.benefitItem}>
-                  <span style={desktopStyles.checkMark}>✓</span>
-                  <span>Save 10% to 40% on surgeries, treatments, and diagnostics Services.</span>
-                </li>
-                <li style={desktopStyles.benefitItem}>
-                  <span style={desktopStyles.checkMark}>✓</span>
-                  <span>Get 10% Cashback: Send your bill to Vaidya Bandhu via WhatsApp or Email. Cashback will be credited to your account within 7 working days.</span>
-                </li>
-                <li style={desktopStyles.benefitItem}>
-                  <span style={desktopStyles.checkMark}>✓</span>
-                  <span>Free surgeries under certain in need through our social programs.</span>
-                </li>
-                <li style={desktopStyles.benefitItem}>
-                  <span style={desktopStyles.checkMark}>✓</span>
-                  <span>Call our helpline from 9 AM to 6 PM for free medical advice.</span>
-                </li>
-                <li style={desktopStyles.benefitItem}>
-                  <span style={desktopStyles.checkMark}>✓</span>
-                  <span>We help you choose the right doctor, hospital, or diagnostic center.</span>
-                </li>
-              </ul>
-              <div style={desktopStyles.sectionDivider}></div>
-            </div>
-            <div style={desktopStyles.termsSection}>
-              <div style={desktopStyles.termsTitle}>TERMS & CONDITIONS</div>
-              <ul style={desktopStyles.termsList}>
-                <li style={desktopStyles.termItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>VALIDITY: CARD IS VALID FOR 1 YEAR FROM THE DATE OF ISSUE.</span>
-                </li>
-                <li style={desktopStyles.termItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>NON-TRANSFERABLE: USE IS LIMITED TO THE REGISTERED INDIVIDUAL ONLY.</span>
-                </li>
-                <li style={desktopStyles.termItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>DISCOUNTS AVAILABLE ON CONSULTATIONS, TREATMENTS, SURGERIES, DIAGNOSTICS, AND MORE AT PARTNER CENTERS.</span>
-                </li>
-                <li style={desktopStyles.termItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>BOOKING REQUIRED: CONTACT OUR TEAM BEFORE VISITING ANY FACILITY TO AVAIL BENEFITS.</span>
-                </li>
-                <li style={desktopStyles.termItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>CARD DELIVERY: CARD WILL BE DELIVERED TO YOU POST MEMBERSHIP CONFIRMATION.</span>
-                </li>
-                <li style={desktopStyles.termItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>LOST CARD: DUPLICATE CAN BE ISSUED WITH A SMALL REISSUE FEE.</span>
-                </li>
-                <li style={desktopStyles.termItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>VALID LOCATIONS: BENEFITS APPLICABLE ONLY AT PARTNER HOSPITALS, DOCTORS, CLINICS, AND LABS.</span>
-                </li>
-                <li style={desktopStyles.termItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>NO CASH VALUE: BENEFITS ARE NON-REDEEMABLE FOR CASH.</span>
-                </li>
-                <li style={desktopStyles.termItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>MISUSE: MISUSE OF BENEFITS MAY RESULT IN MEMBERSHIP CANCELLATION.</span>
-                </li>
-                <li style={desktopStyles.termItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>THE CARD DOES NOT COVER EMERGENCY SERVICES UNLESS PRE-APPROVED.</span>
-                </li>
-                <li style={desktopStyles.termItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>IF THE MEMBERSHIP CARD IS NOT USED WITHIN ONE YEAR MEMBERS MUST INFORM US THROUGH THE HELPLINE NUMBER FOR THE FREE RENEWAL.</span>
-                </li>
-                <li style={desktopStyles.termItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>DISCOUNTS MAY VARY BASED ON LOCATION, SERVICE TYPE, AND AVAILABILITY.</span>
-                </li>
-              </ul>
-              <div style={desktopStyles.sectionDivider}></div>
-            </div>
-            <div style={desktopStyles.instructionsSection}>
-              <div style={desktopStyles.instructionsTitle}>
-                INSTRUCTIONS TO USE
-              </div>
-              <ul style={desktopStyles.instructionsList}>
-                <li style={desktopStyles.instructionItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>CALL OR WHATSAPP US AT +91 8535 8535 89</span>
-                </li>
-                <li style={desktopStyles.instructionItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>SHARE YOUR MEMBERSHIP ID AND ISSUE</span>
-                </li>
-                <li style={desktopStyles.instructionItem}>
-                  <span style={desktopStyles.bullet}>•</span>
-                  <span>GET INSTANT HELP FROM VAIDYA BANDHU TEAM</span>
-                </li>
-              </ul>
-            </div>
-            <div style={desktopStyles.priceTag}>49/-</div>
-            <div style={desktopStyles.bottomBanner}>
-              <div style={desktopStyles.companyName}>
-                VAIDYA BANDHU (A UNIT OF MY COMPANYON HEALTHCARE PRIVATE LIMITED)
-              </div>
-              <div style={desktopStyles.tagline}>
-                "SERVING WITH CARE & COMMITMENT"
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div style={styles.profilePage}>
         <div style={styles.mainContainer}>
           {/* Left Column - Personal Information */}
@@ -1573,18 +1166,18 @@ const MyProfile = () => {
               }}
             >
               <button
-                style={{
-                  backgroundColor: "#007bff",
-                  color: "white",
-                  border: "none",
-                  padding: isMobile ? "8px 16px" : "10px 20px",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                  fontSize: isMobile ? "14px" : "16px",
-                }}
+                style={styles.downloadButton}
                 onClick={handleDownload}
+                disabled={downloading}
               >
-                Download PDF
+                {downloading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Downloading...
+                  </>
+                ) : (
+                  "Download PDF"
+                )}
               </button>
             </div>
 

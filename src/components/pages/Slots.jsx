@@ -10,7 +10,9 @@ import { Button, Col, Form, Row, Alert } from "react-bootstrap";
 
 // --- Slot Modal (updated) ---
 function getLocalTimeString(isoDateTime) {
+  if (!isoDateTime) return "";
   const date = new Date(isoDateTime);
+  if (isNaN(date.getTime())) return "";
   return date.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
@@ -19,7 +21,9 @@ function getLocalTimeString(isoDateTime) {
 }
 
 function getLocalDateString(isoDateTime) {
+  if (!isoDateTime) return "";
   const date = new Date(isoDateTime);
+  if (isNaN(date.getTime())) return "";
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -54,7 +58,7 @@ const updateSlotPatchApi = async (payload) => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token
+          Authorization: token,
         },
         body: JSON.stringify({
           id: payload.id,
@@ -122,50 +126,74 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
     }
   }, [show]);
 
+  // Initialize form data
   useEffect(() => {
     if (slot) {
       // For existing slot, use slot data
+      let duration = 15; // Default value
+      if (slot.start_time && slot.end_time) {
+        const startDate = new Date(slot.start_time);
+        const endDate = new Date(slot.end_time);
+        if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+          duration = Math.round((endDate - startDate) / (1000 * 60));
+        }
+      }
+
       setFormData({
         start_date: getLocalDateString(slot.start_time),
         start_time: getLocalTimeString(slot.start_time),
         end_date: getLocalDateString(slot.end_time),
         end_time: getLocalTimeString(slot.end_time),
-        slot_duration: Math.round(
-          (new Date(slot.end_time) - new Date(slot.start_time)) / (1000 * 60)
-        ),
+        slot_duration: duration,
         doctor: slot.doctor?.toString() || "",
         hospital: slot.hospital?.toString() || "",
       });
-    } else if (userInfo) {
-      // For new slot with user info available
+    } else {
+      // For new slot — calculate end_time from start_time + duration
       const now = new Date();
-      const nextHour = new Date(now.getTime() + 60 * 60 * 1000);
-      const endTime = new Date(nextHour.getTime() + 30 * 60 * 1000);
+      const nextHour = new Date(now.getTime() + 60 * 60 * 1000); // Next hour
+
+      const startDateStr = nextHour.toISOString().slice(0, 10);
+      const startTimeStr = nextHour.toTimeString().slice(0, 5);
+
+      const durationMinutes = 30;
+      const startDateTime = new Date(`${startDateStr}T${startTimeStr}`);
+      const endDateTime = new Date(
+        startDateTime.getTime() + durationMinutes * 60 * 1000
+      );
+
       setFormData({
-        start_date: nextHour.toISOString().slice(0, 10),
-        start_time: nextHour.toTimeString().slice(0, 5),
-        end_date: nextHour.toISOString().slice(0, 10),
-        end_time: endTime.toTimeString().slice(0, 5),
-        slot_duration: 30,
-        doctor: userInfo.doctor_id?.toString() || "",
-        hospital: userInfo.hospital_id?.toString() || "",
-      });
-    } else if (!slot && !userInfo && show) {
-      // For new slot without user info yet (initial state)
-      const now = new Date();
-      const nextHour = new Date(now.getTime() + 60 * 60 * 1000);
-      const endTime = new Date(nextHour.getTime() + 30 * 60 * 1000);
-      setFormData({
-        start_date: nextHour.toISOString().slice(0, 10),
-        start_time: nextHour.toTimeString().slice(0, 5),
-        end_date: nextHour.toISOString().slice(0, 10),
-        end_time: endTime.toTimeString().slice(0, 5),
-        slot_duration: 30,
-        doctor: "",
-        hospital: "",
+        start_date: startDateStr,
+        start_time: startTimeStr,
+        end_date: endDateTime.toISOString().slice(0, 10),
+        end_time: endDateTime.toTimeString().slice(0, 5),
+        slot_duration: durationMinutes,
+        doctor: userInfo?.doctor_id?.toString() || "",
+        hospital: userInfo?.hospital_id?.toString() || "",
       });
     }
   }, [slot, userInfo, show]);
+
+  // Auto-update end_time when duration or start_time/date changes
+  useEffect(() => {
+    if (!formData.start_date || !formData.start_time) return;
+
+    const startDateTime = new Date(
+      `${formData.start_date}T${formData.start_time}`
+    );
+    if (isNaN(startDateTime.getTime())) return; // Skip if invalid date
+
+    const endDateTime = new Date(
+      startDateTime.getTime() + formData.slot_duration * 60 * 1000
+    );
+    if (isNaN(endDateTime.getTime())) return; // Skip if invalid date
+
+    setFormData((prev) => ({
+      ...prev,
+      end_date: endDateTime.toISOString().slice(0, 10),
+      end_time: endDateTime.toTimeString().slice(0, 5),
+    }));
+  }, [formData.slot_duration, formData.start_date, formData.start_time]);
 
   // Validation helper
   const validateFields = () => {
@@ -176,6 +204,11 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
       !formData.end_time
     ) {
       setValidationMsg(""); // Don't show anything until user fills everything
+      return false;
+    }
+
+    if (formData.slot_duration <= 0) {
+      setValidationMsg("Duration must be greater than 0 minutes.");
       return false;
     }
 
@@ -209,6 +242,7 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
     formData.end_date,
     formData.start_time,
     formData.end_time,
+    formData.slot_duration,
   ]);
 
   const handleChange = (field, value) => {
@@ -226,6 +260,13 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
     e.preventDefault();
     setError("");
     if (!validateFields()) return;
+
+    // Additional validation: duration > 0
+    if (formData.slot_duration <= 0) {
+      setError("Duration must be greater than 0 minutes.");
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -255,32 +296,55 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
           throw new Error(response.message || "Failed to update slot");
         }
       } else {
-        // Use existing API for creating new slots
+        // For new slots: recalculate end_time to ensure correctness at submit time
+        const startDateTime = new Date(
+          `${formData.start_date}T${formData.start_time}`
+        );
+        const endDateTime = new Date(
+          startDateTime.getTime() + formData.slot_duration * 60 * 1000
+        );
+        const finalEndDate = endDateTime.toISOString().slice(0, 10);
+        const finalEndTime = endDateTime.toTimeString().slice(0, 5);
+
         const payload = {
           doctor: formData.doctor,
           hospital: formData.hospital,
           start_date: formData.start_date,
           start_time: formData.start_time,
-          end_date: formData.end_date,
-          end_time: formData.end_time,
+          end_date: finalEndDate,
+          end_time: finalEndTime,
           slot_duration: formData.slot_duration,
         };
 
         console.log("Creating slot with payload:", payload);
-        
+
         const response = await addSlotApi(payload);
         console.log("Create Slot API response:", response.status);
 
-        if (response.status >= 200 && response.status < 300) {
-           onSaved(); 
-         
+        if (response.status >= 200 && response.status < 500) {
+          onSaved();
         } else {
           throw new Error(response.data?.message || "Failed to save slot");
         }
       }
     } catch (err) {
       console.error("Error in handleSubmit:", err);
-      setError(err.message || "Something went wrong");
+
+      // Handle specific overlap error
+      let errorMessage = "Something went wrong";
+      const errorString = JSON.stringify(err).toLowerCase();
+
+      if (
+        errorString.includes("overlaps") ||
+        errorString.includes("this slot overlaps with an existing one")
+      ) {
+        errorMessage =
+          "This slot overlaps with an existing one. Please choose a different time.";
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -312,36 +376,6 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
                   {error}
                 </Alert>
               )}
-
-              {/* Doctor and Hospital Fields */}
-              {/* <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Doctor ID</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={formData.doctor}
-                      onChange={(e) => handleChange("doctor", e.target.value)}
-                      required
-                      disabled
-                    />
-                  
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Hospital ID</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={formData.hospital}
-                      onChange={(e) => handleChange("hospital", e.target.value)}
-                      required
-                      disabled
-                    />
-                   
-                  </Form.Group>
-                </Col>
-              </Row> */}
 
               <Row>
                 <Col md={6}>
@@ -449,11 +483,16 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
 };
 
 // --- SlotManager UI ---
-const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {
+const SlotManager = ({
+  dateFilter,
+  showCreateModal,
+  setShowCreateModal,
+  refreshKey,
+}) => {
   const { user } = useAuthContext();
   const [editingSlot, setEditingSlot] = useState(null);
 
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
   const response = useFetch({
     method: "GET",
     request: "slots/slot/",
@@ -474,25 +513,35 @@ const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {
 
   const slots = response?.data || [];
 
+  // Helper function to safely parse dates
+  const safeParseDate = (dateString) => {
+    if (!dateString) return new Date(); // Return current date if empty
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? new Date() : date; // Fallback to current date if invalid
+  };
+
   // Group slots by date
   const groupedSlots = slots.reduce((acc, slot) => {
-    const date = new Date(slot.start_time).toDateString();
-    if (!acc[date]) {
-      acc[date] = [];
+    const date = safeParseDate(slot.start_time);
+    const dateKey = date.toDateString();
+    if (!acc[dateKey]) {
+      acc[dateKey] = [];
     }
-    acc[date].push(slot);
+    acc[dateKey].push(slot);
     return acc;
   }, {});
 
   const handleEditSlot = (slot) => setEditingSlot(slot);
   const handleSlotSaved = async () => {
+    // Force a refresh by updating the refreshKey in the parent component
     response.refetch();
     setShowCreateModal(false);
     setEditingSlot(null);
   };
 
   const formatTime = (timeString) => {
-    return new Date(timeString).toLocaleTimeString("en-US", {
+    const date = safeParseDate(timeString);
+    return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
@@ -500,7 +549,8 @@ const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    const date = safeParseDate(dateString);
+    return date.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -508,15 +558,13 @@ const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {
     });
   };
 
-  // if (response?.loading) {
-  //   return (
-  //     <div className="text-center py-4">
-  //       <div className="spinner-border" role="status">
-  //         <span className="visually-hidden">Loading...</span>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  const formatShortDate = (dateString) => {
+    const date = safeParseDate(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   return (
     <>
@@ -536,104 +584,111 @@ const SlotManager = ({ dateFilter, showCreateModal, setShowCreateModal }) => {
             </div>
           ) : (
             <>
-              {Object.keys(groupedSlots).length > 0 && (
-                <div>
-                  {Object.entries(groupedSlots)
-                    .sort(([a], [b]) => new Date(a) - new Date(b))
-                    .map(([date, dateSlots]) => (
-                      <div key={date} className="mb-4">
-                        {/* Date Header */}
-                        <div
-                          className="bg-light p-3 rounded-top border"
-                          style={{ background: "#f2f6fa" }}
-                        >
-                          {/* <h5>{formatDate(date)}</h5> */}
-                          <small className="text-muted">
-                            {dateSlots.length} slot
-                            {dateSlots.length !== 1 ? "s" : ""}
-                          </small>
-                        </div>
-                        {/* Slots Grid */}
-                        <div
-                          className="border border-top-0 rounded-bottom p-3"
-                          style={{ background: "#f8fafd" }}
-                        >
-                          <div className="row g-2">
-                            {dateSlots
-                              .sort(
-                                (a, b) =>
-                                  new Date(a.start_time) -
-                                  new Date(b.start_time)
-                              )
-                              .map((slot) => (
-                                <div key={slot.id} className="col-auto">
-                                  <div
-                                    className={`border rounded p-2 ${
-                                      slot.is_blocked
-                                        ? "bg-danger bg-opacity-10 border-danger"
-                                        : "bg-success bg-opacity-10 border-success"
-                                    }`}
-                                    style={{
-                                      width: "110px",
-                                      fontSize: "0.75rem",
-                                      background: slot.is_blocked
-                                        ? "#ffeaea"
-                                        : "#e6f8f5",
-                                    }}
-                                  >
-                                    {/* Time */}
-                                    <div
-                                      className="fw-bold text-center mb-1"
-                                      style={{
-                                        fontSize: "0.8rem",
-                                        lineHeight: "1.1",
-                                      }}
-                                    >
-                                      SLOT
-                                      {/* {formatTime(slot.start_time)
-                                        .replace(/:\d{2}/, "")
-                                        .replace(" ", "")
-                                        .toLowerCase()}
-                                      -
-                                      {formatTime(slot.end_time)
-                                        .replace(/:\d{2}/, "")
-                                        .replace(" ", "")
-                                        .toLowerCase()} */}
-                                    </div>
-                                    {/* Duration and Edit */}
-                                    <div className="d-flex align-items-center justify-content-between">
-                                      {/* <small
-                                        className="text-muted"
-                                        style={{ fontSize: "0.7rem" }}
-                                      >
-                                        {Math.round(
-                                          (new Date(slot.end_time) -
-                                            new Date(slot.start_time)) /
-                                            (1000 * 60)
-                                        )}
-                                        
-                                      </small> */}
-                                      <button
-                                        className="btn p-0 text-primary"
-                                        onClick={() => handleEditSlot(slot)}
-                                        title="Edit Slot"
-                                        style={{
-                                          fontSize: "0.8rem",
-                                          lineHeight: "1",
-                                        }}
-                                      >
-                                        <i className="fas fa-edit"></i>
-                                      </button>
-                                    </div>
+              <h5 className="mb-3">Available Slots</h5>
+              {Object.keys(groupedSlots).length > 0 &&
+                (console.log("Grouped Slots:", groupedSlots),
+                (
+                  <div>
+                    {Object.entries(groupedSlots)
+
+                      .sort(([a], [b]) => new Date(a) - new Date(b))
+                      .map(([date, dateSlots]) => (
+                        <div key={date} className="mb-4">
+                          {/* Date Header */}
+                          <div
+                            className="bg-light p-3 rounded-top border"
+                            style={{ background: "#f2f6fa" }}
+                          >
+                            {/* <h5>{formatDate(date)}</h5> */}
+                            <small className="text-muted">
+                              {dateSlots.length} slot
+                              {dateSlots.length !== 1 ? "s" : ""}
+                            </small>
+                          </div>
+                          {/* Slots Grid */}
+                          <div
+                            className="border border-top-0 rounded-bottom p-3"
+                            style={{ background: "#f8fafd" }}
+                          >
+                            <div className="row g-2">
+                              {dateSlots.map((dateGroup) => (
+                                <React.Fragment key={dateGroup.date}>
+                                  {/* Optional: show the date header */}
+                                  <div className="col-12 fw-bold my-2">
+                                    {dateGroup.date}
                                   </div>
-                                </div>
+
+                                  {dateGroup.slots
+                                    .sort(
+                                      (a, b) =>
+                                        new Date(a.start_time) -
+                                        new Date(b.start_time)
+                                    )
+                                    .map((slot) => {
+                                      const start = new Date(slot.start_time);
+                                      const end = new Date(slot.end_time);
+                                      const duration = Math.round(
+                                        (end - start) / (1000 * 60)
+                                      );
+
+                                      return (
+                                        <div key={slot.id} className="col-auto">
+                                          <div
+                                            className={`border rounded p-2 ${
+                                              slot.is_blocked
+                                                ? "bg-danger bg-opacity-10 border-danger"
+                                                : "bg-success bg-opacity-10 border-success"
+                                            }`}
+                                            style={{
+                                              width: "140px",
+                                              fontSize: "0.75rem",
+                                              background: slot.is_blocked
+                                                ? "#ffeaea"
+                                                : "#e6f8f5",
+                                            }}
+                                          >
+                                            {/* Date, Time, and Duration */}
+                                            <div>
+                                              <div className="fw-bold text-center mb-1">
+                                               {formatShortDate(slot.start_time)}
+                                              </div>
+                                              <div className="text-center mb-1">
+                                                {formatTime(slot.start_time)} -{" "}
+                                                {formatTime(slot.end_time)}
+                                              </div>
+                                              <div className="text-center mb-2">
+                                                {duration} min
+                                              </div>
+                                            </div>
+
+                                            {/* Edit Button */}
+                                            <div className="d-flex align-items-center justify-content-center">
+                                              <button
+                                                className="btn p-0 text-primary"
+                                                onClick={() =>
+                                                  handleEditSlot(slot)
+                                                }
+                                                title="Edit Slot"
+                                                style={{
+                                                  fontSize: "0.8rem",
+                                                  lineHeight: "1",
+                                                }}
+                                              >
+                                                <i className="fas fa-edit"></i>
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                </React.Fragment>
                               ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                </div>
-              )}
+                      ))}
+                  </div>
+                ))}
             </>
           )}
         </>
@@ -674,6 +729,7 @@ const Slots = () => {
   );
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const onFilter = ({ start, end }) => {
     setDateFilter({
@@ -683,6 +739,12 @@ const Slots = () => {
   };
 
   const handleCreateSlot = () => setShowCreateModal(true);
+
+  const handleSlotSaved = () => {
+    // Force a refresh by updating the refreshKey
+    setRefreshKey((prev) => prev + 1);
+    setShowCreateModal(false);
+  };
 
   const onClear = () => {
     setDateFilter({ date_from: "", date_to: "" });
@@ -730,6 +792,7 @@ const Slots = () => {
           </header>
           <div className="shadow-sm bg-white rounded-bottom p-3">
             <SlotManager
+              key={refreshKey}
               dateFilter={
                 dateFilter.date_from && dateFilter.date_to
                   ? {
@@ -740,6 +803,7 @@ const Slots = () => {
               }
               showCreateModal={showCreateModal}
               setShowCreateModal={setShowCreateModal}
+              refreshKey={refreshKey}
             />
           </div>
         </div>
