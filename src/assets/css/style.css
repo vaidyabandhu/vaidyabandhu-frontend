@@ -11953,7 +11953,7 @@ hr {
 
 .sigma_header-absolute .sigma_banner.style-8 .banner-slider-inner,
 .sigma_header-absolute .sigma_banner .banner-slider-inner {
-  padding: 260px 0 230px;
+  padding: 286px 0 100px;
 }
 
 .sigma_banner .banner-links {
@@ -17062,4 +17062,5 @@ td.remove button span {
   background: #f8f9fa; /* Match your table head bg */
   box-shadow: 0 2px 2px -2px #dee2e6;
 }
+
 
