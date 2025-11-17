@@ -24,7 +24,7 @@ const MyProfile = () => {
     email: "",
     Aadhar_number: "",
     pan_number: "",
-    profile_image: null,
+    profile_image: "",
   });
 
   const [loading, setLoading] = useState(true);

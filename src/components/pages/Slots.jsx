@@ -4,7 +4,7 @@ import { useFetch } from "../hooks/usefetch";
 import useLocalStorageState from "../hooks/useLocalStorageState";
 import DateRangeFilter2 from "../common/DateRangeFilter2";
 import { dateFormat } from "../utiles/dateFormat";
-import { addSlotApi, updateSlotApi } from "../../api/slotApi";
+import { addSlotApi, updateSlotApi, getSlotsApi } from "../../api/slotApi";
 import { getDateRange } from "../common/DateRangeFilter2/utils";
 import { Button, Col, Form, Row, Alert } from "react-bootstrap";
 
@@ -350,6 +350,7 @@ const SlotFormModal = ({ show, onHide, onSaved, user, slot = null, title }) => {
     }
   };
 
+
   if (!show) return null;
 
   return (
@@ -491,8 +492,17 @@ const SlotManager = ({
 }) => {
   const { user } = useAuthContext();
   const [editingSlot, setEditingSlot] = useState(null);
+  const [formData, setFormData] = useState({
+  doctor: user?.id,
+  hospital: user?.selectedHospital?.id,
+  start_date: "2025-11-11", // or dynamic default
+  start_time: "09:00",
+  slot_duration: 30,
+});
 
   const token = localStorage.getItem("token");
+
+  
   const response = useFetch({
     method: "GET",
     request: "slots/slot/",
@@ -511,7 +521,47 @@ const SlotManager = ({
     },
   });
 
-  const slots = response?.data || [];
+   const { refetch } = response;
+     const slots = response?.data || [];
+ useEffect(() => {
+  const fetchSlotsOnLoad = async () => {
+    // console.log("params on load:", params)
+    if (
+      !user?.id ||
+      !user?.selectedHostiptal?.id ||
+      !dateFilter?.start_date ||
+      !dateFilter?.end_date
+    ) {
+      
+      console.warn("Missing params, skipping slots API call");
+      return;
+    }
+
+    try {
+      const params = {
+        doctor_id: user.id,
+        hospital_id: user.selectedHostiptal.id,
+        start_date: dateFilter.start_date,
+        end_date: dateFilter.end_date,
+      };
+
+      console.log("Fetching slots on load with params:", params);
+      const data = await getSlotsApi(params, token);
+      console.log("Slots API response:", data);
+
+      // setSlotsData(data);
+    } catch (error) {
+      console.error("Error fetching slots on load:", error);
+    }
+  };
+
+  fetchSlotsOnLoad();
+}, [user, dateFilter]); // ✅ Runs again when user/dateFilter are ready
+
+
+
+
+  // console.log("Fetched slotsss:", refetch);
 
   // Helper function to safely parse dates
   const safeParseDate = (dateString) => {
@@ -568,131 +618,119 @@ const SlotManager = ({
 
   return (
     <>
-      {!response?.loading && (
-        <>
-          {response?.error ? (
-            <div className="alert alert-danger" role="alert">
-              Error loading slots: {response.error}
-            </div>
-          ) : slots.length === 0 ? (
-            <div className="text-center py-5">
-              <i className="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-              <h6 className="text-muted">No slots found</h6>
-              <p className="text-muted">
-                Create your first slot to get started
-              </p>
-            </div>
-          ) : (
-            <>
-              <h5 className="mb-3">Available Slots</h5>
-              {Object.keys(groupedSlots).length > 0 &&
-                (console.log("Grouped Slots:", groupedSlots),
-                (
-                  <div>
-                    {Object.entries(groupedSlots)
+ {!response?.loading && (
+  <>
+    {response?.error ? (
+      <div className="alert alert-danger" role="alert">
+        Error loading slots: {response.error}
+      </div>
+    ) : Object.keys(groupedSlots || {}).length === 0 ? (
+      // ✅ Show this only if groupedSlots is actually empty
+      <div className="text-center py-5">
+        <i className="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+        <h6 className="text-muted">No slots found</h6>
+        <p className="text-muted">Create your first slot to get started</p>
+      </div>
+    ) : (
+      // ✅ Show available slots
+      <>
+        <h5 className="mb-3">Available Slots</h5>
 
-                      .sort(([a], [b]) => new Date(a) - new Date(b))
-                      .map(([date, dateSlots]) => (
-                        <div key={date} className="mb-4">
-                          {/* Date Header */}
-                          <div
-                            className="bg-light p-3 rounded-top border"
-                            style={{ background: "#f2f6fa" }}
-                          >
-                            {/* <h5>{formatDate(date)}</h5> */}
-                            <small className="text-muted">
-                              {dateSlots.length} slot
-                              {dateSlots.length !== 1 ? "s" : ""}
-                            </small>
-                          </div>
-                          {/* Slots Grid */}
-                          <div
-                            className="border border-top-0 rounded-bottom p-3"
-                            style={{ background: "#f8fafd" }}
-                          >
-                            <div className="row g-2">
-                              {dateSlots.map((dateGroup) => (
-                                <React.Fragment key={dateGroup.date}>
-                                  {/* Optional: show the date header */}
-                                  <div className="col-12 fw-bold my-2">
-                                    {dateGroup.date}
+        <div>
+          {Object.entries(groupedSlots)
+            .sort(([a], [b]) => new Date(a) - new Date(b))
+            .map(([date, dateSlots]) => (
+              <div key={date} className="mb-4">
+                {/* Date Header */}
+                <div
+                  className="bg-light p-3 rounded-top border"
+                  style={{ background: "#f2f6fa" }}
+                >
+                  <small className="text-muted">
+                    {dateSlots.length} slot{dateSlots.length !== 1 ? "s" : ""}
+                  </small>
+                </div>
+
+                {/* Slots Grid */}
+                <div
+                  className="border border-top-0 rounded-bottom p-3"
+                  style={{ background: "#f8fafd" }}
+                >
+                  <div className="row g-2">
+                    {dateSlots.map((dateGroup) => (
+                      <React.Fragment key={dateGroup.date}>
+                        <div className="col-12 fw-bold my-2">
+                          {dateGroup.date}
+                        </div>
+
+                        {dateGroup.slots
+                          .sort(
+                            (a, b) =>
+                              new Date(a.start_time) - new Date(b.start_time)
+                          )
+                          .map((slot) => {
+                            const start = new Date(slot.start_time);
+                            const end = new Date(slot.end_time);
+                            const duration = Math.round(
+                              (end - start) / (1000 * 60)
+                            );
+
+                            return (
+                              <div key={slot.id} className="col-auto">
+                                <div
+                                  className={`border rounded p-2 ${
+                                    slot.is_blocked
+                                      ? "bg-danger bg-opacity-10 border-danger"
+                                      : "bg-success bg-opacity-10 border-success"
+                                  }`}
+                                  style={{
+                                    width: "140px",
+                                    fontSize: "0.75rem",
+                                    background: slot.is_blocked
+                                      ? "#ffeaea"
+                                      : "#e6f8f5",
+                                  }}
+                                >
+                                  <div className="fw-bold text-center mb-1">
+                                    {formatShortDate(slot.start_time)}
+                                  </div>
+                                  <div className="text-center mb-1">
+                                    {formatTime(slot.start_time)} -{" "}
+                                    {formatTime(slot.end_time)}
+                                  </div>
+                                  <div className="text-center mb-2">
+                                    {duration} min
                                   </div>
 
-                                  {dateGroup.slots
-                                    .sort(
-                                      (a, b) =>
-                                        new Date(a.start_time) -
-                                        new Date(b.start_time)
-                                    )
-                                    .map((slot) => {
-                                      const start = new Date(slot.start_time);
-                                      const end = new Date(slot.end_time);
-                                      const duration = Math.round(
-                                        (end - start) / (1000 * 60)
-                                      );
-
-                                      return (
-                                        <div key={slot.id} className="col-auto">
-                                          <div
-                                            className={`border rounded p-2 ${
-                                              slot.is_blocked
-                                                ? "bg-danger bg-opacity-10 border-danger"
-                                                : "bg-success bg-opacity-10 border-success"
-                                            }`}
-                                            style={{
-                                              width: "140px",
-                                              fontSize: "0.75rem",
-                                              background: slot.is_blocked
-                                                ? "#ffeaea"
-                                                : "#e6f8f5",
-                                            }}
-                                          >
-                                            {/* Date, Time, and Duration */}
-                                            <div>
-                                              <div className="fw-bold text-center mb-1">
-                                               {formatShortDate(slot.start_time)}
-                                              </div>
-                                              <div className="text-center mb-1">
-                                                {formatTime(slot.start_time)} -{" "}
-                                                {formatTime(slot.end_time)}
-                                              </div>
-                                              <div className="text-center mb-2">
-                                                {duration} min
-                                              </div>
-                                            </div>
-
-                                            {/* Edit Button */}
-                                            <div className="d-flex align-items-center justify-content-center">
-                                              <button
-                                                className="btn p-0 text-primary"
-                                                onClick={() =>
-                                                  handleEditSlot(slot)
-                                                }
-                                                title="Edit Slot"
-                                                style={{
-                                                  fontSize: "0.8rem",
-                                                  lineHeight: "1",
-                                                }}
-                                              >
-                                                <i className="fas fa-edit"></i>
-                                              </button>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                </React.Fragment>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                                  <div className="d-flex align-items-center justify-content-center">
+                                    <button
+                                      className="btn p-0 text-primary"
+                                      onClick={() => handleEditSlot(slot)}
+                                      title="Edit Slot"
+                                      style={{
+                                        fontSize: "0.8rem",
+                                        lineHeight: "1",
+                                      }}
+                                    >
+                                      <i className="fas fa-edit"></i>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </React.Fragment>
+                    ))}
                   </div>
-                ))}
-            </>
-          )}
-        </>
-      )}
+                </div>
+              </div>
+            ))}
+        </div>
+      </>
+    )}
+  </>
+)}
+
 
       {/* Create Slot Modal */}
       {showCreateModal && (

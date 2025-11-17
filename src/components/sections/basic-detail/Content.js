@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   CreditCard,
   MapPin,
@@ -54,7 +54,7 @@ const VaidyaBandhuForm = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false); // New state for welcome modal
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   
   // Cropping state
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -117,7 +117,13 @@ const VaidyaBandhuForm = () => {
         );
         if (response.ok) {
           const data = await response.json();
-          setFormData(data);
+          // Convert numeric fields to strings to ensure consistency
+          setFormData({
+            ...data,
+            age: data.age ? String(data.age) : "",
+            pin_code: data.pin_code ? String(data.pin_code) : "",
+            aadhaar_number: data.aadhaar_number ? String(data.aadhaar_number) : "",
+          });
           if (data.photo) {
             setPhotoPreview(data.photo);
           }
@@ -240,7 +246,8 @@ const VaidyaBandhuForm = () => {
     }
   };
 
-  const validateForm = () => {
+  // Memoized validation function using useCallback
+  const validateForm = useCallback(() => {
     const newErrors = {};
 
     if (!formData.full_name.trim()) {
@@ -248,9 +255,11 @@ const VaidyaBandhuForm = () => {
         languagesType[selectedLanguage].validation.fullNameRequired;
     }
 
-    if (!formData.age.trim()) {
+    // Convert age to string before trimming
+    const ageStr = String(formData.age || "");
+    if (!ageStr.trim()) {
       newErrors.age = languagesType[selectedLanguage].validation.ageRequired;
-    } else if (isNaN(formData.age) || formData.age < 1 || formData.age > 120) {
+    } else if (isNaN(ageStr) || Number(ageStr) < 1 || Number(ageStr) > 120) {
       newErrors.age = languagesType[selectedLanguage].validation.ageValid;
     }
 
@@ -272,10 +281,12 @@ const VaidyaBandhuForm = () => {
         languagesType[selectedLanguage].validation.addressRequired;
     }
 
-    if (!formData.pin_code.trim()) {
+    // Convert pin_code to string before trimming
+    const pinCodeStr = String(formData.pin_code || "");
+    if (!pinCodeStr.trim()) {
       newErrors.pin_code =
         languagesType[selectedLanguage].validation.pinCodeRequired;
-    } else if (!/^\d{6}$/.test(formData.pin_code)) {
+    } else if (!/^\d{6}$/.test(pinCodeStr)) {
       newErrors.pin_code =
         languagesType[selectedLanguage].validation.pinCodeValid;
     }
@@ -292,7 +303,9 @@ const VaidyaBandhuForm = () => {
       newErrors.email = languagesType[selectedLanguage].validation.emailValid;
     }
 
-    if (formData.aadhaar_number && !/^\d{12}$/.test(formData.aadhaar_number)) {
+    // Convert aadhaar_number to string before testing
+    const aadhaarStr = String(formData.aadhaar_number || "");
+    if (aadhaarStr && !/^\d{12}$/.test(aadhaarStr)) {
       newErrors.aadhaar_number =
         languagesType[selectedLanguage].validation.aadhaarValid;
     }
@@ -306,7 +319,7 @@ const VaidyaBandhuForm = () => {
     }
 
     return newErrors;
-  };
+  }, [formData, selectedLanguage, languagesType]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

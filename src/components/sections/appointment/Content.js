@@ -65,8 +65,9 @@ class Content extends Component {
     const endDateStr = endDate.toISOString().split("T")[0];
 
     try {
+      // Include doctor and hospital in the request to get only relevant slots
       const response = await fetch(
-        `https://admin.vaidyabandhu.com/api/slots/slot/?start_date=${startDateStr}&end_date=${endDateStr}`,
+        `https://admin.vaidyabandhu.com/api/slots/slot/?start_date=${startDateStr}&end_date=${endDateStr}&doctor=${doctorId}&hospital=${hospitalId}`,
         {
           method: "GET",
           headers: {
@@ -77,9 +78,9 @@ class Content extends Component {
       );
 
       if (response.status === 401) {
-        alert("doctor is not logged in for appointment"); // Updated message
+        alert("doctor is not logged in for appointment");
         localStorage.removeItem("token");
-        window.location.href = "/doctor-list"; // Updated redirect path
+        window.location.href = "/doctor-list";
         return;
       }
 
@@ -114,12 +115,20 @@ class Content extends Component {
       // Process slots for the selected date
       const timeSlots = dateData.slots.map((slot) => {
         const startTime = new Date(slot.start_time);
+        const endTime = new Date(slot.end_time);
         return {
           id: slot.id,
-          time: startTime.toLocaleTimeString([], {
+          startTime: startTime.toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
           }),
+          endTime: endTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          // Store doctor and hospital info with each slot
+          doctorId: slot.doctor || this.state.doctorId,
+          hospitalId: slot.hospital || this.state.hospitalId,
         };
       });
       this.setState({ availableSlots: timeSlots });
@@ -175,6 +184,7 @@ class Content extends Component {
     this.handleDateChange = this.handleDateChange.bind(this);
     this.handleSlotSelect = this.handleSlotSelect.bind(this);
     this.blockSlot = this.blockSlot.bind(this);
+    this.bookAppointment = this.bookAppointment.bind(this);
     this.resetForm = this.resetForm.bind(this);
   }
 
@@ -195,21 +205,20 @@ class Content extends Component {
   handleSlotSelect(slotId) {
     this.setState({ selectedSlot: slotId });
   }
+
   blockSlot = async () => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const token = userInfo?.token; 
     if (!token) {
       alert("Session expired. Please login again.");
       window.location.href = "/doctor-list";
-      return;
+      return { success: false, slotId: null };
     }
 
     if (!this.state.selectedSlot) {
       alert("Please select a time slot");
-      return;
+      return { success: false, slotId: null };
     }
-
-    this.setState({ isBooking: true });
 
     try {
       const response = await fetch(
@@ -230,27 +239,91 @@ class Content extends Component {
         localStorage.removeItem("userInfo");
         alert("Session expired. Please login again.");
         window.location.href = "/appointment";
-        return;
+        return { success: false, slotId: null };
       }
 
       const data = await response.json();
       if (response.ok) {
-        alert("Slot booked successfully! Please wait, the doctor is reviewing your appointment. The status is currently in progress.");
-        this.resetForm();
-        this.fetchAvailableSlots(this.state.doctorId, this.state.hospitalId);
+        // Return the slot ID from the response if available, otherwise use the selected one
+        const slotId = data.slot || this.state.selectedSlot;
+        return { success: true, slotId };
       } else {
-        console.error("Failed to book slot:", data);
+        console.error("Failed to block slot:", data);
         alert("Your slot is already booked. Please select a different slot.");
+        return { success: false, slotId: null };
       }
     } catch (error) {
-      console.error("Error booking slot:", error);
-      alert("An error occurred. Please try again.");
-    } finally {
-      this.setState({ isBooking: false });
+      console.error("Error blocking slot:", error);
+      alert("An error occurred while blocking the slot. Please try again.");
+      return { success: false, slotId: null };
     }
   };
 
-  // Form field handlers
+  bookAppointment = async (slotId) => {
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    const token = userInfo?.token; 
+    if (!token) {
+      alert("Session expired. Please login again.");
+      window.location.href = "/doctor-list";
+      return false;
+    }
+
+    // Find the selected slot to get its doctor and hospital IDs
+    const selectedSlotData = this.state.availableSlots.find(slot => slot.id === slotId);
+    if (!selectedSlotData) {
+      alert("Invalid slot selected. Please try again.");
+      return false;
+    }
+
+    try {
+      const response = await fetch(
+        "https://admin.vaidyabandhu.com/api/appointment/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token, 
+          },
+          body: JSON.stringify({
+            doctor: selectedSlotData.doctorId,
+            hospital: selectedSlotData.hospitalId,
+            slot: slotId,
+            notes: this.state.remarks,
+            reason: this.state.remarks, // Using remarks as reason
+          }),
+        }
+      );
+
+      if (response.status === 401) {
+        localStorage.removeItem("userInfo");
+        alert("Session expired. Please login again.");
+        window.location.href = "/appointment";
+        return false;
+      }
+
+      const data = await response.json();
+      if (response.ok) {
+        return true; // Appointment booked successfully
+      } else {
+        console.error("Failed to book appointment:", data);
+        // Handle specific error messages
+        if (data.error === "Slot not available") {
+          alert("The selected slot is no longer available. Please select a different slot.");
+          // Refresh available slots
+          this.fetchAvailableSlots(this.state.doctorId, this.state.hospitalId);
+        } else {
+          alert("Failed to book appointment. Please try again.");
+        }
+        return false;
+      }
+    } catch (error) {
+      console.error("Error booking appointment:", error);
+      alert("An error occurred while booking the appointment. Please try again.");
+      return false;
+    }
+  };
+
+  // Form field handlers remain the same
   fullname(event) {
     this.setState({ fullname: event.target.value });
   }
@@ -311,19 +384,49 @@ class Content extends Component {
     this.setState({ condition: event.target.value });
   }
 
-  handleSubmit(e) {
+  async handleSubmit(e) {
     e.preventDefault();
-    // Call blockSlot instead of just logging
-    this.blockSlot();
+    this.setState({ isBooking: true });
+
+    try {
+      // First block the slot
+      const blockResult = await this.blockSlot();
+      
+      if (!blockResult.success) {
+        this.setState({ isBooking: false });
+        return;
+      }
+
+      // Then book the appointment using the slot ID returned from blockSlot
+      const appointmentBooked = await this.bookAppointment(blockResult.slotId);
+      
+      if (appointmentBooked) {
+        alert("Appointment booked successfully! The doctor will review your appointment soon.");
+        this.resetForm();
+        this.fetchAvailableSlots(this.state.doctorId, this.state.hospitalId);
+      }
+    } catch (error) {
+      console.error("Error during booking process:", error);
+      alert("An error occurred during the booking process. Please try again.");
+    } finally {
+      this.setState({ isBooking: false });
+    }
   }
 
   resetForm() {
+    // Store user profile information before resetting
+    const userProfile = {
+      fullname: this.state.fullname,
+      email: this.state.email,
+      dateofbirth: this.state.dateofbirth,
+      phoneno: this.state.phoneno,
+      gender: this.state.gender,
+      doctorId: this.state.doctorId,
+      hospitalId: this.state.hospitalId,
+    };
+    
     this.setState({
-      fullname: "",
-      email: "",
-      dateofbirth: "",
-      phoneno: "",
-      gender: "",
+      ...userProfile, // Preserve user profile information
       hospital: "",
       service: "",
       date: new Date().toISOString().split("T")[0], // Reset to today
@@ -486,7 +589,7 @@ class Content extends Component {
                                       : "black",
                                 }}
                               >
-                                {slot.time}
+                                {slot.startTime} - {slot.endTime}
                               </span>
                             </label>
                           ))
