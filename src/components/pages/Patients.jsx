@@ -30,7 +30,6 @@ const Patients = () => {
         }
 
         const data = await response.json();
-        console.log('API Response:', data); // Log the response for debugging
         
         // Handle the specific API response structure with "slots" array
         if (data && Array.isArray(data.slots)) {
@@ -46,7 +45,7 @@ const Patients = () => {
           setPatientsData([data]);
         } else {
           console.warn('Unexpected API response format:', data);
-          setPatientsData([]); // Default to empty array if format is unexpected
+          setPatientsData([]);
         }
       } catch (err) {
         setError(err.message);
@@ -61,7 +60,6 @@ const Patients = () => {
 
   // Handle view details button click
   const handleViewDetails = (patientId) => {
-    console.log("View Details clicked for patient:", patientId);
     navigate(`/patient-details/${patientId}`);
   };
 
