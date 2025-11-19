@@ -12,7 +12,6 @@ const Topbar = () => {
     if (userInfo) {
       try {
         const parsed = JSON.parse(userInfo);
-        console.log("Parsed user info:", parsed);
         setUserType(parsed.user_type);
       } catch (error) {
         console.error("Error parsing user info:", error);

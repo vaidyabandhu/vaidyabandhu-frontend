@@ -45,7 +45,6 @@ const LeftSidebar = () => {
     if (userType) {
       try {
         const parsed = JSON.parse(userType);
-        console.log("User Type from localStorage:", parsed.user_type);
         setUserType(parsed.user_type);
       } catch (err) {
         console.error("Error parsing userInfo:", err);
