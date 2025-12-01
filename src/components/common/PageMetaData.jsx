@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async"
 const PageMetaData = ({ title }) => {
 	return (
 		<Helmet>
-			<title>{title} | Miles Recruit</title>
+			<title>{title} | Vaidya Bandhu</title>
 		</Helmet>
 	)
 }
