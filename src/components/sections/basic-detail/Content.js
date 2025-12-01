@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   CreditCard,
   MapPin,
@@ -54,7 +54,7 @@ const VaidyaBandhuForm = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false); // New state for welcome modal
   
   // Cropping state
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -117,13 +117,7 @@ const VaidyaBandhuForm = () => {
         );
         if (response.ok) {
           const data = await response.json();
-          // Convert numeric fields to strings to ensure consistency
-          setFormData({
-            ...data,
-            age: data.age ? String(data.age) : "",
-            pin_code: data.pin_code ? String(data.pin_code) : "",
-            aadhaar_number: data.aadhaar_number ? String(data.aadhaar_number) : "",
-          });
+          setFormData(data);
           if (data.photo) {
             setPhotoPreview(data.photo);
           }
@@ -137,16 +131,22 @@ const VaidyaBandhuForm = () => {
 
     fetchUserProfile();
   }, []);
-
-  // Handle photo removal
-  const handleRemovePhoto = () => {
-    setFormData((prev) => ({
-      ...prev,
-      photo: null,
-    }));
-    setPhotoPreview(null);
-    setCroppedFile(null);
+useEffect(() => {
+  return () => {
+    if (photoPreview && photoPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(photoPreview);
+    }
   };
+}, [photoPreview]);
+  // Handle photo removal
+const handleRemovePhoto = () => {
+  if (photoPreview && photoPreview.startsWith('blob:')) {
+    URL.revokeObjectURL(photoPreview);
+  }
+  setPhotoPreview(null);
+  setFormData(prev => ({ ...prev, photo: null }));
+  setCroppedFile(null);
+};
 
   // Crop functions
   const onImageLoad = (e) => {
@@ -215,39 +215,40 @@ const VaidyaBandhuForm = () => {
     });
   };
 
-  const handleCropSave = async () => {
-    try {
-      const croppedBlob = await createCroppedImage();
-      if (!croppedBlob) return;
-      
-      const croppedFile = new File([croppedBlob], 'cropped_photo.jpg', {
-        type: 'image/jpeg',
-      });
-      
-      setCroppedFile(croppedFile);
-      setPhotoPreview(URL.createObjectURL(croppedBlob));
-      setFormData((prev) => ({
-        ...prev,
-        photo: croppedFile,
-      }));
-      
-      // Clear any existing photo error
-      if (errors.photo) {
-        setErrors((prev) => ({
-          ...prev,
-          photo: "",
-        }));
-      }
-    } catch (e) {
-      console.error('Error cropping image', e);
-    } finally {
-      setCropModalOpen(false);
-      setImgSrc(null);
-    }
-  };
+ const handleCropSave = async () => {
+  try {
+    const croppedBlob = await createCroppedImage();
+    if (!croppedBlob) return;
 
-  // Memoized validation function using useCallback
-  const validateForm = useCallback(() => {
+    // Get original file name safely
+    const originalFile = document.getElementById('photo-upload')?.files[0];
+    const originalName = originalFile?.name || 'profile-photo.jpg';
+    const fileExt = originalName.split('.').pop();
+    const safeName = `profile_${Date.now()}.${fileExt}`;
+
+    const croppedFile = new File([croppedBlob], safeName, {
+      type: croppedBlob.type || 'image/jpeg',
+      lastModified: Date.now(),
+    });
+
+    setCroppedFile(croppedFile);
+    setPhotoPreview(URL.createObjectURL(croppedBlob));
+    setFormData((prev) => ({
+      ...prev,
+      photo: croppedFile,
+    }));
+
+    setErrors((prev) => ({ ...prev, photo: "" }));
+  } catch (e) {
+    console.error('Error cropping image', e);
+  } finally {
+    setCropModalOpen(false);
+    setImgSrc(null);
+    setCompletedCrop(null);
+  }
+};
+
+  const validateForm = () => {
     const newErrors = {};
 
     if (!formData.full_name.trim()) {
@@ -255,11 +256,9 @@ const VaidyaBandhuForm = () => {
         languagesType[selectedLanguage].validation.fullNameRequired;
     }
 
-    // Convert age to string before trimming
-    const ageStr = String(formData.age || "");
-    if (!ageStr.trim()) {
+    if (!formData.age.trim()) {
       newErrors.age = languagesType[selectedLanguage].validation.ageRequired;
-    } else if (isNaN(ageStr) || Number(ageStr) < 1 || Number(ageStr) > 120) {
+    } else if (isNaN(formData.age) || formData.age < 1 || formData.age > 120) {
       newErrors.age = languagesType[selectedLanguage].validation.ageValid;
     }
 
@@ -281,12 +280,10 @@ const VaidyaBandhuForm = () => {
         languagesType[selectedLanguage].validation.addressRequired;
     }
 
-    // Convert pin_code to string before trimming
-    const pinCodeStr = String(formData.pin_code || "");
-    if (!pinCodeStr.trim()) {
+    if (!formData.pin_code.trim()) {
       newErrors.pin_code =
         languagesType[selectedLanguage].validation.pinCodeRequired;
-    } else if (!/^\d{6}$/.test(pinCodeStr)) {
+    } else if (!/^\d{6}$/.test(formData.pin_code)) {
       newErrors.pin_code =
         languagesType[selectedLanguage].validation.pinCodeValid;
     }
@@ -303,9 +300,7 @@ const VaidyaBandhuForm = () => {
       newErrors.email = languagesType[selectedLanguage].validation.emailValid;
     }
 
-    // Convert aadhaar_number to string before testing
-    const aadhaarStr = String(formData.aadhaar_number || "");
-    if (aadhaarStr && !/^\d{12}$/.test(aadhaarStr)) {
+    if (formData.aadhaar_number && !/^\d{12}$/.test(formData.aadhaar_number)) {
       newErrors.aadhaar_number =
         languagesType[selectedLanguage].validation.aadhaarValid;
     }
@@ -319,21 +314,28 @@ const VaidyaBandhuForm = () => {
     }
 
     return newErrors;
-  }, [formData, selectedLanguage, languagesType]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
   };
+
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  let cleanedValue = value;
+
+  if (name === "pan_number") {
+    cleanedValue = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  }
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: cleanedValue,
+  }));
+
+  if (errors[name]) {
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  }
+};
 
   const handleNumberChange = (e, fieldName) => {
     const value = e.target.value;
@@ -397,10 +399,17 @@ const VaidyaBandhuForm = () => {
       formDataToSend.append("mobile", formData.mobile);
       formDataToSend.append("alternate_number", formData.alternate_mobile);
       formDataToSend.append("email", formData.email);
-      formDataToSend.append("aadhaar_number", formData.aadhaar_number);
-      formDataToSend.append("pan_number", formData.pan_number);
+formDataToSend.append(
+  "aadhaar_number",
+  formData.aadhaar_number?.trim() || "NA"
+);
+formDataToSend.append(
+  "pan_number",
+  formData.pan_number?.trim().toUpperCase() || "NA"
+);
       if (formData.photo) {
-        formDataToSend.append("profile_image", formData.photo);
+        // formDataToSend.append("profile_image", formData.photo);
+      formDataToSend.append("profile_image", formData.photo);
       }
 
       const response = await fetch(
@@ -450,7 +459,7 @@ const VaidyaBandhuForm = () => {
         return;
       }
 
-      const options = {
+         const options = {
         key: razorpay_key,
         amount: amount,
         currency: currency,
@@ -478,35 +487,50 @@ const VaidyaBandhuForm = () => {
             );
 
             if (callbackResponse.ok) {
-              // Show welcome modal instead of navigating immediately
+              // Refresh photo from server with cache busting (fixes Android + all image issues)
+              try {
+                const profileRes = await fetch(
+                  "https://admin.vaidyabandhu.com/api/user/profile/",
+                  {
+                    method: "GET",
+                    headers: {
+                      Authorization: token,
+                    },
+                  }
+                );
+
+                if (profileRes.ok) {
+                  const freshData = await profileRes.json();
+                  if (freshData.photo) {
+                    setPhotoPreview(freshData.photo + `?t=${Date.now()}`);
+                  }
+                }
+              } catch (err) {
+                console.warn("Photo refresh failed (non-critical):", err);
+              }
+
               setShowWelcomeModal(true);
             } else {
               const errorData = await callbackResponse.json();
-              console.error("Callback API error:", errorData);
-              alert("Payment verification failed. Please contact support.");
+              alert("Payment verification failed. Contact support.");
             }
           } catch (error) {
-            console.error("Error in payment callback:", error);
-            alert(
-              "An error occurred during payment verification. Please contact support."
-            );
+            console.error("Payment handler error:", error);
+            alert("Payment failed. Please try again.");
           } finally {
             setIsSubmitting(false);
           }
         },
-
         prefill: {
-          name: formData.full_name,
-          email: formData.email,
+          name: formData.full_name || "",
+          email: formData.email || "",
           contact: formData.mobile,
         },
         theme: {
           color: "#3399cc",
         },
         modal: {
-          ondismiss: function () {
-            setIsSubmitting(false);
-          },
+          ondismiss: () => setIsSubmitting(false),
         },
       };
       const rzp = new window.Razorpay(options);
