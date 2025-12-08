@@ -512,9 +512,17 @@ const SlotManager = ({
                 end_date: dateFilter.end_date,
             };
 
-            const data = await getSlotsApi(params, token);
-            setSlotsData(Array.isArray(data) ? data : []);
+            const response = await getSlotsApi(params, token);
+
+            // FIX: Handle { data: [...] } structure
+            const slotsArray = response?.data || response || [];
+
+            // Ensure it's always an array of { date, slots }
+            const normalizedData = Array.isArray(slotsArray) ? slotsArray : [];
+            setSlotsData(normalizedData);
+
         } catch (err) {
+            console.error("Fetch slots error:", err);
             setError(err.message || "Failed to load slots");
         } finally {
             setLoading(false);
@@ -532,13 +540,30 @@ const SlotManager = ({
 
     //  Group slots by date
     const groupedSlots = useMemo(() => {
-        if (!slotsData || slotsData.length === 0) return {};
+        if (!Array.isArray(slotsData) || slotsData.length === 0) return {};
+
         const grouped = {};
-        slotsData.forEach((entry) => {
-            grouped[entry.date] = [entry];
+        slotsData.forEach((dayEntry) => {
+            if (dayEntry.date && Array.isArray(dayEntry.slots)) {
+                grouped[dayEntry.date] = dayEntry.slots;
+            }
         });
         return grouped;
     }, [slotsData]);
+
+    // --- Accurate total count (only non-blocked slots) ---
+    const totalAvailableSlots = useMemo(() => {
+        return Object.values(groupedSlots).reduce((total, slots) => {
+            return total + slots.filter(slot => !slot.is_blocked).length;
+        }, 0);
+    }, [groupedSlots]);
+
+    // --- Optional: Total including blocked (if you want all) ---
+    const totalSlotsIncludingBlocked = useMemo(() => {
+        return Object.values(groupedSlots).reduce((total, slots) => {
+            return total + slots.length;
+        }, 0);
+    }, [groupedSlots]);
 
     //  Refresh after save
     const handleSlotSaved = async () => {
@@ -596,7 +621,7 @@ const SlotManager = ({
                 </div>
             ) : (
                 <>
-                    <h5 className="mb-3">Available Slots ({totalSlots} total)</h5>
+                    <h5 className="mb-3">Available Slots ({totalSlotsIncludingBlocked} total)</h5>
 
                     <div
                         className="border rounded p-3"
@@ -604,63 +629,51 @@ const SlotManager = ({
                     >
                         {Object.entries(groupedSlots)
                             .sort(([a], [b]) => new Date(a) - new Date(b))
-                            .map(([date, [dateGroup]]) => {
-                                const slotsForDate = dateGroup?.slots || [];
+                            .map(([date, slotsForDate]) => {  // ← Now it's direct array
                                 return (
                                     <div key={date} className="mb-4">
-                                        <div className="col-12 fw-bold my-2">{date}</div>
-                                        <div className="row g-2">
+                                        <div className="col-12 fw-bold my-2">
+                                            {new Date(date).toLocaleDateString('en-US', {
+                                                weekday: 'long',
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric'
+                                            })}
+                                        </div>
+                                        <div className="row g-3">
                                             {slotsForDate
-                                                .sort(
-                                                    (a, b) =>
-                                                        new Date(a.start_time) - new Date(b.start_time)
-                                                )
+                                                .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
                                                 .map((slot) => {
                                                     const start = new Date(slot.start_time);
                                                     const end = new Date(slot.end_time);
-                                                    const duration = Math.round(
-                                                        (end - start) / (1000 * 60)
-                                                    );
+                                                    const duration = Math.round((end - start) / (1000 * 60));
 
                                                     return (
                                                         <div key={slot.id} className="col-auto">
                                                             <div
-                                                                className={`border rounded p-2 ${slot.is_blocked
-                                                                    ? "bg-danger bg-opacity-10 border-danger"
-                                                                    : "bg-success bg-opacity-10 border-success"
+                                                                className={`border rounded p-3 text-center ${slot.is_blocked
+                                                                        ? "bg-danger bg-opacity-10 border-danger"
+                                                                        : "bg-success bg-opacity-10 border-success"
                                                                     }`}
                                                                 style={{
-                                                                    width: "140px",
-                                                                    fontSize: "0.75rem",
-                                                                    background: slot.is_blocked
-                                                                        ? "#ffeaea"
-                                                                        : "#e6f8f5",
+                                                                    width: "160px",
+                                                                    background: slot.is_blocked ? "#ffeaea" : "#e6f8f5",
                                                                 }}
                                                             >
-                                                                <div className="fw-bold text-center mb-1">
-                                                                    {formatShortDate(slot.start_time)}
+                                                                <div className="fw-bold">
+                                                                    {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                    {' - '}
+                                                                    {end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                                 </div>
-                                                                <div className="text-center mb-1">
-                                                                    {formatTime(slot.start_time)} -{" "}
-                                                                    {formatTime(slot.end_time)}
-                                                                </div>
-                                                                <div className="text-center mb-2">
+                                                                <div className="text-muted small mt-1">
                                                                     {duration} min
                                                                 </div>
-
-                                                                <div className="d-flex align-items-center justify-content-center">
-                                                                    <button
-                                                                        className="btn p-0 text-primary"
-                                                                        onClick={() => handleEditSlot(slot)}
-                                                                        title="Edit Slot"
-                                                                        style={{
-                                                                            fontSize: "0.8rem",
-                                                                            lineHeight: "1",
-                                                                        }}
-                                                                    >
-                                                                        <i className="fas fa-edit"></i>
-                                                                    </button>
-                                                                </div>
+                                                                <button
+                                                                    className="btn btn-sm btn-link p-0 mt-2"
+                                                                    onClick={() => handleEditSlot(slot)}
+                                                                >
+                                                                    <i className="fas fa-edit"></i>
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     );
