@@ -15,7 +15,7 @@ const Content = ({ detailId }) => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
-  
+
   const sectionRefs = {
     overview: useRef(null),
     expertise: useRef(null),
@@ -34,7 +34,7 @@ const Content = ({ detailId }) => {
 
     updateHeaderHeight();
     window.addEventListener('resize', updateHeaderHeight);
-    
+
     return () => {
       window.removeEventListener('resize', updateHeaderHeight);
     };
@@ -67,7 +67,7 @@ const Content = ({ detailId }) => {
 
     try {
       const token = localStorage.getItem('token');
-      
+
       const response = await fetch('https://admin.vaidyabandhu.com/api/enquiry/', {
         method: 'POST',
         headers: {
@@ -83,29 +83,28 @@ const Content = ({ detailId }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Enquiry submitted successfully:', data);
         setSubmitSuccess(true);
-        
+
         // Reset form
         setFormData({
           name: '',
           email: '',
           message: ''
         });
-        
+
         // Hide success message after 5 seconds
         setTimeout(() => setSubmitSuccess(false), 5000);
       } else {
         console.error('Failed to submit enquiry');
         setSubmitError(true);
-        
+
         // Hide error message after 5 seconds
         setTimeout(() => setSubmitError(false), 5000);
       }
     } catch (error) {
       console.error('Error submitting enquiry:', error);
       setSubmitError(true);
-      
+
       // Hide error message after 5 seconds
       setTimeout(() => setSubmitError(false), 5000);
     } finally {
@@ -159,33 +158,33 @@ const Content = ({ detailId }) => {
   // Process fellowship membership from string to array
   const fellowshipItems = item.fellowship_membership
     ? item.fellowship_membership
-        .split("•")
-        .filter((item) => item.trim() !== "")
-        .map((item) => item.trim())
+      .split("•")
+      .filter((item) => item.trim() !== "")
+      .map((item) => item.trim())
     : [];
 
   // Process field expertise
   const fieldExpertiseItems = item.field_expertise
     ? item.field_expertise
-        .split("•")
-        .filter((item) => item.trim() !== "")
-        .map((item) => item.trim())
+      .split("•")
+      .filter((item) => item.trim() !== "")
+      .map((item) => item.trim())
     : [];
 
   // Process awards and achievements
   const awardsAchievementsItems = item.awards_achievements
     ? item.awards_achievements
-        .split("•")
-        .filter((item) => item.trim() !== "")
-        .map((item) => item.trim())
+      .split("•")
+      .filter((item) => item.trim() !== "")
+      .map((item) => item.trim())
     : [];
 
   // Process talks and publications
   const talksPublicationsItems = item.talks_publications
     ? item.talks_publications
-        .split("•")
-        .filter((item) => item.trim() !== "")
-        .map((item) => item.trim())
+      .split("•")
+      .filter((item) => item.trim() !== "")
+      .map((item) => item.trim())
     : [];
 
   return (
@@ -205,7 +204,7 @@ const Content = ({ detailId }) => {
                           src={
                             item.photo ||
                             process.env.PUBLIC_URL +
-                              "/images/doctor-placeholder.jpg"
+                            "/images/doctor-placeholder.jpg"
                           }
                           alt={item.full_name}
                         />
@@ -331,11 +330,13 @@ const Content = ({ detailId }) => {
                                 }
                               );
                               const data = await response.json();
+                              const doctorId = doctorData?.data?.id;
+                              const hospitalId = doctorData?.data?.hospital_id;
                               if (response.ok) {
                                 if (data?.is_active === false) {
                                   window.location.href = "/basic-details";
                                 } else if (data?.is_active === true) {
-                                  window.location.href = "/appointment";
+                                  window.location.href = `/appointment?doctor_id=${doctorId}&hospital_id=${hospitalId}`;
                                 } else {
                                   window.location.href = "/basic-details";
                                 }
@@ -369,9 +370,8 @@ const Content = ({ detailId }) => {
                         <div className="menu nav-item">
                           <Link
                             to="#"
-                            className={`nav-link p-0 ${
-                              i === 0 ? "active" : ""
-                            }`}
+                            className={`nav-link p-0 ${i === 0 ? "active" : ""
+                              }`}
                             onClick={(e) => {
                               e.preventDefault();
                               scrollToSection(menu.id);
@@ -558,7 +558,7 @@ const Content = ({ detailId }) => {
                         </>
                       )}
                     </button>
-                    
+
                     {/* Success and error messages */}
                     {submitSuccess && (
                       <div className="alert alert-success mt-3">
@@ -566,7 +566,7 @@ const Content = ({ detailId }) => {
                         Your message has been sent successfully!
                       </div>
                     )}
-                    
+
                     {submitError && (
                       <div className="alert alert-danger mt-3">
                         <i className="fas fa-exclamation-circle me-2" style={{ color: "#fff" }}></i>
@@ -578,7 +578,7 @@ const Content = ({ detailId }) => {
               </div>
 
               {/* Contact Widget */}
-             <div className="widget">
+              <div className="widget">
                 <h5 className="widget-title" style={{ color: "#005963" }}>
                   <i className="fas fa-address-book me-2" style={{ color: "#005963" }}></i>Contact
                 </h5>

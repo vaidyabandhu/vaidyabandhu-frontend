@@ -2,68 +2,71 @@ import React, { Component } from "react";
 import { Link } from "react-router-dom";
 
 class Content extends Component {
- async componentDidMount() {
-  const token = localStorage.getItem("token"); // FIXED
-  if (!token) {
-    alert("Session expired or not logged in. Please login again.");
-    window.location.href = "/doctor-list";
-    return;
-  }
-  try {
-    const response = await fetch(
-      "https://admin.vaidyabandhu.com/api/user/profile/",
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${token}`, // Add "Token " prefix (see below)
-        },
-      }
-    );
-    if (response.status === 401) {
-      localStorage.removeItem("token"); // Clear only "token"
-      alert("Session expired. Please login again testing.");
+  async componentDidMount() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const doctorId = urlParams.get('doctor_id');
+    const hospitalId = urlParams.get('hospital_id');
+    const token = localStorage.getItem("token"); // FIXED
+    if (!token) {
+      alert("Session expired or not logged in. Please login again.");
       window.location.href = "/doctor-list";
       return;
     }
-    const data = await response.json();
-    if (response.ok && data) {
-      this.setState({
-        fullname: data.full_name || "",
-        email: data.email || "",
-        dateofbirth: data.age ? String(data.age) : "",
-        phoneno: data.mobile || "",
-        gender: data.gender || "",
-        doctorId: data.doctor || 245,
-        hospitalId: data.hospital || 2,
-      });
-      this.fetchAvailableSlots(data.doctor || 245, data.hospital || 2);
+    try {
+      const response = await fetch(
+        "https://admin.vaidyabandhu.com/api/user/profile/",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token, // Add "Token " prefix (see below)
+          },
+        }
+      );
+      if (response.status === 401) {
+        localStorage.removeItem("token"); // Clear only "token"
+        alert("Session expired. Please login again testing.");
+        window.location.href = "/doctor-list";
+        return;
+      }
+      const data = await response.json();
+      if (response.ok && data) {
+        this.setState({
+          fullname: data.full_name || "",
+          email: data.email || "",
+          dateofbirth: data.age ? String(data.age) : "",
+          phoneno: data.mobile || "",
+          gender: data.gender || "",
+          doctorId: doctorId,
+          hospitalId: hospitalId,
+        });
+        this.fetchAvailableSlots(doctorId, hospitalId);
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
     }
-  } catch (error) {
-    console.error("Failed to fetch profile:", error);
   }
-}
 
   fetchAvailableSlots = async (doctorId, hospitalId) => {
-  const token = localStorage.getItem("token");
-    console.log("testing the token", token);
+    const token = localStorage.getItem("token");
     if (!token) {
       alert("Session expired. Please login again.");
       window.location.href = "/doctor-list";
       return;
     }
 
-    // Set default date range (today to 30 days from now)
+    this.setState({ doctorId, hospitalId, loadingSlots: true });
+
     const today = new Date();
     const endDate = new Date();
     endDate.setDate(today.getDate() + 30);
 
-    const startDateStr = today.toISOString().split("T")[0];
-    const endDateStr = endDate.toISOString().split("T")[0];
+    const startStr = today.toISOString().split("T")[0];
+    const endStr = endDate.toISOString().split("T")[0];
 
     try {
       const response = await fetch(
-        `https://admin.vaidyabandhu.com/api/slots/slot/?start_date=${startDateStr}&end_date=${endDateStr}`,
+        `https://admin.vaidyabandhu.com/api/slots/slot/?start_date=${startStr}&end_date=${endStr}&doctor_id=${doctorId}&hospital_id=${hospitalId}`,
         {
           method: "GET",
           headers: {
@@ -73,26 +76,39 @@ class Content extends Component {
         }
       );
 
-      if (response.status === 401) {
-        alert("doctor is not logged in for appointment"); // Updated message
-        localStorage.removeItem("token");
-        window.location.href = "/doctor-list"; // Updated redirect path
-        return;
-      }
+      if (!response.ok) throw new Error("Failed");
 
-      const data = await response.json();
-      if (response.ok) {
-        // Store all slots data in state
-        this.setState({ allSlotsData: data });
-        // Process slots for the current date
-        this.processSlotsForDate(this.state.date);
-      } else {
-        console.error("Failed to fetch slots:", data);
-        this.setState({ availableSlots: [] });
-      }
-    } catch (error) {
-      console.error("Error fetching slots:", error);
-      this.setState({ availableSlots: [] });
+      const result = await response.json();
+
+      // Handle both: direct array OR { data: [...] }
+      const rawData = Array.isArray(result) ? result : (result.data || []);
+
+      // Save full data
+      this.setState({ allSlotsData: rawData });
+
+      // Show TODAY's slots
+      const todayStr = today.toISOString().split("T")[0];
+      const todayEntry = rawData.find(d => d.date === todayStr);
+      const slots = (todayEntry?.slots || []).filter(s => !s.is_blocked);
+
+      const formatted = slots.map(slot => ({
+        id: slot.id,
+        time: new Date(slot.start_time).toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+      }));
+
+      this.setState({
+        availableSlots: formatted,
+        date: todayStr,
+        loadingSlots: false,
+      });
+
+    } catch (err) {
+      console.error("Initial load error:", err);
+      this.setState({ availableSlots: [], loadingSlots: false });
     }
   };
 
@@ -149,7 +165,8 @@ class Content extends Component {
       availableSlots: [],
       selectedSlot: null,
       isBooking: false,
-      allSlotsData: [], // Store all slots data
+      loadingSlots: true,
+      allSlotsData: [],
     };
 
     // Bind all methods
@@ -175,71 +192,130 @@ class Content extends Component {
     this.resetForm = this.resetForm.bind(this);
   }
 
-  handleDateChange(event) {
+  handleDateChange = async (event) => {
     const selectedDate = event.target.value;
-    this.setState(
-      {
-        date: selectedDate,
-        selectedSlot: null, // Reset selected slot when date changes
-      },
-      () => {
-        // Process slots for the new date after state update
-        this.processSlotsForDate(selectedDate);
+
+    this.setState({
+      date: selectedDate,
+      selectedSlot: null,
+      availableSlots: [],
+      loadingSlots: true,
+    });
+
+    if (!selectedDate) {
+      this.setState({ loadingSlots: false });
+      return;
+    }
+
+    const { doctorId, hospitalId } = this.state;
+    const token = localStorage.getItem("token");
+
+    if (!doctorId || !hospitalId) {
+      alert("Doctor info missing.");
+      this.setState({ loadingSlots: false });
+      return;
+    }
+
+    try {
+      const url = `https://admin.vaidyabandhu.com/api/slots/slot/?start_date=${selectedDate}&end_date=${selectedDate}&doctor_id=${doctorId}&hospital_id=${hospitalId}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed");
+
+      const result = await response.json();
+      
+      // Extract slots from ANY format
+      let slots = [];
+      if (result?.data && Array.isArray(result.data)) {
+        const entry = result.data.find(d => d.date === selectedDate);
+        slots = entry?.slots || [];
+      } else if (Array.isArray(result)) {
+        const entry = result.find(d => d.date === selectedDate);
+        slots = entry?.slots || [];
       }
-    );
-  }
+
+      const available = slots.filter(s => !s.is_blocked);
+      const formatted = available.map(slot => ({
+        id: slot.id,
+        time: new Date(slot.start_time).toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+      }));
+
+      this.setState({
+        availableSlots: formatted,
+        loadingSlots: false,
+      });
+
+    } catch (err) {
+      console.error("Date change error:", err);
+      this.setState({
+        availableSlots: [],
+        loadingSlots: false,
+      });
+      alert("No slots available for this date.");
+    }
+  };
 
   handleSlotSelect(slotId) {
     this.setState({ selectedSlot: slotId });
   }
-blockSlot = async () => {
-  const token = localStorage.getItem("token"); // FIXED
-  if (!token) {
-    alert("Session expired. Please login again.");
-    window.location.href = "/doctor-list";
-    return;
-  }
-  if (!this.state.selectedSlot) {
-    alert("Please select a time slot");
-    return;
-  }
-  this.setState({ isBooking: true });
-  try {
-    const response = await fetch(
-      "https://admin.vaidyabandhu.com/api/slots/slot/block/",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${token}`, // Add "Token " prefix
-        },
-        body: JSON.stringify({
-          slot: this.state.selectedSlot,
-        }),
-      }
-    );
-    if (response.status === 401) {
-      localStorage.removeItem("token"); // Clear only "token"
+  blockSlot = async () => {
+    const token = localStorage.getItem("token"); // FIXED
+    if (!token) {
       alert("Session expired. Please login again.");
-      window.location.href = "/appointment";
+      window.location.href = "/doctor-list";
       return;
     }
-    const data = await response.json();
-    if (response.ok) {
-      alert("Slot booked successfully! Please wait, the doctor is reviewing your appointment. The status is currently in progress.");
-      this.resetForm();
-      this.fetchAvailableSlots(this.state.doctorId, this.state.hospitalId);
-    } else {
-      console.error("Failed to book slot:", data);
-      alert("Your slot is already booked. Please select a different slot.");
+    if (!this.state.selectedSlot) {
+      alert("Please select a time slot");
+      return;
     }
-  } catch (error) {
-    console.error("Error booking slot:", error);
-    alert("An error occurred. Please try again.");
-  } finally {
-    this.setState({ isBooking: false });
-  }
-};
+    this.setState({ isBooking: true });
+    try {
+      const response = await fetch(
+        "https://admin.vaidyabandhu.com/api/slots/slot/block/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `${token}`, // Add "Token " prefix
+          },
+          body: JSON.stringify({
+            slot: this.state.selectedSlot,
+          }),
+        }
+      );
+      if (response.status === 401) {
+        localStorage.removeItem("token"); // Clear only "token"
+        alert("Session expired. Please login again.");
+        window.location.href = "/appointment";
+        return;
+      }
+      const data = await response.json();
+      if (response.ok) {
+        alert("Slot booked successfully! Please wait, the doctor is reviewing your appointment. The status is currently in progress.");
+        this.resetForm();
+        this.fetchAvailableSlots(this.state.doctorId, this.state.hospitalId);
+      } else {
+        console.error("Failed to book slot:", data);
+        alert("Your slot is already booked. Please select a different slot.");
+      }
+    } catch (error) {
+      console.error("Error booking slot:", error);
+      alert("An error occurred. Please try again.");
+    } finally {
+      this.setState({ isBooking: false });
+    }
+  };
 
   // Form field handlers
   fullname(event) {
@@ -444,15 +520,11 @@ blockSlot = async () => {
                       </form>
                       <label>Available Slots</label>
                       <div className="form-group d-flex flex-wrap gap-2">
-                        {this.state.availableSlots.length > 0 ? (
+                        {this.state.loadingSlots ? (
+                          <p>Loading slots...</p>
+                        ) : this.state.availableSlots.length > 0 ? (
                           this.state.availableSlots.map((slot) => (
-                            <label
-                              key={slot.id}
-                              style={{
-                                cursor: "pointer",
-                                margin: "5px",
-                              }}
-                            >
+                            <label key={slot.id} style={{ cursor: "pointer", margin: "5px" }}>
                               <input
                                 type="radio"
                                 name="slot"
@@ -467,14 +539,8 @@ blockSlot = async () => {
                                   padding: "6px 12px",
                                   border: "1px solid #ddd",
                                   borderRadius: "6px",
-                                  background:
-                                    this.state.selectedSlot === slot.id
-                                      ? "#007bff"
-                                      : "#f8f9fa",
-                                  color:
-                                    this.state.selectedSlot === slot.id
-                                      ? "white"
-                                      : "black",
+                                  background: this.state.selectedSlot === slot.id ? "#007bff" : "#f8f9fa",
+                                  color: this.state.selectedSlot === slot.id ? "white" : "black",
                                 }}
                               >
                                 {slot.time}
@@ -482,7 +548,7 @@ blockSlot = async () => {
                             </label>
                           ))
                         ) : (
-                          <p>No available slots for the selected date.</p>
+                          <p>No available slots for this date.</p>
                         )}
                       </div>
                       <hr />
