@@ -328,7 +328,7 @@ class Content extends Component {
     this.setState({ isBooking: true });
     try {
       const response = await fetch(
-        "https://admin.vaidyabandhu.com/api/slots/slot/block/",
+        "https://admin.vaidyabandhu.com/api/appointment/",
         {
           method: "POST",
           headers: {
