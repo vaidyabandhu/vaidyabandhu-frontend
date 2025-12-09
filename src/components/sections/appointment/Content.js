@@ -79,8 +79,6 @@ class Content extends Component {
       if (!response.ok) throw new Error("Failed");
 
       const result = await response.json();
-
-      // Handle both: direct array OR { data: [...] }
       const rawData = Array.isArray(result) ? result : (result.data || []);
 
       // Save full data
@@ -89,10 +87,11 @@ class Content extends Component {
       // Show TODAY's slots
       const todayStr = today.toISOString().split("T")[0];
       const todayEntry = rawData.find(d => d.date === todayStr);
-      const slots = (todayEntry?.slots || []).filter(s => !s.is_blocked);
+      const slots = todayEntry?.slots || [];
 
       const formatted = slots.map(slot => ({
         id: slot.id,
+        isBlocked: slot.is_blocked,
         time: new Date(slot.start_time).toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
@@ -124,7 +123,6 @@ class Content extends Component {
     const dateData = allSlotsData.find((item) => item.date === selectedDate);
 
     if (dateData && dateData.slots) {
-      // Process slots for the selected date
       const timeSlots = dateData.slots.map((slot) => {
         const startTime = new Date(slot.start_time);
         return {
@@ -167,6 +165,13 @@ class Content extends Component {
       isBooking: false,
       loadingSlots: true,
       allSlotsData: [],
+      notes: '',
+      reason: '',
+      showExtraFields: false,
+      errors: {
+        notes: "",
+        reason: "",
+      }
     };
 
     // Bind all methods
@@ -190,6 +195,8 @@ class Content extends Component {
     this.handleSlotSelect = this.handleSlotSelect.bind(this);
     this.blockSlot = this.blockSlot.bind(this);
     this.resetForm = this.resetForm.bind(this);
+    this.handleReasonChange = this.handleReasonChange.bind(this);
+    this.handleNotesChange = this.handleNotesChange.bind(this);
   }
 
   handleDateChange = async (event) => {
@@ -229,20 +236,28 @@ class Content extends Component {
       if (!response.ok) throw new Error("Failed");
 
       const result = await response.json();
-      
+
       // Extract slots from ANY format
       let slots = [];
+      const selectedDateString = new Date(selectedDate);
+      const selectedDateStr =
+        selectedDateString.getFullYear() +
+        "-" +
+        String(selectedDateString.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(selectedDateString.getDate()).padStart(2, "0");
       if (result?.data && Array.isArray(result.data)) {
-        const entry = result.data.find(d => d.date === selectedDate);
+        const entry = result.data.find(d => d.date === selectedDateStr);
         slots = entry?.slots || [];
       } else if (Array.isArray(result)) {
-        const entry = result.find(d => d.date === selectedDate);
+        const entry = result.find(d => d.date === selectedDateStr);
         slots = entry?.slots || [];
       }
 
-      const available = slots.filter(s => !s.is_blocked);
+      const available = slots || [];
       const formatted = available.map(slot => ({
         id: slot.id,
+        isBlocked: slot.is_blocked,
         time: new Date(slot.start_time).toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
@@ -266,8 +281,36 @@ class Content extends Component {
   };
 
   handleSlotSelect(slotId) {
-    this.setState({ selectedSlot: slotId });
+    this.setState({ selectedSlot: slotId, showExtraFields: true });
   }
+
+  handleNotesChange(e) {
+    this.setState({ notes: e.target.value });
+  }
+
+  handleReasonChange(e) {
+    this.setState({ reason: e.target.value });
+  }
+
+  validateForm = () => {
+    const errors = {};
+    let isValid = true;
+
+    if (!this.state.notes.trim()) {
+      errors.notes = "Notes is required";
+      isValid = false;
+    }
+
+    if (!this.state.reason.trim()) {
+      errors.reason = "Reason for visit is required";
+      isValid = false;
+    }
+
+    this.setState({ errors });
+    return isValid;
+  };
+
+
   blockSlot = async () => {
     const token = localStorage.getItem("token"); // FIXED
     if (!token) {
@@ -278,6 +321,9 @@ class Content extends Component {
     if (!this.state.selectedSlot) {
       alert("Please select a time slot");
       return;
+    }
+    if (!this.validateForm()) {
+      return; // Stop booking
     }
     this.setState({ isBooking: true });
     try {
@@ -291,6 +337,10 @@ class Content extends Component {
           },
           body: JSON.stringify({
             slot: this.state.selectedSlot,
+            reason: this.state.reason,
+            notes: this.state.notes,
+            doctor: this.state.doctorId,
+            hospital: this.state.hospitalId,
           }),
         }
       );
@@ -403,6 +453,8 @@ class Content extends Component {
       condition: "",
       selectedSlot: null,
       availableSlots: [],
+      reason: "",
+      notes: "",
     });
   }
 
@@ -517,6 +569,42 @@ class Content extends Component {
                             min={new Date().toISOString().split("T")[0]} // Prevent past dates
                           />
                         </div>
+                        {this.state.showExtraFields && (
+                          <>
+                            <div className="form-group">
+                              <label>Reason for Visit <span style={{ color: "red" }}>*</span></label>
+                              <textarea
+                                name="reason"
+                                rows="3"
+                                value={this.state.reason}
+                                onChange={this.handleReasonChange}
+                                placeholder="Briefly describe the reason for your appointment"
+                                required
+                              />
+                              {this.state.errors.reason && (
+                                <p style={{ color: "red", fontSize: "18px", marginTop: "10px" }}>
+                                  {this.state.errors.reason}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="form-group">
+                              <label>Notes <span style={{ color: "red" }}>*</span></label>
+                              <textarea
+                                name="notes"
+                                rows="3"
+                                value={this.state.notes}
+                                onChange={this.handleNotesChange}
+                                placeholder="Any additional notes..."
+                              />
+                              {this.state.errors.notes && (
+                                <p style={{ color: "red", fontSize: "18px", marginTop: "10px" }}>
+                                  {this.state.errors.notes}
+                                </p>
+                              )}
+                            </div>
+                          </>
+                        )}
                       </form>
                       <label>Available Slots</label>
                       <div className="form-group d-flex flex-wrap gap-2">
@@ -524,13 +612,21 @@ class Content extends Component {
                           <p>Loading slots...</p>
                         ) : this.state.availableSlots.length > 0 ? (
                           this.state.availableSlots.map((slot) => (
-                            <label key={slot.id} style={{ cursor: "pointer", margin: "5px" }}>
+                            <label
+                              key={slot.id}
+                              style={{
+                                cursor: slot.isBlocked ? "not-allowed" : "pointer",
+                                margin: "5px",
+                                opacity: slot.isBlocked ? 0.5 : 1, // fade disabled slots
+                              }}
+                            >
                               <input
                                 type="radio"
                                 name="slot"
                                 value={slot.id}
                                 checked={this.state.selectedSlot === slot.id}
-                                onChange={() => this.handleSlotSelect(slot.id)}
+                                disabled={slot.isBlocked}                    // 👈 DISABLE blocked slot
+                                onChange={() => !slot.isBlocked && this.handleSlotSelect(slot.id)}
                                 style={{ display: "none" }}
                               />
                               <span
@@ -539,13 +635,22 @@ class Content extends Component {
                                   padding: "6px 12px",
                                   border: "1px solid #ddd",
                                   borderRadius: "6px",
-                                  background: this.state.selectedSlot === slot.id ? "#007bff" : "#f8f9fa",
-                                  color: this.state.selectedSlot === slot.id ? "white" : "black",
+                                  background: slot.isBlocked
+                                    ? "#e0e0e0"                              // 👈 Blocked slot background
+                                    : this.state.selectedSlot === slot.id
+                                      ? "#007bff"
+                                      : "#f8f9fa",
+                                  color: slot.isBlocked
+                                    ? "#888"                                  // 👈 Blocked slot text
+                                    : this.state.selectedSlot === slot.id
+                                      ? "white"
+                                      : "black",
                                 }}
                               >
-                                {slot.time}
+                                {slot.time} {slot.isBlocked && "(Booked)"}     {/* Label */}
                               </span>
                             </label>
+
                           ))
                         ) : (
                           <p>No available slots for this date.</p>
