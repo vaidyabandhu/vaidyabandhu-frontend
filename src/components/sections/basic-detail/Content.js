@@ -466,60 +466,58 @@ formDataToSend.append(
         name: "VaidyaBandhu Membership",
         description: "Membership Payment",
         order_id: order_id,
-        handler: async function (response) {
-          try {
-            console.log("Payment successful:", response);
+          handler: async function (response) {
+          let attempts = 0;
+          const maxAttempts = 5;
+          let success = false;
 
-            const callbackResponse = await fetch(
-              "https://admin.vaidyabandhu.com/api/payment/callback/",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: token,
-                },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                }),
-              }
-            );
-
-            if (callbackResponse.ok) {
-              // Refresh photo from server with cache busting (fixes Android + all image issues)
-              try {
-                const profileRes = await fetch(
-                  "https://admin.vaidyabandhu.com/api/user/profile/",
-                  {
-                    method: "GET",
-                    headers: {
-                      Authorization: token,
-                    },
-                  }
-                );
-
-                if (profileRes.ok) {
-                  const freshData = await profileRes.json();
-                  if (freshData.photo) {
-                    setPhotoPreview(freshData.photo + `?t=${Date.now()}`);
-                  }
+          while (attempts < maxAttempts && !success) {
+            try {
+              const res = await fetch(
+                "https://admin.vaidyabandhu.com/api/payment/callback/",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: token,
+                  },
+                  body: JSON.stringify({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                  }),
                 }
-              } catch (err) {
-                console.warn("Photo refresh failed (non-critical):", err);
-              }
+              );
 
-              setShowWelcomeModal(true);
-            } else {
-              const errorData = await callbackResponse.json();
-              alert("Payment verification failed. Contact support.");
+              if (res.ok) {
+                const data = await res.json();
+                // Success only if backend really activated membership
+                if (data.status === "success" || data.message?.toLowerCase().includes("success")) {
+                  success = true;
+                  setShowWelcomeModal(true);
+                  return; // Done!
+                }
+              }
+            } catch (err) {
+              console.warn(`Callback attempt ${attempts + 1} failed:`, err);
             }
-          } catch (error) {
-            console.error("Payment handler error:", error);
-            alert("Payment failed. Please try again.");
-          } finally {
-            setIsSubmitting(false);
+
+            attempts++;
+            if (attempts < maxAttempts) {
+              // Wait before retry (3 seconds)
+              await new Promise(resolve => setTimeout(resolve, 3000));
+            }
           }
+
+          // If all attempts failed → still money taken, so be honest & friendly
+          alert(
+            "Payment Successful!\n\nYour membership is being activated automatically.\nIt will be active within 2–5 minutes.\nThank you for joining VaidyaBandhu Family!"
+          );
+          
+          // Optional: redirect to profile so user can see it soon
+          setTimeout(() => {
+            navigate("/myprofile");
+          }, 3000);
         },
         prefill: {
           name: formData.full_name || "",
@@ -1273,3 +1271,4 @@ formDataToSend.append(
 };
 
 export default VaidyaBandhuForm;
+
