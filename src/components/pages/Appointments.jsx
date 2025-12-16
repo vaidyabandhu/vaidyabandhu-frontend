@@ -14,6 +14,7 @@ import {
   ButtonGroup,
 } from "react-bootstrap";
 import { useAuthContext } from "../context";
+import axios from 'axios';
 
 const Appointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -37,25 +38,25 @@ const Appointments = () => {
       try {
         setLoading(true);
         const token = getToken();
-        
+
         if (!token) {
           throw new Error('Authentication token not found');
         }
 
         // Build the URL with query parameters
         const params = new URLSearchParams();
-        params.append('user', user?.id || '63'); 
-        
+        params.append('user', user?.id || '63');
+
         if (filterStatus !== "all") {
           params.append('status', filterStatus);
         }
-        
+
         if (searchTerm.trim()) {
           params.append('search', encodeURIComponent(searchTerm.trim()));
         }
 
-        const url = `https://admin.vaidyabandhu.com/api/appointment/appointment_history/?${params.toString()}`;
-        
+        const url = `https://admin.vaidyabandhu.com/api/appointment/?${params.toString()}`;
+
         const response = await fetch(url, {
           method: 'GET',
           headers: {
@@ -69,7 +70,7 @@ const Appointments = () => {
         }
 
         const data = await response.json();
-        
+
         // Extract appointments from the response
         let appointmentsArray = [];
         if (data && Array.isArray(data.slots)) {
@@ -90,9 +91,9 @@ const Appointments = () => {
           description: appointment.description || appointment.purpose || "General consultation",
           gender: appointment.gender || "Male",
           status: appointment.status || "pending",
-          time: appointment.time || appointment.date_time ? 
-                new Date(appointment.date_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
-                "10:00 AM",
+          time: appointment.time || appointment.date_time ?
+            new Date(appointment.date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) :
+            "10:00 AM",
           phone: appointment.phone || appointment.mobile || "+1 000-000-0000",
           doctor_name: appointment.doctor_name || "Dr. Smith",
           hospital_name: appointment.hospital_name || "General Hospital"
@@ -119,14 +120,43 @@ const Appointments = () => {
     const { id, action } = actionData;
     setLoadingActionId(id);
 
-    // Simulate API call
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setAppointments((prev) =>
-        prev.map((app) => (app.id === id ? { ...app, status: action } : app))
+      const token = localStorage.getItem('authToken');
+
+      const response = await axios.patch(
+        `https://admin.vaidyabandhu.com/api/appointment/?appointment_id=${id}`,
+        { status: action },
+        {
+          headers: {
+            'Authorization': `${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
       );
+
+      // Success: Update local state to reflect the change immediately
+      setAppointments((prev) =>
+        prev.map((app) =>
+          app.id === id ? { ...app, status: action } : app
+        )
+      );
+
+      // Optional: Show success feedback
+      // toast.success(`Appointment ${action} successfully!`);
+
     } catch (err) {
-      console.error("Failed to update appointment status.");
+      console.error("Failed to update appointment status:", err);
+
+      let errorMessage = "Failed to update appointment.";
+      if (err.response?.data?.detail) {
+        errorMessage = err.response.data.detail;
+      } else if (err.response?.data) {
+        errorMessage = JSON.stringify(err.response.data);
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      alert(errorMessage);
     } finally {
       setShowModal(false);
       setLoadingActionId(null);
@@ -216,9 +246,8 @@ const Appointments = () => {
                       filterStatus === status ? "primary" : "outline-primary"
                     }
                     onClick={() => setFilterStatus(status)}
-                    className={`text-capitalize position-relative ${
-                      filterStatus === status ? "" : "outline-primary"
-                    }`}
+                    className={`text-capitalize position-relative ${filterStatus === status ? "" : "outline-primary"
+                      }`}
                     style={{ fontSize: "0.85rem" }}
                   >
                     {status === "all" ? "All" : status}
@@ -342,18 +371,16 @@ const Appointments = () => {
                   {filteredAppointments.map((app, idx) => (
                     <tr
                       key={app.id}
-                      className={`${
-                        loadingActionId === app.id ? "table-active" : ""
-                      }`}
+                      className={`${loadingActionId === app.id ? "table-active" : ""
+                        }`}
                       style={{
                         transition: "all 0.2s ease",
-                        borderLeft: `4px solid ${
-                          app.status === "approved" || app.status === "Completed" || app.status === "Confirmed"
-                            ? "#28a745"
-                            : app.status === "rejected" || app.status === "Rejected"
+                        borderLeft: `4px solid ${app.status === "approved" || app.status === "Completed" || app.status === "Confirmed"
+                          ? "#28a745"
+                          : app.status === "rejected" || app.status === "Rejected"
                             ? "#dc3545"
                             : "#ffc107"
-                        }`,
+                          }`,
                       }}
                     >
                       <td
@@ -426,7 +453,7 @@ const Appointments = () => {
                             }}
                           >
                             {loadingActionId === app.id &&
-                            actionData.action === "approved" ? (
+                              actionData.action === "approved" ? (
                               <Spinner size="sm" />
                             ) : (
                               "✓ Approve"
@@ -448,7 +475,7 @@ const Appointments = () => {
                             }}
                           >
                             {loadingActionId === app.id &&
-                            actionData.action === "rejected" ? (
+                              actionData.action === "rejected" ? (
                               <Spinner size="sm" />
                             ) : (
                               "✗ Reject"

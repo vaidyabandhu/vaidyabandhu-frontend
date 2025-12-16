@@ -26,6 +26,7 @@ const Blogstandard = React.lazy(() =>
 const Blogdetails = React.lazy(() => import("./components/pages/Blogdetails"));
 const About = React.lazy(() => import("./components/pages/About"));
 const MyProfile = React.lazy(() => import("./components/pages/MyProfile"));
+const DoctorProfile = React.lazy(() => import("./components/pages/DoctorProfile"));
 const Services = React.lazy(() => import("./components/pages/Services"));
 const Servicedetails = React.lazy(() =>
   import("./components/pages/Servicedetails")
@@ -93,6 +94,7 @@ function AppRoutes() {
         element={<Blog key={window.location.pathname} />}
       />
        <Route path="/myprofile" element={<MyProfile />} />
+       <Route path="/doctorprofile" element={<DoctorProfile />}/>
       <Route path="/about" element={<About />} />
       <Route path="/services" element={<Services />} />
       <Route

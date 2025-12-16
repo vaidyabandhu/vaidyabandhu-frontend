@@ -33,7 +33,7 @@ const ProfileDropdown = () => {
 				</div>
 			</DropdownToggle>
 			<DropdownMenu align="end">
-				<DropdownItem href="#" onClick={() => navigate('/myProfile')}>
+				<DropdownItem href="#" onClick={() => navigate('/doctorprofile')}>
 					<i className="ti ti-user font-16 me-1 align-text-bottom" /> Profile
 				</DropdownItem>
 				{/* <DropdownItem href="#">

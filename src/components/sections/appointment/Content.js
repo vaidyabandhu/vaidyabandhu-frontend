@@ -296,10 +296,10 @@ class Content extends Component {
     const errors = {};
     let isValid = true;
 
-    if (!this.state.notes.trim()) {
-      errors.notes = "Notes is required";
-      isValid = false;
-    }
+    // if (!this.state.notes.trim()) {
+    //   errors.notes = "Notes is required";
+    //   isValid = false;
+    // }
 
     if (!this.state.reason.trim()) {
       errors.reason = "Reason for visit is required";
@@ -537,20 +537,6 @@ class Content extends Component {
                         </div>
                       </div>
                     </div>
-                    <div className="form-block">
-                      <div className="row">
-                        <div className="col-12">
-                          <div className="form-group">
-                            <textarea
-                              value={this.state.remarks}
-                              onChange={this.remarks}
-                              rows={7}
-                              placeholder="Note To The Doctor(Optional)"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
                 <div className="col-lg-4">
@@ -579,27 +565,11 @@ class Content extends Component {
                                 value={this.state.reason}
                                 onChange={this.handleReasonChange}
                                 placeholder="Briefly describe the reason for your appointment"
-                                required
+                                
                               />
                               {this.state.errors.reason && (
                                 <p style={{ color: "red", fontSize: "18px", marginTop: "10px" }}>
                                   {this.state.errors.reason}
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="form-group">
-                              <label>Notes <span style={{ color: "red" }}>*</span></label>
-                              <textarea
-                                name="notes"
-                                rows="3"
-                                value={this.state.notes}
-                                onChange={this.handleNotesChange}
-                                placeholder="Any additional notes..."
-                              />
-                              {this.state.errors.notes && (
-                                <p style={{ color: "red", fontSize: "18px", marginTop: "10px" }}>
-                                  {this.state.errors.notes}
                                 </p>
                               )}
                             </div>
