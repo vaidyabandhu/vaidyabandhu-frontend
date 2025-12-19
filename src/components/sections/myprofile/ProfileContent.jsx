@@ -48,16 +48,62 @@ const MyProfile = () => {
     if (!firstPart) return 'N/A';
 
     // Extract YYYY-MM-DD part
-    const dateOnly = firstPart.split(' ')[0]; // "2025-12-15"
+    const dateOnly = firstPart.split(' ')[0];
     if (!dateOnly) return 'N/A';
 
     const date = new Date(dateOnly);
     return isNaN(date.getTime())
       ? 'Invalid Date'
-      : date.toLocaleDateString('en-IN'); // Output: 15-12-2025
+      : date.toLocaleDateString('en-IN');
   } catch (error) {
     return 'N/A';
   }
+};
+
+const formatTimeIST = (isoString) => {
+  if (!isoString || typeof isoString !== 'string') return 'N/A';
+
+  try {
+    // Remove trailing +00:00 if present and treat as UTC
+    const cleaned = isoString.replace('+00:00', '').trim();
+    const utcDate = new Date(cleaned + 'Z'); // Force UTC
+
+    if (isNaN(utcDate.getTime())) return 'N/A';
+
+    // Format in 12-hour with 2-digit padding and proper AM/PM
+    return utcDate.toLocaleTimeString('en-US', {
+      timeZone: 'Asia/Kolkata', // Explicitly IST
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch (error) {
+    return 'N/A';
+  }
+};
+
+// Extract Start Time
+const formatAppointmentStartTime = (timeString) => {
+  if (!timeString) return 'N/A';
+  const parts = timeString.split(' - ');
+  if (parts.length < 2) return 'N/A';
+  return formatTimeIST(parts[0].trim());
+};
+
+// Extract End Time
+const formatAppointmentEndTime = (timeString) => {
+  if (!timeString) return 'N/A';
+  const parts = timeString.split(' - ');
+  if (parts.length < 2) return 'N/A';
+  return formatTimeIST(parts[1].trim());
+};
+
+// Full Range
+const formatAppointmentTimeRange = (timeString) => {
+  const start = formatAppointmentStartTime(timeString);
+  const end = formatAppointmentEndTime(timeString);
+  if (start === 'N/A' || end === 'N/A') return 'N/A';
+  return `${start} - ${end}`;
 };
 
   // Update window width on resize
@@ -1440,7 +1486,7 @@ const MyProfile = () => {
                     <th style={tabStyles.tableHeaderStyle}>Sl. No</th>
                     <th style={tabStyles.tableHeaderStyle}>Doctor Name</th>
                     <th style={tabStyles.tableHeaderStyle}>Hospital Name</th>
-                    <th style={tabStyles.tableHeaderStyle}>Reason</th>
+                    <th style={tabStyles.tableHeaderStyle}>Time</th>
                     <th style={tabStyles.tableHeaderStyle}>Appointment Date</th>
                     <th style={tabStyles.tableHeaderStyle}>Booked On</th>
                     <th style={tabStyles.tableHeaderStyle}>Status</th>
@@ -1452,7 +1498,7 @@ const MyProfile = () => {
                       <td style={tabStyles.tableCellStyle}>{appt.slno}</td>
                       <td style={tabStyles.tableCellStyle}>{appt.doctorName}</td>
                       <td style={tabStyles.tableCellStyle}>{appt.hospitalName}</td>
-                      <td style={tabStyles.tableCellStyle}>{appt.reason}</td>
+                      <td style={tabStyles.tableCellStyle}>{formatAppointmentTimeRange(appt.time)}</td>
                       <td style={tabStyles.tableCellStyle}>
                         {formatAppointmentDateOnly(appt.time)}
                       </td>

@@ -166,7 +166,7 @@ const Appointments = () => {
 
   const getStatusVariant = (status) => {
     switch (status) {
-      case "approved":
+      case "confirmed":
       case "Completed":
       case "Confirmed":
         return "success";
@@ -189,7 +189,7 @@ const Appointments = () => {
   const statusCounts = {
     all: appointments.length,
     pending: appointments.filter((app) => app.status === "pending").length,
-    approved: appointments.filter((app) => app.status === "approved").length,
+    confirmed: appointments.filter((app) => app.status === "confirmed").length,
     rejected: appointments.filter((app) => app.status === "rejected").length,
   };
 
@@ -239,7 +239,7 @@ const Appointments = () => {
             </Col>
             <Col md={6}>
               <ButtonGroup className="w-100">
-                {["all", "pending", "approved", "rejected"].map((status) => (
+                {["all", "pending", "confirmed", "rejected"].map((status) => (
                   <Button
                     key={status}
                     variant={
@@ -375,7 +375,7 @@ const Appointments = () => {
                         }`}
                       style={{
                         transition: "all 0.2s ease",
-                        borderLeft: `4px solid ${app.status === "approved" || app.status === "Completed" || app.status === "Confirmed"
+                        borderLeft: `4px solid ${app.status === "confirmed" || app.status === "Completed" || app.status === "Confirmed"
                           ? "#28a745"
                           : app.status === "rejected" || app.status === "Rejected"
                             ? "#dc3545"
@@ -427,7 +427,7 @@ const Appointments = () => {
                           }}
                         >
                           {app.status === "pending" && "⏳ "}
-                          {app.status === "approved" && "✅ "}
+                          {app.status === "confirmed" && "✅ "}
                           {app.status === "rejected" && "❌ "}
                           {app.status === "Completed" && "✅ "}
                           {app.status === "Confirmed" && "✅ "}
@@ -441,10 +441,10 @@ const Appointments = () => {
                             variant="success"
                             size="sm"
                             disabled={
-                              (app.status === "approved" || app.status === "Completed" || app.status === "Confirmed") ||
+                              (app.status === "confirmed" || app.status === "Completed" || app.status === "Confirmed") ||
                               loadingActionId === app.id
                             }
-                            onClick={() => handleAction(app.id, "approved")}
+                            onClick={() => handleAction(app.id, "confirmed")}
                             style={{
                               borderRadius: "20px",
                               fontWeight: 600,
@@ -453,7 +453,7 @@ const Appointments = () => {
                             }}
                           >
                             {loadingActionId === app.id &&
-                              actionData.action === "approved" ? (
+                              actionData.action === "confirmed" ? (
                               <Spinner size="sm" />
                             ) : (
                               "✓ Approve"
@@ -514,7 +514,7 @@ const Appointments = () => {
           closeButton
           style={{
             background:
-              actionData.action === "approved"
+              actionData.action === "confirmed"
                 ? "linear-gradient(135deg, #28a745, #20c997)"
                 : "linear-gradient(135deg, #dc3545, #fd7e14)",
             color: "white",
@@ -522,13 +522,13 @@ const Appointments = () => {
           }}
         >
           <Modal.Title className="fw-bold">
-            {actionData.action === "approved" ? "✅ Approve" : "❌ Reject"}{" "}
+            {actionData.action === "confirmed" ? "✅ Approve" : "❌ Reject"}{" "}
             Appointment
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center py-4">
           <div className="mb-3" style={{ fontSize: "3rem" }}>
-            {actionData.action === "approved" ? "✅" : "❌"}
+            {actionData.action === "confirmed" ? "✅" : "❌"}
           </div>
           <h5 className="fw-bold mb-3">Confirm Action</h5>
           <p className="text-muted mb-0">
@@ -548,7 +548,7 @@ const Appointments = () => {
             Cancel
           </Button>
           <Button
-            variant={actionData.action === "approved" ? "success" : "danger"}
+            variant={actionData.action === "confirmed" ? "success" : "danger"}
             onClick={confirmAction}
             disabled={loadingActionId}
             style={{ borderRadius: "25px", minWidth: "100px", fontWeight: 600 }}
@@ -559,7 +559,7 @@ const Appointments = () => {
                 Processing...
               </>
             ) : (
-              `Yes, ${actionData.action === "approved" ? "Approve" : "Reject"}`
+              `Yes, ${actionData.action === "confirmed" ? "Approve" : "Reject"}`
             )}
           </Button>
         </Modal.Footer>

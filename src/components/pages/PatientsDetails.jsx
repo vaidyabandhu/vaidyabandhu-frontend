@@ -13,7 +13,7 @@ const PatientsDetails = () => {
     const fetchPatientData = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        
+
         if (!token) {
           throw new Error('Authentication token not found');
         }
@@ -32,7 +32,7 @@ const PatientsDetails = () => {
         }
 
         const listData = await listResponse.json();
-        
+
         // Extract the array of patients from the response
         let patientsArray = [];
         if (listData && Array.isArray(listData.slots)) {
@@ -46,8 +46,8 @@ const PatientsDetails = () => {
         }
 
         // Find the patient with the matching ID
-        const patient = patientsArray.find(p => 
-          (p.id && p.id.toString() === id) || 
+        const patient = patientsArray.find(p =>
+          (p.id && p.id.toString() === id) ||
           (p.membership_id && p.membership_id.toString() === id)
         );
 
@@ -70,7 +70,8 @@ const PatientsDetails = () => {
         }
 
         const appointments = await appointmentsResponse.json();
-        setAppointmentHistory(appointments);
+        console.log("Appointments for frontdesk", appointments)
+        setAppointmentHistory(appointments?.slots);
       } catch (err) {
         setError(err.message);
         console.error('Error fetching patient details:', err);
@@ -84,7 +85,7 @@ const PatientsDetails = () => {
 
   // Function to get status style
   const getStatusStyle = (status) => {
-    switch(status) {
+    switch (status) {
       case 'Completed':
         return { backgroundColor: '#d4edda', color: '#155724' };
       case 'Confirmed':
@@ -192,7 +193,8 @@ const PatientsDetails = () => {
 
   const tableStyle = {
     width: '100%',
-    borderCollapse: 'collapse'
+    borderCollapse: 'collapse',
+    marginBottom: '0px'
   };
 
   const thStyle = {
@@ -240,18 +242,18 @@ const PatientsDetails = () => {
   return (
     <div style={containerStyle}>
       <h1 style={titleStyle}>Patient Details</h1>
-      
+
       {/* Membership Information Section */}
       <div>
         <h2 style={sectionTitleStyle}>Membership Information</h2>
         <div style={cardStyle}>
           <div style={headerStyle}>
             <div style={patientIdStyle}>Membership ID: {patientData?.membership_id || 'N/A'}</div>
-            <div style={{...membershipTypeStyle, ...(patientData?.is_active ? activeStyle : {})}}>
+            <div style={{ ...membershipTypeStyle, ...(patientData?.is_active ? activeStyle : {}) }}>
               {patientData?.is_active ? 'Active' : 'Inactive'}
             </div>
           </div>
-          
+
           <div style={detailsStyle}>
             <div style={rowStyle}>
               <div style={groupStyle}>
@@ -263,7 +265,7 @@ const PatientsDetails = () => {
                 <div style={valueStyle}>{patientData?.mobile || 'N/A'}</div>
               </div>
             </div>
-            
+
             <div style={rowStyle}>
               <div style={groupStyle}>
                 <label style={labelStyle}>Email ID</label>
@@ -274,7 +276,7 @@ const PatientsDetails = () => {
                 <div style={valueStyle}>{patientData?.gender || 'N/A'}</div>
               </div>
             </div>
-            
+
             <div style={rowStyle}>
               <div style={groupStyle}>
                 <label style={labelStyle}>Age</label>
@@ -285,7 +287,7 @@ const PatientsDetails = () => {
                 <div style={valueStyle}>{patientData?.blood_group || 'N/A'}</div>
               </div>
             </div>
-            
+
             <div style={rowStyle}>
               <div style={groupStyle}>
                 <label style={labelStyle}>Address</label>
@@ -296,7 +298,7 @@ const PatientsDetails = () => {
                 <div style={valueStyle}>{patientData?.pin_code || 'N/A'}</div>
               </div>
             </div>
-            
+
             <div style={rowStyle}>
               <div style={groupStyle}>
                 <label style={labelStyle}>Membership Start Date</label>
@@ -314,7 +316,7 @@ const PatientsDetails = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Appointment History Section */}
       <div>
         <h2 style={sectionTitleStyle}>Appointment History</h2>
@@ -333,12 +335,31 @@ const PatientsDetails = () => {
                 appointmentHistory.map((appointment) => (
                   <tr key={appointment.id}>
                     <td style={tdStyle}>
-                      {appointment.date_time ? new Date(appointment.date_time).toLocaleString() : 'N/A'}
+                      {appointment.time ? (
+                        (() => {
+                          const [startStr, endStr] = appointment.time.split(" - ");
+                          const startDate = new Date(startStr);
+                          const endDate = new Date(endStr);
+                          const startTime = startDate.toLocaleTimeString([], {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true, // Enables 12-hour format with AM/PM
+                          });
+                          const endTime = endDate.toLocaleTimeString([], {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          });
+                          return `${startTime} - ${endTime}`;
+                        })()
+                      ) : (
+                        "N/A"
+                      )}
                     </td>
                     <td style={tdStyle}>{appointment.doctor_name || 'N/A'}</td>
                     <td style={tdStyle}>{appointment.hospital_name || 'N/A'}</td>
                     <td style={tdStyle}>
-                      <span style={{...statusBadgeStyle, ...getStatusStyle(appointment.status)}}>
+                      <span style={{ ...statusBadgeStyle, ...getStatusStyle(appointment.status) }}>
                         {appointment.status || 'N/A'}
                       </span>
                     </td>
@@ -346,7 +367,7 @@ const PatientsDetails = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" style={{textAlign: 'center', padding: '20px'}}>
+                  <td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>
                     No appointment history found
                   </td>
                 </tr>

@@ -14,6 +14,7 @@ import {
   ButtonGroup,
 } from "react-bootstrap";
 import { useAuthContext } from "../context";
+import axios from 'axios';
 
 const Appointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -45,21 +46,18 @@ const Appointments = () => {
         }
 
         const data = await response.json();
-        
-        // Transform API data to match our component structure
+
+        // Transform API data to match the required table columns
         const transformedAppointments = data.slots.map(patient => ({
-          id: patient.id,
-          name: patient.full_name || patient.membership_id || 'Unknown',
-          age: patient.age || 'N/A',
-          description: patient.blood_group ? `Blood Group: ${patient.blood_group}` : 'No blood group info',
+          id: patient.id || patient.membership_id || Math.random().toString(36).substring(7),
+          name: patient.name || patient.membership_id || 'Unknown',
+          doctor_name: patient.doctor_name || 'N/A',  // Add if available; otherwise placeholder
+          hospital_name: patient.hospital_name || 'N/A',
           gender: patient.gender || 'N/A',
-          status: 'pending', 
-          time: 'N/A', 
-          phone: patient.mobile || 'N/A',
-          membership_id: patient.membership_id,
-          address: patient.address,
-          email: patient.email,
-          profile_image: patient.profile_image
+          status: patient.status || 'pending',  // Use actual status if provided
+          phone: patient.phone || 'N/A',
+          email: patient.email || 'N/A',
+          profile_image: patient.profile_image || ''
         }));
 
         setAppointments(transformedAppointments);
@@ -83,14 +81,43 @@ const Appointments = () => {
     const { id, action } = actionData;
     setLoadingActionId(id);
 
-    // Simulate API call
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setAppointments((prev) =>
-        prev.map((app) => (app.id === id ? { ...app, status: action } : app))
+      const token = localStorage.getItem('authToken');
+
+      const response = await axios.patch(
+        `https://admin.vaidyabandhu.com/api/appointment/?appointment_id=${id}`,
+        { status: action },
+        {
+          headers: {
+            'Authorization': `${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
       );
+
+      // Success: Update local state to reflect the change immediately
+      setAppointments((prev) =>
+        prev.map((app) =>
+          app.id === id ? { ...app, status: action } : app
+        )
+      );
+
+      // Optional: Show success feedback
+      // toast.success(`Appointment ${action} successfully!`);
+
     } catch (err) {
-      console.error("Failed to update appointment status.");
+      console.error("Failed to update appointment status:", err);
+
+      let errorMessage = "Failed to update appointment.";
+      if (err.response?.data?.detail) {
+        errorMessage = err.response.data.detail;
+      } else if (err.response?.data) {
+        errorMessage = JSON.stringify(err.response.data);
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      alert(errorMessage);
     } finally {
       setShowModal(false);
       setLoadingActionId(null);
@@ -100,7 +127,7 @@ const Appointments = () => {
 
   const getStatusVariant = (status) => {
     switch (status) {
-      case "approved":
+      case "confirmed":
         return "success";
       case "rejected":
         return "danger";
@@ -122,7 +149,7 @@ const Appointments = () => {
   const statusCounts = {
     all: appointments.length,
     pending: appointments.filter((app) => app.status === "pending").length,
-    approved: appointments.filter((app) => app.status === "approved").length,
+    confirmed: appointments.filter((app) => app.status === "confirmed").length,
     rejected: appointments.filter((app) => app.status === "rejected").length,
   };
 
@@ -172,16 +199,15 @@ const Appointments = () => {
             </Col>
             <Col md={6}>
               <ButtonGroup className="w-100">
-                {["all", "pending", "approved", "rejected"].map((status) => (
+                {["all", "pending", "confirmed", "rejected"].map((status) => (
                   <Button
                     key={status}
                     variant={
                       filterStatus === status ? "primary" : "outline-primary"
                     }
                     onClick={() => setFilterStatus(status)}
-                    className={`text-capitalize position-relative ${
-                      filterStatus === status ? "" : "outline-primary"
-                    }`}
+                    className={`text-capitalize position-relative ${filterStatus === status ? "" : "outline-primary"
+                      }`}
                     style={{ fontSize: "0.85rem" }}
                   >
                     {status === "all" ? "All" : status}
@@ -240,42 +266,27 @@ const Appointments = () => {
               }}
             >
               <tr>
-                <th
-                  className="text-center"
-                  style={{ width: "60px", fontWeight: 600 }}
-                >
+                <th className="text-center" style={{ width: "60px", fontWeight: 600 }}>
                   #
                 </th>
                 <th style={{ minWidth: "140px", fontWeight: 600 }}>
                   👤 Patient
                 </th>
-                <th
-                  className="text-center"
-                  style={{ width: "80px", fontWeight: 600 }}
-                >
-                  Age
+                <th style={{ minWidth: "140px", fontWeight: 600 }}>
+                  Doctor Name
                 </th>
                 <th style={{ minWidth: "160px", fontWeight: 600 }}>
-                  📋 Details
+                  Hospital Name
                 </th>
-                <th
-                  className="text-center"
-                  style={{ width: "100px", fontWeight: 600 }}
-                >
+                <th className="text-center" style={{ width: "100px", fontWeight: 600 }}>
                   Gender
                 </th>
-                <th
-                  className="text-center"
-                  style={{ width: "100px", fontWeight: 600 }}
-                >
+                <th className="text-center" style={{ width: "100px", fontWeight: 600 }}>
                   🕒 Status
                 </th>
                 <th style={{ minWidth: "140px", fontWeight: 600 }}>📞 Phone</th>
-                <th style={{ minWidth: "140px", fontWeight: 600 }}>📧 Email</th>
-                <th
-                  className="text-center"
-                  style={{ width: "180px", fontWeight: 600 }}
-                >
+                <th style={{ minWidth: "180px", fontWeight: 600 }}>📧 Email</th>
+                <th className="text-center" style={{ width: "180px", fontWeight: 600 }}>
                   Actions
                 </th>
               </tr>
@@ -309,59 +320,50 @@ const Appointments = () => {
                 filteredAppointments.map((app, idx) => (
                   <tr
                     key={app.id}
-                    className={`${
-                      loadingActionId === app.id ? "table-active" : ""
-                    }`}
+                    className={`${loadingActionId === app.id ? "table-active" : ""}`}
                     style={{
                       transition: "all 0.2s ease",
-                      borderLeft: `4px solid ${
-                        app.status === "approved"
-                          ? "#28a745"
-                          : app.status === "rejected"
-                          ? "#dc3545"
-                          : "#ffc107"
-                      }`,
+                      borderLeft: `4px solid ${app.status === "confirmed" ? "#28a745" : app.status === "rejected" ? "#dc3545" : "#ffc107"}`
                     }}
                   >
-                    <td
-                      className="text-center fw-bold"
-                      style={{ color: "#6c757d" }}
-                    >
+                    <td className="text-center fw-bold" style={{ color: "#6c757d" }}>
                       {idx + 1}
                     </td>
                     <td>
                       <div className="d-flex align-items-center">
-                        {app.profile_image && (
-                          <img
-                            src={app.profile_image}
-                            alt={app.name}
-                            className="rounded-circle me-2"
-                            style={{ width: "30px", height: "30px", objectFit: "cover" }}
-                          />
-                        )}
+                       {app.profile_image ? (
+  <img
+    src={app.profile_image}
+    alt={app.name || "Patient"}
+    className="rounded-circle me-2"
+    style={{ width: "40px", height: "40px", objectFit: "cover" }}
+  />
+) : (
+  <img
+    src={
+      app.gender === "Male"
+        ? "https://ui-avatars.com/api/?name=Male&background=0D8ABC&color=fff&size=128"
+        : app.gender === "Female"
+          ? "https://ui-avatars.com/api/?name=Female&background=E91E63&color=fff&size=128"
+          : "https://ui-avatars.com/api/?name=User&background=9E9E9E&color=fff&size=128"
+    }
+    alt={`${app.gender || "Unknown"} avatar`}
+    className="rounded-circle me-2"
+    style={{ width: "40px", height: "40px", objectFit: "cover" }}
+  />
+)}
                         <div>
-                          <div className="fw-bold">{app.name}</div>
-                          {app.membership_id && (
-                            <small className="text-muted">{app.membership_id}</small>
-                          )}
+                          <div className="fw-bold">{app?.name}</div>
+                          {/* <small className="text-muted">ID: {app.id}</small> */}
                         </div>
                       </div>
                     </td>
-                    <td className="text-center">{app.age}</td>
-                    <td>
-                      <small className="text-muted">{app.description}</small>
-                      {app.address && (
-                        <div className="small text-muted mt-1">
-                          📍 {app.address}
-                        </div>
-                      )}
-                    </td>
+                    <td>{app.doctor_name}</td>
+                    <td>{app.hospital_name}</td>
                     <td className="text-center">
                       <Badge
                         bg={app.gender === "Male" ? "info" : app.gender === "Female" ? "danger" : "secondary"}
-                        style={{
-                          fontSize: "0.75rem",
-                        }}
+                        style={{ fontSize: "0.75rem" }}
                       >
                         {app.gender}
                       </Badge>
@@ -370,69 +372,43 @@ const Appointments = () => {
                       <Badge
                         bg={getStatusVariant(app.status)}
                         className="text-capitalize px-3 py-1"
-                        style={{
-                          fontSize: "0.75rem",
-                          borderRadius: "15px",
-                          fontWeight: 600,
-                        }}
+                        style={{ fontSize: "0.75rem", borderRadius: "15px", fontWeight: 600 }}
                       >
                         {app.status === "pending" && "⏳ "}
-                        {app.status === "approved" && "✅ "}
+                        {app.status === "confirmed" && "✅ "}
                         {app.status === "rejected" && "❌ "}
                         {app.status}
                       </Badge>
                     </td>
                     <td>
-                      <small className="text-muted font-monospace">
-                        {app.phone}
-                      </small>
+                      <small className="text-muted font-monospace">{app?.phone}</small>
                     </td>
                     <td>
-                      <small className="text-muted">
-                        {app.email || 'N/A'}
-                      </small>
+                      <small className="text-muted">{app?.email || 'N/A'}</small>
                     </td>
                     <td>
                       <div className="d-flex gap-2 justify-content-center">
                         <Button
                           variant="success"
                           size="sm"
-                          disabled={
-                            app.status === "approved" ||
-                            loadingActionId === app.id
-                          }
-                          onClick={() => handleAction(app.id, "approved")}
-                          style={{
-                            borderRadius: "20px",
-                            fontWeight: 600,
-                            fontSize: "0.75rem",
-                            minWidth: "70px",
-                          }}
+                          disabled={app.status === "confirmed" || loadingActionId === app.id}
+                          onClick={() => handleAction(app.id, "confirmed")}
+                          style={{ borderRadius: "20px", fontWeight: 600, fontSize: "0.75rem", minWidth: "90px" }}
                         >
-                          {loadingActionId === app.id &&
-                          actionData.action === "approved" ? (
+                          {loadingActionId === app.id && actionData.action === "confirmed" ? (
                             <Spinner size="sm" />
                           ) : (
-                            "✓ Approve"
+                            "Confirm"
                           )}
                         </Button>
                         <Button
                           variant="danger"
                           size="sm"
-                          disabled={
-                            app.status === "rejected" ||
-                            loadingActionId === app.id
-                          }
+                          disabled={app.status === "rejected" || loadingActionId === app.id}
                           onClick={() => handleAction(app.id, "rejected")}
-                          style={{
-                            borderRadius: "20px",
-                            fontWeight: 600,
-                            fontSize: "0.75rem",
-                            minWidth: "70px",
-                          }}
+                          style={{ borderRadius: "20px", fontWeight: 600, fontSize: "0.75rem", minWidth: "70px" }}
                         >
-                          {loadingActionId === app.id &&
-                          actionData.action === "rejected" ? (
+                          {loadingActionId === app.id && actionData.action === "rejected" ? (
                             <Spinner size="sm" />
                           ) : (
                             "✗ Reject"
@@ -459,7 +435,7 @@ const Appointments = () => {
           closeButton
           style={{
             background:
-              actionData.action === "approved"
+              actionData.action === "confirmed"
                 ? "linear-gradient(135deg, #28a745, #20c997)"
                 : "linear-gradient(135deg, #dc3545, #fd7e14)",
             color: "white",
@@ -467,13 +443,13 @@ const Appointments = () => {
           }}
         >
           <Modal.Title className="fw-bold">
-            {actionData.action === "approved" ? "✅ Approve" : "❌ Reject"}{" "}
+            {actionData.action === "confirmed" ? "✅ Approve" : "❌ Reject"}{" "}
             Patient
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center py-4">
           <div className="mb-3" style={{ fontSize: "3rem" }}>
-            {actionData.action === "approved" ? "✅" : "❌"}
+            {actionData.action === "confirmed" ? "✅" : "❌"}
           </div>
           <h5 className="fw-bold mb-3">Confirm Action</h5>
           <p className="text-muted mb-0">
@@ -493,7 +469,7 @@ const Appointments = () => {
             Cancel
           </Button>
           <Button
-            variant={actionData.action === "approved" ? "success" : "danger"}
+            variant={actionData.action === "confirmed" ? "success" : "danger"}
             onClick={confirmAction}
             disabled={loadingActionId}
             style={{ borderRadius: "25px", minWidth: "100px", fontWeight: 600 }}
@@ -504,7 +480,7 @@ const Appointments = () => {
                 Processing...
               </>
             ) : (
-              `Yes, ${actionData.action === "approved" ? "Approve" : "Reject"}`
+              `Yes, ${actionData.action === "confirmed" ? "Approve" : "Reject"}`
             )}
           </Button>
         </Modal.Footer>
