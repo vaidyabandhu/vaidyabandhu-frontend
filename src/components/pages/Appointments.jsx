@@ -134,15 +134,11 @@ const Appointments = () => {
         }
       );
 
-      // Success: Update local state to reflect the change immediately
       setAppointments((prev) =>
         prev.map((app) =>
           app.id === id ? { ...app, status: action } : app
         )
       );
-
-      // Optional: Show success feedback
-      // toast.success(`Appointment ${action} successfully!`);
 
     } catch (err) {
       console.error("Failed to update appointment status:", err);

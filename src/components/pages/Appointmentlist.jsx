@@ -47,14 +47,13 @@ const Appointments = () => {
 
         const data = await response.json();
 
-        // Transform API data to match the required table columns
         const transformedAppointments = data.slots.map(patient => ({
           id: patient.id || patient.membership_id || Math.random().toString(36).substring(7),
           name: patient.name || patient.membership_id || 'Unknown',
-          doctor_name: patient.doctor_name || 'N/A',  // Add if available; otherwise placeholder
+          doctor_name: patient.doctor_name || 'N/A',
           hospital_name: patient.hospital_name || 'N/A',
           gender: patient.gender || 'N/A',
-          status: patient.status || 'pending',  // Use actual status if provided
+          status: patient.status || 'pending',
           phone: patient.phone || 'N/A',
           email: patient.email || 'N/A',
           profile_image: patient.profile_image || ''
@@ -101,10 +100,6 @@ const Appointments = () => {
           app.id === id ? { ...app, status: action } : app
         )
       );
-
-      // Optional: Show success feedback
-      // toast.success(`Appointment ${action} successfully!`);
-
     } catch (err) {
       console.error("Failed to update appointment status:", err);
 
