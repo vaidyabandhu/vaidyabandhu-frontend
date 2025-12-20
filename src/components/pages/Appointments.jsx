@@ -87,13 +87,11 @@ const Appointments = () => {
         const transformedAppointments = appointmentsArray.map((appointment, index) => ({
           id: appointment.id || index + 1,
           name: appointment.patient_name || appointment.name || `Patient ${index + 1}`,
-          age: appointment.age || 30,
-          description: appointment.description || appointment.purpose || "General consultation",
+          age: appointment.age || `N/A`,
+          reason: appointment.reason || appointment.purpose || "General consultation",
           gender: appointment.gender || "Male",
           status: appointment.status || "pending",
-          time: appointment.time || appointment.date_time ?
-            new Date(appointment.date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) :
-            "10:00 AM",
+          time: appointment.time,
           phone: appointment.phone || appointment.mobile || "+1 000-000-0000",
           doctor_name: appointment.doctor_name || "Dr. Smith",
           hospital_name: appointment.hospital_name || "General Hospital"
@@ -177,7 +175,7 @@ const Appointments = () => {
   const filteredAppointments = appointments.filter((app) => {
     const matchesSearch =
       app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.description.toLowerCase().includes(searchTerm.toLowerCase());
+      app.reason.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === "all" || app.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
@@ -322,7 +320,7 @@ const Appointments = () => {
                       className="text-center"
                       style={{ width: "60px", fontWeight: 600 }}
                     >
-                      #
+                      Sl No
                     </th>
                     <th style={{ minWidth: "140px", fontWeight: 600 }}>
                       👤 Patient
@@ -334,7 +332,7 @@ const Appointments = () => {
                       Age
                     </th>
                     <th style={{ minWidth: "160px", fontWeight: 600 }}>
-                      📋 Description
+                      📋 Reason
                     </th>
                     <th
                       className="text-center"
@@ -390,7 +388,7 @@ const Appointments = () => {
                       </td>
                       <td className="text-center">{app.age}</td>
                       <td>
-                        <small className="text-muted">{app.description}</small>
+                        <small className="text-muted">{app?.reason}</small>
                       </td>
                       <td className="text-center">
                         <Badge
@@ -405,7 +403,46 @@ const Appointments = () => {
                         </Badge>
                       </td>
                       <td className="text-center">
-                        <small className="fw-bold text-success">{app.time}</small>
+                        <small className="fw-bold text-success">
+                          {app.time && app.time !== 'N/A'
+                            ? (() => {
+                              try {
+                                // Split the time range string (e.g., "2025-12-12 12:04:00+00:00 - 2025-12-12 12:34:00+00:00")
+                                const [startStr, endStr] = app.time.split(' - ');
+                                if (!startStr || !endStr) throw new Error('Invalid format');
+
+                                // Normalize and parse both times
+                                const startDate = new Date(startStr.replace(' ', 'T'));
+                                const endDate = new Date(endStr.replace(' ', 'T'));
+
+                                if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                                  throw new Error('Invalid date');
+                                }
+
+                                // Format to 12-hour with AM/PM
+                                const startFormatted = startDate.toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: true
+                                });
+                                const endFormatted = endDate.toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: true
+                                });
+
+                                return `${startFormatted} - ${endFormatted}`;
+                              } catch (e) {
+                                // Fallback: Extract HH:MM from strings if parsing fails
+                                const startMatch = app.time.match(/(\d{2}:\d{2}):\d{2}/);
+                                const endMatch = app.time.match(/ - .*(\d{2}:\d{2}):\d{2}/);
+                                const startTime = startMatch ? `${startMatch[1]} ${parseInt(startMatch[1].split(':')[0]) >= 12 ? 'PM' : 'AM'}` : 'N/A';
+                                const endTime = endMatch ? `${endMatch[1]} ${parseInt(endMatch[1].split(':')[0]) >= 12 ? 'PM' : 'AM'}` : 'N/A';
+                                return `${startTime} - ${endTime}`;
+                              }
+                            })()
+                            : 'N/A'}
+                        </small>
                       </td>
                       <td>
                         <small className="text-muted font-monospace">
