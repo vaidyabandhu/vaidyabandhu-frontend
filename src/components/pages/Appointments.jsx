@@ -55,7 +55,7 @@ const Appointments = () => {
           params.append('search', encodeURIComponent(searchTerm.trim()));
         }
 
-        const url = `https://admin.vaidyabandhu.com/api/appointment/?${params.toString()}`;
+        const url = `https://admin.vaidyabandhu.com/api/appointment`;
 
         const response = await fetch(url, {
           method: 'GET',

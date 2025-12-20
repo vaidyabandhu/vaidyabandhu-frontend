@@ -4,6 +4,8 @@ import {
     User, Stethoscope, Calendar, Languages, Award, Hospital, MapPin,
     Phone, Mail, Loader2, AlertCircle
 } from 'lucide-react';
+import { FaArrowLeft } from 'react-icons/fa';
+import { Button } from 'react-bootstrap';
 
 const DoctorProfile = () => {
     const navigate = useNavigate();
@@ -619,7 +621,12 @@ const DoctorProfile = () => {
                 <div style={styles.mainContainer}>
                     <div style={styles.leftColumn}>
                         <div style={styles.personalInfoCard}>
-                            <h2 style={styles.sectionTitle}>Personal Information</h2>
+                            <div className="d-flex align-items-center mb-3" style={styles.sectionTitle}>
+                                <Button variant="link" className="p-0 me-3" style={{ color: '#fff' }} onClick={() => navigate(-1)}>
+                                    <FaArrowLeft />
+                                </Button>
+                                <h4 className="mb-0">Personal Information</h4>
+                            </div>
 
                             <div style={styles.infoRow}>
                                 <User style={styles.infoIcon} />
