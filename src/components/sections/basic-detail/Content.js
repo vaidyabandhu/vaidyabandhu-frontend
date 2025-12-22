@@ -38,7 +38,6 @@ const VaidyaBandhuForm = () => {
     blood_group: "",
     mobile: "",
     alternate_mobile: "",
-    email: "",
     address: "",
     pin_code: "",
     aadhaar_number: "",
@@ -55,7 +54,30 @@ const VaidyaBandhuForm = () => {
   const [error, setError] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false); // New state for welcome modal
-  
+  const [apiProcessing, setApiProcessing] = useState(false);
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+
+
+  const FullScreenLoader = ({ text = "Please wait..." }) => (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(255,255,255,0.8)",
+        zIndex: 99999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+      }}
+    >
+      <div className="spinner-border text-primary" role="status" />
+      <p style={{ marginTop: 12, fontWeight: 500 }}>{text}</p>
+    </div>
+  );
+
+
   // Cropping state
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [imgSrc, setImgSrc] = useState(null);
@@ -131,22 +153,22 @@ const VaidyaBandhuForm = () => {
 
     fetchUserProfile();
   }, []);
-useEffect(() => {
-  return () => {
+  useEffect(() => {
+    return () => {
+      if (photoPreview && photoPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(photoPreview);
+      }
+    };
+  }, [photoPreview]);
+  // Handle photo removal
+  const handleRemovePhoto = () => {
     if (photoPreview && photoPreview.startsWith('blob:')) {
       URL.revokeObjectURL(photoPreview);
     }
+    setPhotoPreview(null);
+    setFormData(prev => ({ ...prev, photo: null }));
+    setCroppedFile(null);
   };
-}, [photoPreview]);
-  // Handle photo removal
-const handleRemovePhoto = () => {
-  if (photoPreview && photoPreview.startsWith('blob:')) {
-    URL.revokeObjectURL(photoPreview);
-  }
-  setPhotoPreview(null);
-  setFormData(prev => ({ ...prev, photo: null }));
-  setCroppedFile(null);
-};
 
   // Crop functions
   const onImageLoad = (e) => {
@@ -181,7 +203,7 @@ const handleRemovePhoto = () => {
     // Convert percentage values to pixel values
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
-    
+
     const pixelCrop = {
       x: completedCrop.x * scaleX,
       y: completedCrop.y * scaleY,
@@ -215,38 +237,38 @@ const handleRemovePhoto = () => {
     });
   };
 
- const handleCropSave = async () => {
-  try {
-    const croppedBlob = await createCroppedImage();
-    if (!croppedBlob) return;
+  const handleCropSave = async () => {
+    try {
+      const croppedBlob = await createCroppedImage();
+      if (!croppedBlob) return;
 
-    // Get original file name safely
-    const originalFile = document.getElementById('photo-upload')?.files[0];
-    const originalName = originalFile?.name || 'profile-photo.jpg';
-    const fileExt = originalName.split('.').pop();
-    const safeName = `profile_${Date.now()}.${fileExt}`;
+      // Get original file name safely
+      const originalFile = document.getElementById('photo-upload')?.files[0];
+      const originalName = originalFile?.name || 'profile-photo.jpg';
+      const fileExt = originalName.split('.').pop();
+      const safeName = `profile_${Date.now()}.${fileExt}`;
 
-    const croppedFile = new File([croppedBlob], safeName, {
-      type: croppedBlob.type || 'image/jpeg',
-      lastModified: Date.now(),
-    });
+      const croppedFile = new File([croppedBlob], safeName, {
+        type: croppedBlob.type || 'image/jpeg',
+        lastModified: Date.now(),
+      });
 
-    setCroppedFile(croppedFile);
-    setPhotoPreview(URL.createObjectURL(croppedBlob));
-    setFormData((prev) => ({
-      ...prev,
-      photo: croppedFile,
-    }));
+      setCroppedFile(croppedFile);
+      setPhotoPreview(URL.createObjectURL(croppedBlob));
+      setFormData((prev) => ({
+        ...prev,
+        photo: croppedFile,
+      }));
 
-    setErrors((prev) => ({ ...prev, photo: "" }));
-  } catch (e) {
-    console.error('Error cropping image', e);
-  } finally {
-    setCropModalOpen(false);
-    setImgSrc(null);
-    setCompletedCrop(null);
-  }
-};
+      setErrors((prev) => ({ ...prev, photo: "" }));
+    } catch (e) {
+      console.error('Error cropping image', e);
+    } finally {
+      setCropModalOpen(false);
+      setImgSrc(null);
+      setCompletedCrop(null);
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -295,11 +317,6 @@ const handleRemovePhoto = () => {
       newErrors.alternate_mobile =
         languagesType[selectedLanguage].validation.alternateValid;
     }
-
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = languagesType[selectedLanguage].validation.emailValid;
-    }
-
     if (formData.aadhaar_number && !/^\d{12}$/.test(formData.aadhaar_number)) {
       newErrors.aadhaar_number =
         languagesType[selectedLanguage].validation.aadhaarValid;
@@ -316,26 +333,26 @@ const handleRemovePhoto = () => {
     return newErrors;
   };
 
-const handleInputChange = (e) => {
-  const { name, value } = e.target;
-  let cleanedValue = value;
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    let cleanedValue = value;
 
-  if (name === "pan_number") {
-    cleanedValue = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  }
+    if (name === "pan_number") {
+      cleanedValue = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    }
 
-  setFormData((prev) => ({
-    ...prev,
-    [name]: cleanedValue,
-  }));
-
-  if (errors[name]) {
-    setErrors((prev) => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: "",
+      [name]: cleanedValue,
     }));
-  }
-};
+
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+  };
 
   const handleNumberChange = (e, fieldName) => {
     const value = e.target.value;
@@ -343,10 +360,10 @@ const handleInputChange = (e) => {
       fieldName === "pin_code"
         ? 6
         : fieldName === "mobile_number"
-        ? 10
-        : fieldName === "aadhaar_number"
-        ? 12
-        : 3;
+          ? 10
+          : fieldName === "aadhaar_number"
+            ? 12
+            : 3;
 
     if (/^[0-9]*$/.test(value) && value.length <= maxLength) {
       setFormData((prev) => ({
@@ -378,167 +395,126 @@ const handleInputChange = (e) => {
     });
   };
 
-  const handleSubmit = async () => {
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setIsSubmitting(true);
+const handleSubmit = async () => {
+  const validationErrors = validateForm();
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
 
-    try {
-      const token = localStorage.getItem("token");
+  setIsSubmitting(true);
+  setApiProcessing(true);
 
-      const formDataToSend = new FormData();
-      formDataToSend.append("full_name", formData.full_name);
-      formDataToSend.append("age", formData.age);
-      formDataToSend.append("gender", formData.gender);
-      formDataToSend.append("blood_group", formData.blood_group);
-      formDataToSend.append("address", formData.address);
-      formDataToSend.append("pin_code", formData.pin_code);
-      formDataToSend.append("mobile", formData.mobile);
-      formDataToSend.append("alternate_number", formData.alternate_mobile);
-      formDataToSend.append("email", formData.email);
-formDataToSend.append(
-  "aadhaar_number",
-  formData.aadhaar_number?.trim() || "NA"
-);
-formDataToSend.append(
-  "pan_number",
-  formData.pan_number?.trim().toUpperCase() || "NA"
-);
-      if (formData.photo) {
-        // formDataToSend.append("profile_image", formData.photo);
+  try {
+    const token = localStorage.getItem("token");
+
+    /* ---------- 1. SAVE PROFILE ---------- */
+    const formDataToSend = new FormData();
+    Object.entries({
+      full_name: formData.full_name,
+      age: formData.age,
+      gender: formData.gender,
+      blood_group: formData.blood_group,
+      address: formData.address,
+      pin_code: formData.pin_code,
+      mobile: formData.mobile,
+      alternate_number: formData.alternate_mobile,
+      aadhaar_number: formData.aadhaar_number || "NA",
+      pan_number: formData.pan_number?.toUpperCase() || "NA",
+    }).forEach(([k, v]) => formDataToSend.append(k, v));
+
+    if (formData.photo) {
       formDataToSend.append("profile_image", formData.photo);
-      }
-
-      const response = await fetch(
-        "https://admin.vaidyabandhu.com/api/user/profile/",
-        {
-          method: "POST",
-          headers: {
-            Authorization: token,
-          },
-          body: formDataToSend,
-        }
-      );
-
-      const createOrder = await fetch(
-        "https://admin.vaidyabandhu.com/api/payment/create_order/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-          body: JSON.stringify({
-            subscription: 1,
-          }),
-        }
-      );
-      const createOrderData = await createOrder.json();
-      if (!createOrder.ok) {
-        alert(
-          "Failed to create order: " +
-            (createOrderData.detail || JSON.stringify(createOrderData))
-        );
-        setIsSubmitting(false);
-        return;
-      }
-
-      const order_id = createOrderData.order_id || "order_RI9lDcv6o4vXni";
-      const razorpay_key =
-        createOrderData.razorpay_key || "rzp_live_RBDq4cloXLAvYR";
-      const amount = createOrderData.amount || 49;
-      const currency = createOrderData.currency || "INR";
-
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        alert("Failed to load Razorpay script");
-        setIsSubmitting(false);
-        return;
-      }
-
-         const options = {
-        key: razorpay_key,
-        amount: amount,
-        currency: currency,
-        name: "VaidyaBandhu Membership",
-        description: "Membership Payment",
-        order_id: order_id,
-          handler: async function (response) {
-          let attempts = 0;
-          const maxAttempts = 5;
-          let success = false;
-
-          while (attempts < maxAttempts && !success) {
-            try {
-              const res = await fetch(
-                "https://admin.vaidyabandhu.com/api/payment/callback/",
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: token,
-                  },
-                  body: JSON.stringify({
-                    razorpay_order_id: response.razorpay_order_id,
-                    razorpay_payment_id: response.razorpay_payment_id,
-                    razorpay_signature: response.razorpay_signature,
-                  }),
-                }
-              );
-
-              if (res.ok) {
-                const data = await res.json();
-                // Success only if backend really activated membership
-                if (data.status === "success" || data.message?.toLowerCase().includes("success")) {
-                  success = true;
-                  setShowWelcomeModal(true);
-                  return; // Done!
-                }
-              }
-            } catch (err) {
-              console.warn(`Callback attempt ${attempts + 1} failed:`, err);
-            }
-
-            attempts++;
-            if (attempts < maxAttempts) {
-              // Wait before retry (3 seconds)
-              await new Promise(resolve => setTimeout(resolve, 3000));
-            }
-          }
-
-          // If all attempts failed → still money taken, so be honest & friendly
-          alert(
-            "Payment Successful!\n\nYour membership is being activated automatically.\nIt will be active within 2–5 minutes.\nThank you for joining VaidyaBandhu Family!"
-          );
-          
-          // Optional: redirect to profile so user can see it soon
-          setTimeout(() => {
-            navigate("/myprofile");
-          }, 3000);
-        },
-        prefill: {
-          name: formData.full_name || "",
-          email: formData.email || "",
-          contact: formData.mobile,
-        },
-        theme: {
-          color: "#3399cc",
-        },
-        modal: {
-          ondismiss: () => setIsSubmitting(false),
-        },
-      };
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (error) {
-      console.error("Error occurred while creating order or payment:", error);
-      alert("Error occurred while creating order or payment");
-      setIsSubmitting(false);
     }
-  };
+
+    const profileRes = await fetch(
+      "https://admin.vaidyabandhu.com/api/user/profile/",
+      {
+        method: "POST",
+        headers: { Authorization: token },
+        body: formDataToSend,
+      }
+    );
+
+    if (!profileRes.ok) {
+      throw new Error("Profile update failed. Please try again.");
+    }
+
+    /* ---------- 2. CREATE ORDER ---------- */
+    const orderRes = await fetch(
+      "https://admin.vaidyabandhu.com/api/payment/create_order/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        body: JSON.stringify({ subscription: 1 }),
+      }
+    );
+
+    if (!orderRes.ok) {
+      throw new Error("Order creation failed. Payment not started.");
+    }
+
+    const orderData = await orderRes.json();
+
+    /* ---------- 3. LOAD RAZORPAY ---------- */
+    const loaded = await loadRazorpayScript();
+    if (!loaded) {
+      throw new Error("Payment SDK failed to load");
+    }
+
+    /* ---------- 4. OPEN PAYMENT ---------- */
+    const options = {
+      key: orderData.razorpay_key,
+      amount: orderData.amount,
+      currency: orderData.currency,
+      name: "VaidyaBandhu Membership",
+      description: "Membership Payment",
+      order_id: orderData.order_id,
+
+      handler: async function (rpResponse) {
+        try {
+          await fetch(
+            "https://admin.vaidyabandhu.com/api/payment/callback/",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: token,
+              },
+              body: JSON.stringify({
+                razorpay_order_id: rpResponse.razorpay_order_id,
+                razorpay_payment_id: rpResponse.razorpay_payment_id,
+                razorpay_signature: rpResponse.razorpay_signature,
+              }),
+            }
+          );
+        } finally {
+          setApiProcessing(false);
+          navigate("/myprofile");
+        }
+      },
+
+      modal: {
+        ondismiss: () => {
+          setIsSubmitting(false);
+          setApiProcessing(false);
+        },
+      },
+    };
+
+    new window.Razorpay(options).open();
+
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "Something went wrong");
+    setApiProcessing(false);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -559,8 +535,15 @@ formDataToSend.append(
   const benefits = languagesType[selectedLanguage].benefits;
   const termsConditions = languagesType[selectedLanguage].terms;
 
+  {apiProcessing && (
+  <FullScreenLoader text="Finalizing your membership..." />
+)}
+
   return (
     <div className="container-fluid bg-light py-5 container-bg">
+        {apiProcessing && (
+  <FullScreenLoader text="Finalizing your membership..." />
+)}
       <style>
         {`
           @media (max-width: 768px) {
@@ -578,7 +561,7 @@ formDataToSend.append(
           }
         `}
       </style>
-      
+
       <div className="container">
         <div className="d-flex justify-content-end">
           <div className="text-right mb-4" style={{ width: "200px" }}>
@@ -1271,4 +1254,5 @@ formDataToSend.append(
 };
 
 export default VaidyaBandhuForm;
+
 
