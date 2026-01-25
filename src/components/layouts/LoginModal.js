@@ -1,289 +1,216 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Modal, Button, Form, Spinner } from "react-bootstrap";
+import { Modal, Button, Form, Spinner } from "react-bootstrap"; // ← FIXED: all components imported
 import OTPInput from "react-otp-input";
-import "../../assets/css/MembershipModal.css"; // Custom CSS for styling
+import "../../assets/css/MembershipModal.css";
 
 const LoginModal = () => {
-  // Listen for custom event to open modal from anywhere
-  useEffect(() => {
-    const handleOpenModal = () => setShow(true);
-    window.addEventListener("open-login-modal", handleOpenModal);
-    return () => {
-      window.removeEventListener("open-login-modal", handleOpenModal);
-    };
-  }, []);
-  
-  // Listen for login state changes from other components
-  useEffect(() => {
-    const handleLoginStateChange = (event) => {
-      setIsLoggedIn(event.detail.isLoggedIn);
-    };
-    window.addEventListener("login-state-changed", handleLoginStateChange);
-    return () => {
-      window.removeEventListener("login-state-changed", handleLoginStateChange);
-    };
-  }, []);
-  
+  const navigate = useNavigate();
+
   const [show, setShow] = useState(false);
   const [mobileNumber, setMobileNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState(1); // 1: Mobile Number, 2: OTP, 3: Basic Details
-  const navigate = useNavigate();
+  const [step, setStep] = useState(1); // 1: Mobile, 2: OTP
   const [errors, setErrors] = useState({});
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Check for existing token on component mount
+  // Check login state on mount
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      setIsLoggedIn(true);
-    }
+    setIsLoggedIn(!!token);
+  }, []);
+
+  // Listen for custom event to open modal
+  useEffect(() => {
+    const handleOpen = () => setShow(true);
+    window.addEventListener("open-login-modal", handleOpen);
+    return () => window.removeEventListener("open-login-modal", handleOpen);
+  }, []);
+
+  // Listen for login state changes from other components
+  useEffect(() => {
+    const handleLoginChange = (e) => setIsLoggedIn(e.detail.isLoggedIn);
+    window.addEventListener("login-state-changed", handleLoginChange);
+    return () => window.removeEventListener("login-state-changed", handleLoginChange);
   }, []);
 
   const handleShow = () => setShow(true);
+
   const handleClose = () => {
     setShow(false);
-    // Reset form when closing
     setStep(1);
     setMobileNumber("");
     setOtp("");
     setErrors({});
+    setIsLoading(false);
   };
 
-  // Validate Mobile Number (10 digits, only numeric)
-  const validateMobile = (mobile) => /^[0-9]{10}$/.test(mobile);
+  // Validate 10-digit mobile number
+  const validateMobile = (mobile) => /^[6-9]\d{9}$/.test(mobile);
 
   const handleMobileSubmit = async () => {
     if (!validateMobile(mobileNumber)) {
-      setErrors((prev) => ({
-        ...prev,
-        mobile: "Please enter a valid 10-digit mobile number.",
-      }));
+      setErrors({ mobile: "Please enter a valid 10-digit mobile number starting with 6-9" });
       return;
     }
-    setErrors({}); // Clear errors
+
+    setErrors({});
     setIsLoading(true);
+
     try {
-      const response = await fetch(
-        "https://admin.vaidyabandhu.com/api/users/login/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            mobile: mobileNumber,
-          }),
-        }
-      );
-      const data = await response.json();
-      if (response.ok) {
-        // Success - move to OTP step
+      const res = await fetch("https://admin.vaidyabandhu.com/api/users/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile: mobileNumber }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
         setStep(2);
-        console.log("OTP sent successfully:", data);
       } else {
-        // Handle API error
-        setErrors((prev) => ({
-          ...prev,
-          mobile:
-            data.message ||
-            data.error ||
-            "Failed to send OTP. Please try again.",
-        }));
+        setErrors({
+          mobile: data.message || data.error || "Failed to send OTP. Try again.",
+        });
       }
-    } catch (error) {
-      console.error("API Error:", error);
-      setErrors((prev) => ({
-        ...prev,
-        mobile: "Network error. Please check your connection and try again.",
-      }));
+    } catch (err) {
+      setErrors({ mobile: "Network error. Please check your connection." });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Validate OTP (4 digits)
-  const validateOtp = (otp) => otp.length === 4 && /^[0-9]{4}$/.test(otp);
+  const validateOtp = (value) => value.length === 4 && /^\d{4}$/.test(value);
 
- const handleOtpSubmit = async () => {
-  if (!validateOtp(otp)) {
-    setErrors((prev) => ({
-      ...prev,
-      otp: "OTP should be exactly 4 digits.",
-    }));
-    return;
-  }
-  setErrors({}); // Clear errors
-  setIsLoading(true);
-  try {
-    const response = await fetch(
-      "https://admin.vaidyabandhu.com/api/users/verify_login_otp/",
-      {
+  const handleOtpSubmit = async () => {
+    if (!validateOtp(otp)) {
+      setErrors({ otp: "OTP must be exactly 4 digits" });
+      return;
+    }
+
+    setErrors({});
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("https://admin.vaidyabandhu.com/api/users/verify_login_otp/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mobile: mobileNumber,
-          otp: otp,
+          otp,
         }),
-      }
-    );
-    const data = await response.json();
-    if (data.success) {
-      // Success - check if user is already a member (token exists)
-      console.log("OTP verified successfully:", data);
-      const token = data?.data?.token || "";
-      console.log("Received token:", token);
-      localStorage.setItem("token", token);
-      setIsLoggedIn(true); // Update login state
-      
-      // Dispatch custom event to notify other components about login
-      window.dispatchEvent(new CustomEvent("login-state-changed", { detail: { isLoggedIn: true } }));
-      
-      handleClose(); // Close the modal
-      
-      // Fetch user profile to check is_active status
-      try {
-        const profileResponse = await fetch(
-          "https://admin.vaidyabandhu.com/api/user/profile/",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: token,
-            },
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        const token = data?.data?.token || "";
+        localStorage.setItem("token", token);
+        setIsLoggedIn(true);
+
+        // Notify other components
+        window.dispatchEvent(new CustomEvent("login-state-changed", { detail: { isLoggedIn: true } }));
+
+        handleClose();
+
+        // Check profile to decide redirect
+        try {
+          const profileRes = await fetch("https://admin.vaidyabandhu.com/api/user/profile/", {
+            headers: { Authorization: token },
+          });
+
+          if (profileRes.ok) {
+            const profile = await profileRes.json();
+            if (profile?.is_active === true) {
+              navigate("/myprofile");
+            } else {
+              navigate("/basic-details");
+            }
+          } else {
+            navigate("/basic-details");
           }
-        );
-        const profileData = await profileResponse.json();
-        console.log("Profile data after login:", profileData);
-        
-        if (profileResponse.ok && profileData?.is_active === true) {
-          console.log("User is active, navigating to /myprofile");
-          navigate("/myprofile");
-        } else {
-          console.log("User is not active, navigating to /basic-details");
+        } catch {
           navigate("/basic-details");
         }
-      } catch (profileError) {
-        console.error("Error fetching profile after OTP:", profileError);
-        navigate("/basic-details");
-      }
-    } else {
-      // Handle API error
-      setErrors((prev) => ({
-        ...prev,
-        otp: data.message || data.error || "Invalid OTP. Please try again.",
-      }));
-    }
-  } catch (error) {
-    console.error("API Error:", error);
-    setErrors((prev) => ({
-      ...prev,
-      otp: "Network error. Please check your connection and try again.",
-    }));
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-  // Handle resend OTP
-  const handleResendOtp = async () => {
-    setIsLoading(true);
-    setOtp(""); // Clear current OTP
-    setErrors({}); // Clear errors
-    try {
-      const response = await fetch(
-        "https://admin.vaidyabandhu.com/api/users/login/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            mobile: mobileNumber,
-          }),
-        }
-      );
-      const data = await response.json();
-      if (response.ok) {
-        alert("OTP sent successfully!");
       } else {
-        alert(
-          data.message ||
-            data.error ||
-            "Failed to resend OTP. Please try again."
-        );
+        setErrors({ otp: data.message || data.error || "Invalid OTP" });
       }
-    } catch (error) {
-      console.error("API Error:", error);
-      alert("Network error. Please check your connection and try again.");
+    } catch (err) {
+      setErrors({ otp: "Network error. Please try again." });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle form field changes for number fields (allow integers only)
-  const handleMobChange = (e) => {
-    const value = e.target.value;
-    if (/^[0-9]*$/.test(value) && value.length <= 10) {
-      // Validate numeric input
-      setMobileNumber(value);
-      // Clear mobile error when user starts typing
-      if (errors.mobile) {
-        setErrors((prev) => ({ ...prev, mobile: "" }));
+  const handleResendOtp = async () => {
+    setIsLoading(true);
+    setOtp("");
+    setErrors({});
+
+    try {
+      const res = await fetch("https://admin.vaidyabandhu.com/api/users/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile: mobileNumber }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("OTP resent successfully!");
+      } else {
+        alert(data.message || "Failed to resend OTP");
       }
+    } catch {
+      alert("Network error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Helper: Call profile API and redirect based on is_active
+  // Only allow digits in mobile field
+  const handleMobChange = (e) => {
+    const val = e.target.value;
+    if (/^\d{0,10}$/.test(val)) {
+      setMobileNumber(val);
+      if (errors.mobile) setErrors((prev) => ({ ...prev, mobile: "" }));
+    }
+  };
+
+  // Handle click on user icon (already logged in)
   const handleIconClick = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/basic-details");
       return;
     }
-    try {
-      const response = await fetch(
-        "https://admin.vaidyabandhu.com/api/user/profile/", // Added trailing slash
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token, // Removed "Bearer " prefix
-          },
-        }
-      );
-      const data = await response.json();
-      console.log("Profile API response:", data); // Add logging to debug
 
-      if (response.ok) {
-        // Check if the user is active - note the path to is_active
+    try {
+      const res = await fetch("https://admin.vaidyabandhu.com/api/user/profile/", {
+        headers: { Authorization: token },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
         if (data?.is_active === true) {
-          console.log("User is active, navigating to /myprofile");
           navigate("/myprofile");
         } else {
-          console.log("User is not active, navigating to /basic-details");
           navigate("/basic-details");
         }
       } else {
-        // fallback if API fails
-        console.error("Profile API failed with status:", response.status);
         navigate("/basic-details");
       }
-    } catch (error) {
-      console.error("Error in handleIconClick:", error);
+    } catch {
       navigate("/basic-details");
     }
   };
 
   return (
     <>
-      {/* Conditionally render button based on login state */}
+      {/* Show user icon if logged in, else show login button */}
       {isLoggedIn ? (
-        <button className="user-icon-btn" onClick={handleIconClick}>
+        <button className="user-icon-btn" onClick={handleIconClick} title="My Profile">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -304,45 +231,43 @@ const LoginModal = () => {
           Log in
         </button>
       )}
-      <Modal
-        show={show}
-        onHide={handleClose}
-        centered
-        className="membership-modal"
-      >
+
+      <Modal show={show} onHide={handleClose} centered className="membership-modal">
         <Modal.Header closeButton>
           <Modal.Title>
-            {step === 1 && "Log in - Mobile Verification"}
-            {step === 2 && "Log in - OTP Verification"}
+            {step === 1 ? "Login - Mobile Verification" : "Login - OTP Verification"}
           </Modal.Title>
         </Modal.Header>
+
         <Modal.Body>
           {step === 1 && (
-            <Form style={{ minHeight: "200px" }}>
-              <Form.Group controlId="formMobileNumber" className="mb-3">
+            <Form>
+              <Form.Group className="mb-3">
                 <Form.Label>Enter Mobile Number</Form.Label>
                 <Form.Control
                   type="text"
-                  placeholder="Enter mobile number"
+                  placeholder="Enter 10-digit mobile number"
                   value={mobileNumber}
                   onChange={handleMobChange}
                   isInvalid={!!errors.mobile}
-                  maxLength={10} // Restrict input to 10 characters
-                  inputMode="numeric" // For mobile and numeric input
+                  maxLength={10}
+                  inputMode="numeric"
+                  autoFocus
                 />
-                <Form.Control.Feedback type="invalid">
-                  {errors.mobile}
-                </Form.Control.Feedback>
+                <Form.Control.Feedback type="invalid">{errors.mobile}</Form.Control.Feedback>
               </Form.Group>
-              <div className="d-flex justify-content-center">
+
+              <div className="d-grid">
                 <Button
                   variant="primary"
                   onClick={handleMobileSubmit}
-                  disabled={isLoading || !mobileNumber}
-                  className="submit-btn"
+                  disabled={isLoading || mobileNumber.length !== 10}
                 >
                   {isLoading ? (
-                    <Spinner animation="border" size="sm" />
+                    <>
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      Sending OTP...
+                    </>
                   ) : (
                     "Send OTP"
                   )}
@@ -350,63 +275,52 @@ const LoginModal = () => {
               </div>
             </Form>
           )}
+
           {step === 2 && (
-            <Form style={{ minHeight: "200px" }}>
-              <Form.Group controlId="formOtp" className="mb-3 text-center">
-                <Form.Label>Enter OTP sent to {mobileNumber}</Form.Label>
+            <Form>
+              <Form.Group className="mb-4 text-center">
+                <Form.Label>Enter OTP sent to <strong>{mobileNumber}</strong></Form.Label>
                 <div className="d-flex justify-content-center mb-3">
                   <OTPInput
                     value={otp}
                     onChange={setOtp}
                     numInputs={4}
-                    separator={<span style={{ margin: "0 5px" }}>-</span>}
+                    separator={<span className="mx-2">-</span>}
                     inputStyle={{
-                      width: "45px",
-                      height: "45px",
-                      margin: "0 5px",
-                      padding: "0px",
-                      textAlign: "center",
-                      fontSize: "18px",
-                      fontFamily: "poppins",
+                      width: "50px",
+                      height: "50px",
+                      margin: "0 8px",
+                      fontSize: "20px",
+                      borderRadius: "8px",
                       border: "2px solid #ced4da",
-                      borderRadius: "5px",
-                      outline: "none",
+                      textAlign: "center",
                     }}
-                    focusStyle={{
-                      border: "2px solid #007bff",
-                      outline: "none",
-                    }}
+                    focusStyle={{ borderColor: "#0d6efd", boxShadow: "0 0 0 0.25rem rgba(13,110,253,0.25)" }}
                     renderInput={(props) => <input {...props} />}
                   />
                 </div>
-                {errors.otp && (
-                  <div className="invalid-feedback d-block text-center">
-                    {errors.otp}
-                  </div>
-                )}
+                {errors.otp && <div className="text-danger text-center">{errors.otp}</div>}
               </Form.Group>
-              <div className="d-flex justify-content-center gap-2">
+
+              <div className="d-grid gap-2">
                 <Button
                   variant="primary"
                   onClick={handleOtpSubmit}
                   disabled={isLoading || otp.length !== 4}
-                  className="submit-btn"
                 >
                   {isLoading ? (
-                    <Spinner animation="border" size="sm" />
+                    <>
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      Verifying...
+                    </>
                   ) : (
                     "Verify OTP"
                   )}
                 </Button>
-              </div>
-              <div className="d-flex justify-content-end">
-                <div
-                  variant="link"
-                  onClick={handleResendOtp}
-                  className="resend-otp-btn"
-                >
+
+                <Button variant="link" onClick={handleResendOtp} disabled={isLoading}>
                   Resend OTP
-                </div>
+                </Button>
               </div>
             </Form>
           )}
