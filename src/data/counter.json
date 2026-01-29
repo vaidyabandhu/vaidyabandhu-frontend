@@ -3,7 +3,7 @@
         "id":1,
         "icon":"fal fa-procedures",
         "title":"Verified Doctors",
-        "value":500
+        "value":2500
     },
     {
         "id":2,
@@ -29,4 +29,5 @@
         "title":"Membership Holder",
         "value":5000
     }
+
 ]
