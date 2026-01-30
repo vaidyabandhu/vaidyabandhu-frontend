@@ -38,7 +38,7 @@ const Banner = () => {
       style={{
         overflow: "hidden",
         position: "relative",
-        marginTop: "-10px",
+        marginTop: "-14px",
       }}
     >
       <div

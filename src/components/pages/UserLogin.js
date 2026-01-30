@@ -22,8 +22,25 @@ const UserLogin = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) setIsLoggedIn(true);
-  }, []);
+    if (token) {
+      // Check profile to decide where to go
+      fetch(PROFILE_API, {
+        method: "GET",
+        headers: { Authorization: token },
+      })
+        .then(res => res.json())
+        .then(profileData => {
+          if (profileData?.is_active === true) {
+            navigate("/myprofile");
+          } else {
+            navigate("/basic-details");
+          }
+        })
+        .catch(() => {
+          navigate("/basic-details");
+        });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const handleLoginStateChange = (event) => {
@@ -136,7 +153,7 @@ const UserLogin = () => {
           })
         );
 
-        /* Now fetch profile to decide where to go */
+        // Now fetch profile to decide where to go
         try {
           const profileRes = await fetch(PROFILE_API, {
             method: "GET",
@@ -146,9 +163,6 @@ const UserLogin = () => {
           });
 
           const profileRaw = await profileRes.text();
-          console.log("✅ PROFILE STATUS:", profileRes.status);
-          console.log("✅ PROFILE RAW RESPONSE:", profileRaw);
-
           let profileData = null;
           try {
             profileData = JSON.parse(profileRaw);
@@ -162,7 +176,6 @@ const UserLogin = () => {
             navigate("/basic-details");
           }
         } catch (profileError) {
-          console.error("❌ Profile fetch error:", profileError);
           navigate("/basic-details");
         }
       } else {

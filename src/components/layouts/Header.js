@@ -1,6 +1,6 @@
 import React, { Fragment, useState, useEffect, useCallback } from "react";
 import Mobilemenu from "./Mobilemenu";
-import { Link, useLocation, useNavigate } from "react-router-dom"; 
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import navigation from "../../data/navigation.json";
 import "../../assets/css/Header.css";
 
@@ -33,6 +33,7 @@ const CustomHamburgerMenu = ({ isOpen, onClick }) => {
       onMouseLeave={(e) =>
         (e.currentTarget.style.backgroundColor = "transparent")
       }
+      aria-label="Open navigation menu"
     >
       <div
         style={{
@@ -78,7 +79,7 @@ const CustomHamburgerMenu = ({ isOpen, onClick }) => {
 // NewsTicker component for sticky news bar
 const NewsTicker = () => {
   // The message to repeat
-  const message = `| Get the Vaidyabandhu Health Card for just ₹49 \u00A0|\u00A0 ಕೇವಲ ₹49ಕ್ಕೆ ವೈದ್ಯಬಂಧು ಆರೋಗ್ಯ ಕಾರ್ಡ್ ಪಡೆಯಿರಿ \u00A0|\u00A0 కేవలం ₹49కే వైద్యబంధు హెల్త్ కార్డ్ పొందండి \u00A0|\u00A0 வெறும் ₹49க்கு வைத்தியபந்து ஹெல்த் கார்டைப் பெறுங்கள் \u00A0|\u00A0 വെറും ₹49ക്ക് വൈദ്യബന്ധു ഹെൽത്ത് കാർഡ് നേടൂ \u00A0|\u00A0 सिर्फ ₹49 में वैद्यबंधु हेल्थ कार्ड प्राप्त करें` ;
+  const message = `| Get the Vaidyabandhu Health Card for just ₹49 \u00A0|\u00A0 ಕೇವಲ ₹49ಕ್ಕೆ ವೈದ್ಯಬಂಧು ಆರೋಗ್ಯ ಕಾರ್ಡ್ ಪಡೆಯಿರಿ \u00A0|\u00A0 కేవలం ₹49కే వైద్యబంధు హెల్త్ కార్డ్ పొందండి \u00A0|\u00A0 வெறும் ₹49க்கு வைத்தியபந்து ஹெல்த் கார்டைப் பெறுங்கள் \u00A0|\u00A0 വെറും ₹49ക്ക് വൈദ്യബന്ധു ഹെൽത്ത് കാർഡ് നേടൂ \u00A0|\u00A0 सिर्फ ₹49 में वैद्यबंधु हेल्थ कार्ड प्राप्त करें`;
   // Repeat the message enough times to fill the ticker
   const repeatCount = 8;
   const repeated = Array(repeatCount).fill(message).join(' ');
@@ -190,15 +191,15 @@ const normalizePath = (path) => {
 const isActiveItem = (item, currentPath) => {
   const normalizedItemLink = normalizePath(item.link);
   const normalizedPath = normalizePath(currentPath);
-  
+
   if (normalizedItemLink === normalizedPath) {
     return true;
   }
-  
+
   if (item.child && item.submenu) {
     return item.submenu.some(subItem => isActiveItem(subItem, currentPath));
   }
-  
+
   return false;
 };
 
@@ -206,20 +207,20 @@ const Header = () => {
   const { navMethod, toggleNav } = useNavHelper();
   const [userPhone, setUserPhone] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
-  const location = useLocation(); 
+  const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname;
-  
+
   useEffect(() => {
     const storedUserPhone = localStorage.getItem("userPhone");
     if (storedUserPhone) {
       setUserPhone(storedUserPhone);
     }
-    
+
     // Check if user is logged in by checking for token
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
-    
+
     // Listen for login state changes
     const handleLoginStateChange = (event) => {
       setIsLoggedIn(event.detail.isLoggedIn);
@@ -230,14 +231,14 @@ const Header = () => {
         setUserPhone(null);
       }
     };
-    
+
     window.addEventListener("login-state-changed", handleLoginStateChange);
-    
+
     return () => {
       window.removeEventListener("login-state-changed", handleLoginStateChange);
     };
   }, []);
-  
+
   // Handle profile icon click
   const handleIconClick = async () => {
     const token = localStorage.getItem("token");
@@ -271,25 +272,25 @@ const Header = () => {
       navigate("/basic-details");
     }
   };
-  
+
   const handleLogout = () => {
     // Remove userPhone from localStorage
     localStorage.removeItem("userPhone");
-    
+
     // Remove token from localStorage
     localStorage.removeItem("token");
-    
+
     // Clear all cookies
-    document.cookie.split(";").forEach(function(c) { 
-      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+    document.cookie.split(";").forEach(function (c) {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
     });
-    
+
     // Update login state
     setIsLoggedIn(false);
-    
+
     // Dispatch custom event to notify other components about logout
     window.dispatchEvent(new CustomEvent("login-state-changed", { detail: { isLoggedIn: false } }));
-    
+
     // Navigate to home page
     navigate("/");
   };
@@ -302,10 +303,14 @@ const Header = () => {
   return (
     <Fragment>
       <NewsTicker />
-      {/* Mobile Menu */}
-      <aside className={navMethod ? "sigma_aside aside-open" : "sigma_aside"}>
+      {/* Mobile Menu: only visible when hamburger is clicked */}
+      <aside
+        className={navMethod ? "sigma_aside aside-open" : "sigma_aside"}
+        aria-hidden={!navMethod}
+        aria-label="Mobile Navigation"
+        style={{ display: navMethod ? 'block' : 'none' }}
+      >
         <Mobilemenu />
-        {/* Added login button in mobile menu */}
         {!isLoggedIn ? (
           <div className="p-3 text-center">
             <div className="mt-2">
@@ -322,8 +327,8 @@ const Header = () => {
           <div className="p-3 text-center">
             {/* User icon */}
             <div className="mb-3">
-              <button 
-                className="user-icon-btn" 
+              <button
+                className="user-icon-btn"
                 onClick={handleIconClick}
                 style={{
                   border: 'none',
@@ -397,236 +402,75 @@ const Header = () => {
         <div
           className="sigma_aside-overlay aside-trigger"
           onClick={toggleNav}
+          aria-label="Close mobile menu"
+          tabIndex={0}
+          role="button"
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') toggleNav(); }}
+          style={{ cursor: 'pointer' }}
         />
       )}
       {/* Header */}
       <header
-        className={`sigma_header header-absolute style-5 other can-sticky ${
-          navMethod ? "mobile-menu-open" : ""
-        }`}
+        className={`sigma_header header-absolute style-5 other can-sticky${navMethod ? " mobile-menu-open" : ""}`}
         style={{
           position: "fixed",
-          top: HEADER_OFFSET, // push header below ticker
+          top: HEADER_OFFSET,
           left: 0,
           right: 0,
           zIndex: navMethod ? 1001 : 1000,
-          backgroundColor: "#fff",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+          background: "linear-gradient(90deg, #e0f7fa 0%, #f8fafc 100%)",
+          boxShadow: "0 4px 24px 0 rgba(0, 122, 126, 0.10)",
+          borderBottom: "1.5px solid #e0e7ef",
           transition: "all 0.3s ease",
+          backdropFilter: "blur(8px)",
         }}
+        aria-label="Site Header"
       >
-        {/* Header Top - Hidden on mobile */}
-        <div className="sigma_header-top dark-bg d-none d-md-block">
-          <div className="container-fluid">
-            <div
-              className="sigma_header-top-inner"
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                padding: "8px 0",
-              }}
-            >
-              {/* Left: Social Icons */}
-              <div
-                className="sigma_header-top-contacts mobile-margin"
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                }}
-              >
-                <Link
-                  to="https://www.facebook.com/profile.php?id=61578623333168"
-                  style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: "30px",
-                    height: "30px",
-                    backgroundColor: "#3b5998",
-                    borderRadius: "50%",
-                    padding: "2px",
-                    textAlign: "center",
-                    textDecoration: "none",
-                  }}
-                >
-                  <i
-                    className="fab fa-facebook-f"
-                    style={{ fontSize: "16px", color: "#fff" }}
-                  />
-                </Link>
-                <Link
-                  to="https://www.youtube.com/@VaidyaBandhu"
-                  style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: "30px",
-                    height: "30px",
-                    backgroundColor: "#cd201f", // Red background color
-                    borderRadius: "50%",
-                    padding: "2px",
-                    textAlign: "center",
-                    textDecoration: "none",
-                  }}
-                >
-                  <i
-                    className="fab fa-youtube"
-                    style={{ fontSize: "16px", color: "#fff" }}
-                  />
-                </Link>
-                <Link
-                  to="https://x.com/vaidya_bandhu"
-                  style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: "30px",
-                    height: "30px",
-                    backgroundColor: "#000", // Black background color
-                    borderRadius: "50%",
-                    padding: "2px",
-                    textAlign: "center",
-                    textDecoration: "none",
-                  }}
-                >
-                  <img
-                    src="/assets/img/t-i.png" // Local image path
-                    alt="Twitter X"
-                    style={{
-                      width: "20px", // Adjust image size as needed
-                      height: "20px",
-                      objectFit: "contain",
-                    }}
-                  />
-                </Link>
-                <Link
-                  to="https://www.instagram.com/vaidyabandhu/"
-                  style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: "30px",
-                    height: "30px",
-                    backgroundColor: "#E1306C", // Instagram color
-                    borderRadius: "50%",
-                    padding: "2px",
-                    textAlign: "center",
-                    textDecoration: "none",
-                  }}
-                >
-                  <img
-                    src="/assets/img/i-i.png" // Local image path
-                    alt="Instagram"
-                    style={{
-                      width: "20px", // Adjust image size as needed
-                      height: "20px",
-                      objectFit: "contain",
-                    }}
-                  />
-                </Link>
-                <Link
-                  to="#"
-                  style={{
-                    display: "inline-flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: "30px",
-                    height: "30px",
-                    backgroundColor: "#0a66c2", // LinkedIn background color
-                    borderRadius: "50%",
-                    padding: "2px",
-                    textAlign: "center",
-                    textDecoration: "none",
-                  }}
-                >
-                  <i
-                    className="fab fa-linkedin-in"
-                    style={{ fontSize: "16px", color: "#fff" }}
-                  />{" "}
-                  {/* LinkedIn icon */}
-                </Link>
-              </div>
-              {/* Right: Contact Info */}
-              <div
-                className="sigma_header-top-links"
-                style={{
-                  display: "flex",
-                  gap: "15px",
-                  fontSize: "14px",
-                  color: "#fff",
-                }}
-              >
-                <a
-                  href="mailto:support@vaidyabandhu.com"
-                  style={{ color: "#fff", textDecoration: "none" }}
-                >
-                  <i
-                    className="fal fa-envelope"
-                    style={{ marginRight: "5px" }}
-                  />{" "}
-                  support@vaidyabandhu.com
-                </a>
-                <Link to="#" style={{ color: "#fff", textDecoration: "none" }}>
-                  <i
-                    className="fal fa-map-marker-alt"
-                    style={{ marginRight: "5px" }}
-                  />{" "}
-                  Bangalore
-                </Link>
-               <a
-  href="tel:+918535853589"
-  style={{
-    color: "#fff",
-    textDecoration: "none",
-    fontSize: "18px", // 🔹 increased font size
-    fontWeight: "500",
-  }}
->
-  <i
-    className="fal fa-mobile"
-    style={{ marginRight: "5px", fontSize: "20px" }} 
-  />
-  +91 8535 8535 89
-</a>
-
-              </div>
-            </div>
-          </div>
-        </div>
         {/* Header Middle (Logo + Nav + Controls) */}
         <div className="sigma_header-middle">
           <div className="container-fluid">
-            <div className="navbar">
-              <div className="sigma_logo-wrapper">
-                <Link to="/" className="sigma_logo">
+            <div className="navbar" style={{ minHeight: 90, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div className="sigma_logo-wrapper premium-logo-wrapper" style={{ display: 'flex', alignItems: 'center' }}>
+                <Link to="/" className="sigma_logo premium-logo-link" style={{
+                  borderRadius: 24,
+                  display: 'flex',
+                  alignItems: 'center',
+                  marginRight: 22,
+                  transition: 'box-shadow 0.3s',
+                }} aria-label="Vaidyabandhu Home">
                   <img
                     src={process.env.PUBLIC_URL + "/assets/img/logoo.png"}
-                    alt="logo"
-                    style={{ borderRadius: "20px" }}
+                    alt="Vaidyabandhu Logo"
+                    className="responsive-header-logo"
+                    style={{
+                      width: "170px",
+                      height: "auto",
+                      padding: "8px",
+                      display: "block",
+                    }}
                   />
                 </Link>
               </div>
-              <ul className="navbar-nav">
+              {/* Desktop Navigation: only show on desktop (>=768px) */}
+              <nav className="navbar-nav responsive-navbar-nav d-none d-md-flex" style={{ display: 'flex', alignItems: 'center', gap: 8 }} aria-label="Main Navigation">
                 {navigation.map((item, i) => (
                   <li
                     key={i}
-                    className={
-                      `menu-item ${item.child ? "menu-item-has-children" : ""} ${isActiveItem(item, currentPath) ? "active" : ""}`
-                    }
+                    className={`menu-item ${item.child ? "menu-item-has-children" : ""} ${isActiveItem(item, currentPath) ? "active" : ""}`}
+                    style={{ margin: '0 2px' }}
                   >
                     {item.child ? (
-                      <Link to="#">{item.linkText}</Link>
+                      <Link to="#" className="nav-link-premium" style={{ borderRadius: 22, padding: '8px 14px', fontWeight: 500, color: '#007a7e', background: 'transparent', fontSize: 15, transition: 'background 0.2s, color 0.2s' }} aria-haspopup="true" aria-expanded="false">{item.linkText}</Link>
                     ) : (
-                      <Link to={item.link}>{item.linkText}</Link>
+                      <Link to={item.link} className="nav-link-premium" style={{ borderRadius: 22, padding: '8px 14px', fontWeight: 600, color: isActiveItem(item, currentPath) ? '#fff' : '#007a7e', background: isActiveItem(item, currentPath) ? 'linear-gradient(90deg, #00908d 0%, #1e293b 100%)' : 'transparent', boxShadow: isActiveItem(item, currentPath) ? '0 2px 8px #b2f5ea33' : 'none', fontSize: 15, transition: 'background 0.2s, color 0.2s' }} aria-current={isActiveItem(item, currentPath) ? 'page' : undefined}>{item.linkText}</Link>
                     )}
+                    {/* Submenus remain unchanged */}
                     {item.child && (
                       <ul className="sub-menu">
                         {item.submenu.map((sub, j) => (
                           <li
                             key={j}
-                            className={
-                              `menu-item ${sub.child ? "menu-item-has-children" : ""} ${isActiveItem(sub, currentPath) ? "active" : ""}`
-                            }
+                            className={`menu-item ${sub.child ? "menu-item-has-children" : ""} ${isActiveItem(sub, currentPath) ? "active" : ""}`}
                           >
                             {sub.child ? (
                               <Link to="#">{sub.linkText}</Link>
@@ -636,8 +480,8 @@ const Header = () => {
                             {sub.child && (
                               <ul className="sub-menu">
                                 {sub.submenu.map((deep, k) => (
-                                  <li 
-                                    key={k} 
+                                  <li
+                                    key={k}
                                     className={`menu-item ${isActiveItem(deep, currentPath) ? "active" : ""}`}
                                   >
                                     <Link to={deep.link}>{deep.linkText}</Link>
@@ -651,20 +495,22 @@ const Header = () => {
                     )}
                   </li>
                 ))}
-              </ul>
-              <div className="sigma_header-controls style-2">
-                <ul className="sigma_header-controls-inner">
+              </nav>
+              {/* Header Controls */}
+              <div className="sigma_header-controls style-2" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <ul className="sigma_header-controls-inner" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   {isLoggedIn ? (
                     <>
                       <li className="d-none d-sm-block">
-                        <Link to="/myprofile" className="sigma_btn btn-sm">
+                        <Link to="/myprofile" className="sigma_btn btn-sm premium-btn" style={{ borderRadius: 22, background: 'linear-gradient(90deg, #00908d 0%, #1e293b 100%)', color: '#fff', fontWeight: 700, padding: '10px 28px', fontSize: 18, boxShadow: '0 2px 8px #b2f5ea33', border: 'none', letterSpacing: 0.2 }}>
                           My Profile
                         </Link>
                       </li>
                       <li className="d-none d-sm-block">
                         <button
                           onClick={handleLogout}
-                          className="btn btn-sm btn-outline-light ms-2"
+                          className="btn btn-sm btn-outline-light ms-2 premium-btn"
+                          style={{ borderRadius: 22, background: '#fff', color: '#007a7e', fontWeight: 700, padding: '10px 28px', fontSize: 18, border: '1.5px solid #00908d', boxShadow: '0 2px 8px #b2f5ea22', transition: 'background 0.2s, color 0.2s', letterSpacing: 0.2 }}
                         >
                           Logout
                         </button>
@@ -675,8 +521,8 @@ const Header = () => {
                       {/* Login Button UI - Only for desktop */}
                       <li className="d-none d-sm-block">
                         <button
-                          className="sigma_btn btn-sm"
-                          style={{ marginLeft: 8 }}
+                          className="sigma_btn btn-sm premium-btn"
+                          style={{ borderRadius: 22, background: 'linear-gradient(90deg, #00908d 0%, #1e293b 100%)', color: '#fff', fontWeight: 700, padding: '10px 28px', fontSize: 18, boxShadow: '0 2px 8px #b2f5ea33', border: 'none', letterSpacing: 0.2 }}
                           onClick={handleLoginPage}
                         >
                           Log in
@@ -689,6 +535,7 @@ const Header = () => {
                     <CustomHamburgerMenu
                       isOpen={navMethod}
                       onClick={toggleNav}
+                      aria-label="Open navigation menu"
                     />
                   </li>
                 </ul>
@@ -696,8 +543,57 @@ const Header = () => {
             </div>
           </div>
         </div>
+        {/* Subtle divider under header */}
+        <div style={{ width: '100%', height: 3, background: 'linear-gradient(90deg, #b2f5ea 0%, #e0e7ef 100%)', opacity: 0.7, boxShadow: '0 1px 4px #b2f5ea22' }} />
       </header>
-      {/* Responsive styles and hamburger/cross controls */}
+      <style>{`
+        .premium-logo-wrapper:hover .premium-brand-text {
+          color: #00908d !important;
+        }
+        .premium-logo-link:hover {
+          box-shadow: 0 8px 32px #00908d33 !important;
+        }
+        .nav-link-premium:hover {
+          color: #fff !important;
+          background: linear-gradient(90deg, #00908d 0%, #1e293b 100%) !important;
+        }
+        @media (max-width: 768px) {
+          .responsive-header-logo {
+            width: 110px !important;
+            padding: 4px !important;
+          }
+          .responsive-navbar-nav {
+            gap: 2px !important;
+          }
+          .nav-link-premium {
+            font-size: 13px !important;
+            padding: 6px 10px !important;
+          }
+          .premium-btn {
+            font-size: 15px !important;
+            padding: 8px 16px !important;
+          }
+        }
+        /* Selected desktop nav link should be white */
+        @media (min-width: 768px) {
+          .navbar-nav .menu-item.active > .nav-link-premium {
+            color: #fff !important;
+            background: linear-gradient(90deg, #00908d 0%, #1e293b 100%) !important;
+            box-shadow: 0 2px 8px #b2f5ea33 !important;
+            padding: 8px 14px !important;
+            font-size: 15px !important;
+            font-weight: 600 !important;
+            border-radius: 22px !important;
+          }
+          /* Match login/myprofile/logout button styles to active nav */
+          .premium-btn {
+            padding: 8px 14px !important;
+            font-size: 15px !important;
+            font-weight: 600 !important;
+            border-radius: 22px !important;
+          }
+        }
+      `}</style>
       <style>
         {`
           @media (max-width: 768px) {

@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import Header from '../layouts/Header';
 import Footer from '../layouts/Footer';
 import Content from '../sections/home/Content';
+import  Banner from '../sections/home/Banner';
 
 const pagelocation = "Homepage";
 
@@ -59,6 +60,8 @@ class Home extends Component {
                 </Helmet>
                 {/* <NewsTicker /> */}
                 <Header />
+                  <Banner />
+                
                 <Content />
                 <Footer />
             </Fragment>
