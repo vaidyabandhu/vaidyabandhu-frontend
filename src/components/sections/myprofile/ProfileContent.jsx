@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { saveAs } from "file-saver";
+import { useNavigate } from "react-router-dom";
 import {
   Mail,
   Phone,
@@ -10,10 +11,21 @@ import {
   CreditCard,
   Hash,
   LogOut, Loader2, AlertCircle,
+  UserPlus,
+  Download,
+  Eye,
+  Crown,
+  Users,
+  Heart,
+  UserCheck,
+  Baby,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 // import LoginModal from "./LoginModal";
 
 const MyProfile = () => {
+  const navigate = useNavigate();
   const [patient, setPatient] = useState({
     full_name: "",
     age: "",
@@ -26,6 +38,10 @@ const MyProfile = () => {
     Aadhar_number: "",
     pan_number: "",
     profile_image: "",
+    membership_id: "",
+    start_date: "",
+    end_date: "",
+    family_members: [],
   });
 
   const [loading, setLoading] = useState(true);
@@ -33,9 +49,31 @@ const MyProfile = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingMemberId, setDownloadingMemberId] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [activeTab, setActiveTab] = useState('profile');
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [flippedCards, setFlippedCards] = useState({});
+
+  // Toggle card flip
+  const toggleCardFlip = (cardId) => {
+    setFlippedCards(prev => ({
+      ...prev,
+      [cardId]: !prev[cardId]
+    }));
+  };
+
+  // Get relationship icon and color
+  const getRelationshipDetails = (relationship) => {
+    const relationshipMap = {
+      spouse: { icon: Heart, color: '#E91E63', label: 'Spouse', bgColor: '#FCE4EC' },
+      son: { icon: Baby, color: '#2196F3', label: 'Son', bgColor: '#E3F2FD' },
+      daughter: { icon: Baby, color: '#9C27B0', label: 'Daughter', bgColor: '#F3E5F5' },
+      father: { icon: UserCheck, color: '#4CAF50', label: 'Father', bgColor: '#E8F5E9' },
+      mother: { icon: UserCheck, color: '#FF9800', label: 'Mother', bgColor: '#FFF3E0' },
+    };
+    return relationshipMap[relationship?.toLowerCase()] || { icon: Users, color: '#9E9E9E', label: 'Family', bgColor: '#F5F5F5' };
+  };
 
   const formatAppointmentDateOnly = (timeString) => {
   if (!timeString || typeof timeString !== 'string') {
@@ -235,20 +273,26 @@ const formatAppointmentTimeRange = (timeString) => {
   }, [activeTab, patient?.id]);
 
   // membership card download handler
-  const handleDownload = async () => {
-    setDownloading(true);
+  const handleDownload = async (memberId = null, memberName = null) => {
+    if (memberId) {
+      setDownloadingMemberId(memberId);
+    } else {
+      setDownloading(true);
+    }
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
-        "https://admin.vaidyabandhu.com/api/user/card/pdf/",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token,
-          },
-        }
-      );
+      // Use different endpoint for family members vs primary member
+      const endpoint = memberId 
+        ? `https://admin.vaidyabandhu.com/api/user/family/card/pdf/${memberId}/`
+        : "https://admin.vaidyabandhu.com/api/user/card/pdf/";
+      
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Failed to download membership card");
@@ -256,7 +300,8 @@ const formatAppointmentTimeRange = (timeString) => {
 
       // Get the filename from the response headers or use a default
       const contentDisposition = response.headers.get("Content-Disposition");
-      let filename = `${patient.full_name || "user"}_HealthCard.pdf`;
+      const name = memberName || patient.full_name || "user";
+      let filename = `${name}_HealthCard.pdf`;
 
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="(.+)"/);
@@ -273,6 +318,7 @@ const formatAppointmentTimeRange = (timeString) => {
       alert("Failed to download membership card. Please try again later.");
     } finally {
       setDownloading(false);
+      setDownloadingMemberId(null);
     }
   };
 
@@ -369,20 +415,17 @@ const formatAppointmentTimeRange = (timeString) => {
       borderBottom: "1px solid #eee",
     },
     healthCard: {
-      width: isMobile ? "300px" : "480px",
-      height: isMobile ? "200px" : "350px",
+      width: "100%",
+      height: "100%",
       borderRadius: "12px",
-      margin: "0 auto",
       background: "#F5F9FA",
       border: "1px solid #CCCCCC",
       boxShadow: "0px 4px 8px 0px rgba(0,0,0,0.1)",
-      position: "relative",
       overflow: "hidden",
       fontFamily: "Poppins, sans-serif",
       display: "flex",
       flexDirection: "column",
       padding: "0px",
-      marginBottom: "20px",
     },
     front: {
       color: "#4A4A4A",
@@ -808,6 +851,180 @@ const formatAppointmentTimeRange = (timeString) => {
       justifyContent: "center",
       opacity: downloading ? 0.7 : 1,
     },
+    // Member cards grid styles
+    cardsSection: {
+      width: "100%",
+      maxWidth: "1400px",
+      margin: "0 auto",
+    },
+    sectionHeader: {
+      display: "flex",
+      alignItems: "center",
+      gap: "12px",
+      marginBottom: "24px",
+      paddingBottom: "12px",
+      borderBottom: "2px solid #095D7E",
+    },
+    sectionHeaderIcon: {
+      width: "32px",
+      height: "32px",
+      color: "#095D7E",
+    },
+    sectionHeaderTitle: {
+      fontSize: isMobile ? "20px" : "24px",
+      fontWeight: 700,
+      color: "#095D7E",
+      margin: 0,
+    },
+    cardsGrid: {
+      display: "grid",
+      gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(480px, 1fr))",
+      gap: isMobile ? "24px" : "32px",
+      justifyItems: "center",
+    },
+    memberCardWrapper: {
+      width: isMobile ? "300px" : "480px",
+      maxWidth: "520px",
+      perspective: "1000px",
+      position: "relative",
+      margin: "0 auto",
+      paddingTop: "16px",
+    },
+    memberCardInner: {
+      position: "relative",
+      width: "100%",
+      height: isMobile ? "200px" : "350px",
+      transition: "transform 0.6s ease-in-out",
+      transformStyle: "preserve-3d",
+    },
+    memberCardFlipped: {
+      transform: "rotateY(180deg)",
+    },
+    cardFace: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      backfaceVisibility: "hidden",
+      WebkitBackfaceVisibility: "hidden",
+    },
+    cardFaceBack: {
+      transform: "rotateY(180deg)",
+    },
+    memberBadge: {
+      position: "absolute",
+      top: isMobile ? "-10px" : "-12px",
+      left: isMobile ? "15px" : "20px",
+      padding: isMobile ? "4px 12px" : "6px 16px",
+      borderRadius: "20px",
+      fontSize: isMobile ? "10px" : "12px",
+      fontWeight: 700,
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
+      zIndex: 10,
+      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+    },
+    primaryBadge: {
+      background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+      color: "#5D4E00",
+    },
+    familyBadge: {
+      background: "#fff",
+      border: "2px solid",
+    },
+    statusBadge: {
+      position: "absolute",
+      top: isMobile ? "-10px" : "-12px",
+      right: isMobile ? "15px" : "20px",
+      padding: isMobile ? "4px 10px" : "6px 12px",
+      borderRadius: "20px",
+      fontSize: isMobile ? "9px" : "11px",
+      fontWeight: 600,
+      zIndex: 10,
+      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+    },
+    activeBadge: {
+      background: "#d4edda",
+      color: "#155724",
+      border: "1px solid #c3e6cb",
+    },
+    inactiveBadge: {
+      background: "#f8d7da",
+      color: "#721c24",
+      border: "1px solid #f5c6cb",
+      fontWeight: 700,
+    },
+    cardActions: {
+      display: "flex",
+      justifyContent: "center",
+      gap: isMobile ? "8px" : "12px",
+      marginTop: "16px",
+    },
+    actionButton: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "6px",
+      padding: isMobile ? "10px 16px" : "12px 24px",
+      borderRadius: "8px",
+      border: "none",
+      cursor: "pointer",
+      fontSize: isMobile ? "13px" : "14px",
+      fontWeight: 600,
+      transition: "all 0.2s ease",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+    },
+    viewButton: {
+      background: "#fff",
+      color: "#095D7E",
+      border: "2px solid #095D7E",
+    },
+    downloadActionButton: {
+      background: "linear-gradient(135deg, #095D7E 0%, #046877 100%)",
+      color: "#fff",
+    },
+    emptyFamilyCard: {
+      width: "100%",
+      maxWidth: "520px",
+      height: isMobile ? "200px" : "280px",
+      borderRadius: "16px",
+      border: "2px dashed #ccc",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "16px",
+      background: "#fafafa",
+      padding: "24px",
+    },
+    emptyIcon: {
+      width: isMobile ? "48px" : "64px",
+      height: isMobile ? "48px" : "64px",
+      color: "#bbb",
+    },
+    emptyText: {
+      fontSize: isMobile ? "14px" : "16px",
+      color: "#888",
+      textAlign: "center",
+    },
+    addMemberButton: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "8px",
+      padding: isMobile ? "12px 20px" : "14px 28px",
+      background: "linear-gradient(135deg, #007a7e 0%, #095D7E 100%)",
+      color: "#fff",
+      border: "none",
+      borderRadius: "12px",
+      fontSize: isMobile ? "14px" : "16px",
+      fontWeight: 600,
+      cursor: "pointer",
+      boxShadow: "0 4px 15px rgba(0,122,126,0.3)",
+      transition: "all 0.3s ease",
+    },
   };
 
   const tabStyles = {
@@ -930,490 +1147,818 @@ const formatAppointmentTimeRange = (timeString) => {
         </div>
 
         {activeTab === 'profile' && (
-          <div style={styles.mainContainer}>
-            {/* Left Column - Personal Information */}
-            <div style={styles.leftColumn}>
-              <div style={styles.personalInfoCard}>
-                <h2 style={styles.sectionTitle}>Personal Information</h2>
+          <div style={styles.cardsSection}>
+            {/* Primary Member Section */}
+            <div style={{ marginBottom: isMobile ? "40px" : "48px" }}>
+              <div style={styles.sectionHeader}>
+                <Crown style={styles.sectionHeaderIcon} />
+                <h2 style={styles.sectionHeaderTitle}>Primary Member</h2>
+              </div>
+              
+              <div style={styles.cardsGrid}>
+                {/* Primary Member Card */}
+                <div style={styles.memberCardWrapper}>
+                  {/* Primary Badge */}
+                  <div style={{ ...styles.memberBadge, ...styles.primaryBadge }}>
+                    <Crown size={isMobile ? 12 : 14} />
+                    Primary Member
+                  </div>
+                  
+                  {/* Status Badge */}
+                  <div style={{ 
+                    ...styles.statusBadge, 
+                    ...(patient.is_active !== false ? styles.activeBadge : styles.inactiveBadge) 
+                  }}>
+                    {patient.is_active !== false ? 'Active' : 'Inactive'}
+                  </div>
+                  
+                  <div 
+                    style={{
+                      ...styles.memberCardInner,
+                      ...(flippedCards['primary'] ? styles.memberCardFlipped : {})
+                    }}
+                  >
+                    {/* Front Card */}
+                    <div
+                      style={{
+                        ...styles.healthCard,
+                        ...styles.front,
+                        ...styles.cardFace,
+                      }}
+                    >
+                      <img
+                        src="assets/img/vb-background.png"
+                        alt="Vaidya Bandhu Background"
+                        style={styles.backgroundImage}
+                      />
+                      <div style={styles.cardHeader}>
+                        <div style={styles.logoContainer}>
+                          <img
+                            src="assets/img/vb-logo.png"
+                            alt="Vaidya Bandhu Logo"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              marginLeft: isMobile ? "10px" : "28px",
+                            }}
+                          />
+                        </div>
+                        <div style={styles.verticalLine}></div>
+                        <div style={styles.titleContainer}>
+                          <div style={styles.titleText}>VAIDYA BANDHU</div>
+                          <div style={styles.subtitleText}>
+                            HEALTHCARE MEMBERSHIP CARD
+                          </div>
+                        </div>
+                      </div>
+                      <div style={styles.horizontalLine}></div>
+                      <div
+                        style={{
+                          ...styles.cardContent,
+                          ...(isMobile && {
+                            marginLeft: 0,
+                            alignItems: "flex-start",
+                            paddingLeft: "10px",
+                            paddingRight: "10px",
+                          }),
+                        }}
+                      >
+                        <div
+                          style={{
+                            ...styles.cardDetails,
+                            ...(isMobile && {
+                              flex: 1,
+                              paddingRight: "8px",
+                              paddingLeft: "0",
+                            }),
+                          }}
+                        >
+                          <div style={styles.detailRowAligned}>
+                            <span style={styles.labelText}>MEMBERSHIP ID:</span>
+                            <span
+                              style={{
+                                ...styles.valueText,
+                                maxWidth: isMobile ? "100px" : "200px",
+                                fontSize: isMobile ? "8px" : "13px",
+                              }}
+                            >
+                              {" "}{patient.membership_id || " "}
+                            </span>
+                          </div>
+                          <div style={styles.detailRowAligned}>
+                            <span style={styles.labelText}>VALIDITY:</span>
+                            <span
+                              style={{
+                                ...styles.valueText,
+                                maxWidth: isMobile ? "100px" : "200px",
+                                fontSize: isMobile ? "8px" : "13px",
+                                whiteSpace: isMobile ? "normal" : "nowrap",
+                              }}
+                            >
+                              {formatDate(patient.start_date)} to{" "}
+                              {formatDate(patient.end_date)}
+                            </span>
+                          </div>
+                          <div style={styles.detailRowAligned}>
+                            <span style={styles.labelText}>CONTACT:</span>
+                            <span
+                              style={{
+                                ...styles.valueText,
+                                maxWidth: isMobile ? "100px" : "200px",
+                                fontSize: isMobile ? "8px" : "13px",
+                              }}
+                            >
+                              {patient.mobile || " "}
+                            </span>
+                          </div>
+                          <div style={styles.detailRowAligned}>
+                            <span style={styles.labelText}>BLOOD GROUP:</span>
+                            <span
+                              style={{
+                                ...styles.bloodGroupText,
+                                fontSize: isMobile ? "8px" : "13px",
+                              }}
+                            >
+                              {patient.blood_group || " "}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              ...styles.detailRowAligned,
+                              marginBottom: isMobile ? "3px" : "15px",
+                            }}
+                          >
+                            <span style={styles.labelText}>ADDRESS:</span>
+                            <span
+                              style={{
+                                ...styles.valueText,
+                                maxWidth: isMobile ? "100px" : "200px",
+                                fontSize: isMobile ? "8px" : "13px",
+                                whiteSpace: "normal",
+                                lineHeight: isMobile ? "1.1" : "normal",
+                                overflow: "visible",
+                                textOverflow: "unset",
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              {patient.address || " "}
+                            </span>
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            ...styles.cardPhoto,
+                            ...(isMobile && {
+                              flex: "none",
+                              width: "70px",
+                              marginLeft: "5px",
+                            }),
+                          }}
+                        >
+                          <div style={styles.photoContainer}>
+                            {patient.profile_image ? (
+                              <img
+                                src={patient.profile_image}
+                                alt={patient.full_name}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                  backgroundColor: "#f0f0f0",
+                                }}
+                              >
+                                <User size={isMobile ? 15 : 24} color="#ccc" />
+                              </div>
+                            )}
+                          </div>
+                          <div
+                            style={{
+                              ...styles.photoNameText,
+                              fontSize: isMobile ? "8px" : "14px",
+                              maxWidth: isMobile ? "70px" : "100%",
+                              lineHeight: isMobile ? "1.1" : "normal",
+                            }}
+                          >
+                            {patient.full_name || " "}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={styles.blueStrip}>
+                        <div style={styles.stripItem}>
+                          <div style={styles.stripLabel}>WHATSAPP HELPLINE</div>
+                          <div
+                            style={{
+                              ...styles.stripValue,
+                              fontSize: isMobile ? "7px" : "12px",
+                            }}
+                          >
+                            +91 8535 8535 89
+                          </div>
+                        </div>
+                        <div style={styles.stripVerticalLine}></div>
+                        <div style={styles.stripItem}>
+                          <div style={styles.stripLabel}>EMAIL ID</div>
+                          <div
+                            style={{
+                              ...styles.stripValue,
+                              fontSize: isMobile ? "7px" : "12px",
+                            }}
+                          >
+                            support@vaidyabandhu.com
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                <div style={styles.infoRow}>
-                  <User style={styles.infoIcon} />
-                  <span style={styles.infoLabel}>Full Name:</span>
-                  <span style={styles.infoValue}>{patient.full_name || " "}</span>
-                </div>
-
-                <div style={styles.infoRow}>
-                  <User style={styles.infoIcon} />
-                  <span style={styles.infoLabel}>Age:</span>
-                  <span style={styles.infoValue}>{patient.age || " "}</span>
-                </div>
-
-                <div style={styles.infoRow}>
-                  <User style={styles.infoIcon} />
-                  <span style={styles.infoLabel}>Gender:</span>
-                  <span style={styles.infoValue}>{patient.gender || " "}</span>
-                </div>
-
-                <div style={styles.infoRow}>
-                  <Droplet style={styles.infoIcon} />
-                  <span style={styles.infoLabel}>Blood Group:</span>
-                  <span style={styles.infoValue}>
-                    {patient.blood_group || " "}
-                  </span>
-                </div>
-
-                <div style={styles.infoRow}>
-                  <MapPin style={styles.infoIcon} />
-                  <span style={styles.infoLabel}>Address:</span>
-                  <span style={styles.infoValue}>{patient.address || " "}</span>
-                </div>
-
-                <div style={styles.infoRow}>
-                  <MapPin style={styles.infoIcon} />
-                  <span style={styles.infoLabel}>Pincode:</span>
-                  <span style={styles.infoValue}>{patient.pin_code || " "}</span>
-                </div>
-
-                <div style={styles.infoRow}>
-                  <Phone style={styles.infoIcon} />
-                  <span style={styles.infoLabel}>Mobile Number:</span>
-                  <span style={styles.infoValue}>{patient.mobile || " "}</span>
-                </div>
-
-                <div style={styles.infoRow}>
-                  <Mail style={styles.infoIcon} />
-                  <span style={styles.infoLabel}>Email:</span>
-                  <span style={styles.infoValue}>{patient.email || " "}</span>
-                </div>
-
-                <div style={styles.infoRow}>
-                  <IdCard style={styles.infoIcon} />
-                  <span style={styles.infoLabel}>Aadhar Number:</span>
-                  <span style={styles.infoValue}>{patient.aadhaar_number}</span>
-                </div>
-
-                <div style={styles.infoRow}>
-                  <CreditCard style={styles.infoIcon} />
-                  <span style={styles.infoLabel}>PAN Number:</span>
-                  <span style={styles.infoValue}>{patient.pan_number}</span>
+                    {/* Back Card */}
+                    <div
+                      style={{
+                        ...styles.healthCard,
+                        ...styles.back,
+                        ...styles.cardFace,
+                        ...styles.cardFaceBack,
+                      }}
+                    >
+                      <div style={styles.backContainer}>
+                        <div style={styles.cashbackBadge}>
+                          10% CASHBACK ON YOUR
+                          <br />
+                          TOTAL HOSPITAL BILL
+                          <br />
+                          <span style={{ fontSize: isMobile ? "3px" : "5px" }}>
+                            EXCLUDING PHARMACY AND IMPLANTS
+                          </span>
+                        </div>
+                        <div style={styles.benefitsSection}>
+                          <div style={styles.benefitsTitle}>BENEFITS OF THIS CARD</div>
+                          <ul style={styles.benefitsList}>
+                            <li style={styles.benefitItem}>
+                              <span style={styles.checkMark}>✓</span>
+                              <span>Save 10% to 40% on surgeries, treatments, and diagnostics Services.</span>
+                            </li>
+                            <li style={styles.benefitItem}>
+                              <span style={styles.checkMark}>✓</span>
+                              <span>Get 10% Cashback: Send your bill to Vaidya Bandhu via WhatsApp or Email.</span>
+                            </li>
+                            <li style={styles.benefitItem}>
+                              <span style={styles.checkMark}>✓</span>
+                              <span>Free surgeries under certain in need through our social programs.</span>
+                            </li>
+                            <li style={styles.benefitItem}>
+                              <span style={styles.checkMark}>✓</span>
+                              <span>Call our helpline from 9 AM to 6 PM for free medical advice.</span>
+                            </li>
+                            <li style={styles.benefitItem}>
+                              <span style={styles.checkMark}>✓</span>
+                              <span>We help you choose the right doctor, hospital, or diagnostic center.</span>
+                            </li>
+                          </ul>
+                          <div style={styles.sectionDivider}></div>
+                        </div>
+                        <div style={styles.termsSection}>
+                          <div style={styles.termsTitle}>TERMS & CONDITIONS</div>
+                          <ul style={styles.termsList}>
+                            <li style={styles.termItem}>
+                              <span style={styles.bullet}>•</span>
+                              <span>VALIDITY: CARD IS VALID FOR 1 YEAR FROM THE DATE OF ISSUE.</span>
+                            </li>
+                            <li style={styles.termItem}>
+                              <span style={styles.bullet}>•</span>
+                              <span>NON-TRANSFERABLE: USE IS LIMITED TO THE REGISTERED INDIVIDUAL ONLY.</span>
+                            </li>
+                            <li style={styles.termItem}>
+                              <span style={styles.bullet}>•</span>
+                              <span>DISCOUNTS AVAILABLE ON CONSULTATIONS, TREATMENTS, SURGERIES, DIAGNOSTICS.</span>
+                            </li>
+                            <li style={styles.termItem}>
+                              <span style={styles.bullet}>•</span>
+                              <span>BOOKING REQUIRED: CONTACT OUR TEAM BEFORE VISITING ANY FACILITY.</span>
+                            </li>
+                          </ul>
+                          <div style={styles.sectionDivider}></div>
+                        </div>
+                        <div style={styles.instructionsSection}>
+                          <div style={styles.instructionsTitle}>INSTRUCTIONS TO USE</div>
+                          <ul style={styles.instructionsList}>
+                            <li style={styles.instructionItem}>
+                              <span style={styles.bullet}>•</span>
+                              <span>CALL OR WHATSAPP US AT +91 8535 8535 89</span>
+                            </li>
+                            <li style={styles.instructionItem}>
+                              <span style={styles.bullet}>•</span>
+                              <span>SHARE YOUR MEMBERSHIP ID AND ISSUE</span>
+                            </li>
+                            <li style={styles.instructionItem}>
+                              <span style={styles.bullet}>•</span>
+                              <span>GET INSTANT HELP FROM VAIDYA BANDHU TEAM</span>
+                            </li>
+                          </ul>
+                        </div>
+                        <div style={styles.priceTag}>49/-</div>
+                        <div style={styles.bottomBanner}>
+                          <div style={styles.companyName}>
+                            VAIDYA BANDHU (A UNIT OF MY COMPANYON HEALTHCARE PRIVATE LIMITED)
+                          </div>
+                          <div style={styles.tagline}>"SERVING WITH CARE & COMMITMENT"</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div style={styles.cardActions}>
+                    <button
+                      style={{ ...styles.actionButton, ...styles.viewButton }}
+                      onClick={() => toggleCardFlip('primary')}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#095D7E";
+                        e.currentTarget.style.color = "#fff";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "#fff";
+                        e.currentTarget.style.color = "#095D7E";
+                      }}
+                    >
+                      <Eye size={16} />
+                      {flippedCards['primary'] ? 'View Front' : 'View Back'}
+                    </button>
+                    <button
+                      style={{ ...styles.actionButton, ...styles.downloadActionButton }}
+                      onClick={() => handleDownload(null, patient.full_name)}
+                      disabled={downloading}
+                      onMouseEnter={(e) => {
+                        if (!downloading) {
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(9,93,126,0.4)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
+                      }}
+                    >
+                      {downloading ? (
+                        <>
+                          <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+                          Downloading...
+                        </>
+                      ) : (
+                        <>
+                          <Download size={16} />
+                          Download PDF
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column - Health Card */}
-            <div style={styles.rightColumn}>
-              {/* Front Card */}
-              <div
-                id="card-front"
-                style={{
-                  ...styles.healthCard,
-                  ...styles.front,
-                }}
-              >
-                <img
-                  src="assets/img/vb-background.png"
-                  alt="Vaidya Bandhu Background"
-                  style={styles.backgroundImage}
-                />
-                <div style={styles.cardHeader}>
-                  <div style={styles.logoContainer}>
-                    <img
-                      src="assets/img/vb-logo.png"
-                      alt="Vaidya Bandhu Logo"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        marginLeft: isMobile ? "10px" : "28px",
-                      }}
-                    />
-                  </div>
-                  <div style={styles.verticalLine}></div>
-                  <div style={styles.titleContainer}>
-                    <div style={styles.titleText}>VAIDYA BANDHU</div>
-                    <div style={styles.subtitleText}>
-                      HEALTHCARE MEMBERSHIP CARD
-                    </div>
-                  </div>
-                </div>
-                <div style={styles.horizontalLine}></div>
-                <div
-                  style={{
-                    ...styles.cardContent,
-                    ...(isMobile && {
-                      marginLeft: 0,
-                      alignItems: "flex-start",
-                      paddingLeft: "10px",
-                      paddingRight: "10px",
-                    }),
-                  }}
-                >
-                  <div
-                    style={{
-                      ...styles.cardDetails,
-                      ...(isMobile && {
-                        flex: 1,
-                        paddingRight: "8px",
-                        paddingLeft: "0",
-                      }),
-                    }}
-                  >
-                    <div style={styles.detailRowAligned}>
-                      <span style={styles.labelText}>MEMBERSHIP ID:</span>
-                      <span
-                        style={{
-                          ...styles.valueText,
-                          maxWidth: isMobile ? "100px" : "200px",
-                          fontSize: isMobile ? "8px" : "13px",
-                        }}
-                      >
-                        {" "}{patient.membership_id || " "}
-                      </span>
-                    </div>
-                    <div style={styles.detailRowAligned}>
-                      <span style={styles.labelText}>VALIDITY:</span>
-                      <span
-                        style={{
-                          ...styles.valueText,
-                          maxWidth: isMobile ? "100px" : "200px",
-                          fontSize: isMobile ? "8px" : "13px",
-                          whiteSpace: isMobile ? "normal" : "nowrap",
-                        }}
-                      >
-                        {formatDate(patient.start_date)} to{" "}
-                        {formatDate(patient.end_date)}
-                      </span>
-                    </div>
-
-                    <div style={styles.detailRowAligned}>
-                      <span style={styles.labelText}>CONTACT:</span>
-                      <span
-                        style={{
-                          ...styles.valueText,
-                          maxWidth: isMobile ? "100px" : "200px",
-                          fontSize: isMobile ? "8px" : "13px",
-                        }}
-                      >
-                        {patient.mobile || " "}
-                      </span>
-                    </div>
-                    <div style={styles.detailRowAligned}>
-                      <span style={styles.labelText}>BLOOD GROUP:</span>
-                      <span
-                        style={{
-                          ...styles.bloodGroupText,
-                          fontSize: isMobile ? "8px" : "13px",
-                        }}
-                      >
-                        {patient.blood_group || " "}
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        ...styles.detailRowAligned,
-                        marginBottom: isMobile ? "3px" : "15px",
-                      }}
-                    >
-                      <span style={styles.labelText}>ADDRESS:</span>
-                      <span
-                        style={{
-                          ...styles.valueText,
-                          maxWidth: isMobile ? "100px" : "200px",
-                          fontSize: isMobile ? "8px" : "13px",
-                          whiteSpace: "normal",
-                          lineHeight: isMobile ? "1.1" : "normal",
-                          overflow: "visible",
-                          textOverflow: "unset",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {patient.address || " "}
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      ...styles.cardPhoto,
-                      ...(isMobile && {
-                        flex: "none",
-                        width: "70px",
-                        marginLeft: "5px",
-                      }),
-                    }}
-                  >
-                    <div style={styles.photoContainer}>
-                      {patient.profile_image ? (
-                        <img
-                          src={patient.profile_image}
-                          alt={patient.full_name}
+            {/* Family Members Section */}
+            <div style={{ marginBottom: isMobile ? "40px" : "48px" }}>
+              <div style={styles.sectionHeader}>
+                <Users style={styles.sectionHeaderIcon} />
+                <h2 style={styles.sectionHeaderTitle}>Family Members</h2>
+              </div>
+              
+              <div style={styles.cardsGrid}>
+                {patient.family_members && patient.family_members.length > 0 ? (
+                  patient.family_members.map((member) => {
+                    const relationDetails = getRelationshipDetails(member.relationship);
+                    const RelationIcon = relationDetails.icon;
+                    const cardId = `family-${member.id}`;
+                    const isDownloadingThis = downloadingMemberId === member.id;
+                    
+                    return (
+                      <div key={member.id} style={styles.memberCardWrapper}>
+                        {/* Relationship Badge */}
+                        <div style={{ 
+                          ...styles.memberBadge, 
+                          ...styles.familyBadge,
+                          borderColor: relationDetails.color,
+                          backgroundColor: relationDetails.bgColor,
+                          color: relationDetails.color,
+                        }}>
+                          <RelationIcon size={isMobile ? 12 : 14} />
+                          {relationDetails.label}
+                        </div>
+                        
+                        {/* Status Badge */}
+                        <div style={{ 
+                          ...styles.statusBadge, 
+                          ...(member.is_active ? styles.activeBadge : styles.inactiveBadge) 
+                        }}>
+                          {member.is_active ? 'Active' : 'Inactive'}
+                        </div>
+                        
+                        <div 
                           style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            backgroundColor: "#f0f0f0",
+                            ...styles.memberCardInner,
+                            ...(flippedCards[cardId] ? styles.memberCardFlipped : {}),
                           }}
                         >
-                          <User size={isMobile ? 15 : 24} color="#ccc" />
+                          {/* Front Card */}
+                          <div
+                            style={{
+                              ...styles.healthCard,
+                              ...styles.front,
+                              ...styles.cardFace,
+                              ...(member.is_active === false && {
+                                opacity: 0.6,
+                                filter: 'grayscale(40%)',
+                              }),
+                            }}
+                          >
+                            <img
+                              src="assets/img/vb-background.png"
+                              alt="Vaidya Bandhu Background"
+                              style={styles.backgroundImage}
+                            />
+                            <div style={styles.cardHeader}>
+                              <div style={styles.logoContainer}>
+                                <img
+                                  src="assets/img/vb-logo.png"
+                                  alt="Vaidya Bandhu Logo"
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    marginLeft: isMobile ? "10px" : "28px",
+                                  }}
+                                />
+                              </div>
+                              <div style={styles.verticalLine}></div>
+                              <div style={styles.titleContainer}>
+                                <div style={styles.titleText}>VAIDYA BANDHU</div>
+                                <div style={styles.subtitleText}>
+                                  HEALTHCARE MEMBERSHIP CARD
+                                </div>
+                              </div>
+                            </div>
+                            <div style={styles.horizontalLine}></div>
+                            <div
+                              style={{
+                                ...styles.cardContent,
+                                ...(isMobile && {
+                                  marginLeft: 0,
+                                  alignItems: "flex-start",
+                                  paddingLeft: "10px",
+                                  paddingRight: "10px",
+                                }),
+                              }}
+                            >
+                              <div
+                                style={{
+                                  ...styles.cardDetails,
+                                  ...(isMobile && {
+                                    flex: 1,
+                                    paddingRight: "8px",
+                                    paddingLeft: "0",
+                                  }),
+                                }}
+                              >
+                                <div style={styles.detailRowAligned}>
+                                  <span style={styles.labelText}>MEMBERSHIP ID:</span>
+                                  <span
+                                    style={{
+                                      ...styles.valueText,
+                                      maxWidth: isMobile ? "100px" : "200px",
+                                      fontSize: isMobile ? "8px" : "13px",
+                                    }}
+                                  >
+                                    {" "}{member.membership_id || " "}
+                                  </span>
+                                </div>
+                                <div style={styles.detailRowAligned}>
+                                  <span style={styles.labelText}>AGE / GENDER:</span>
+                                  <span
+                                    style={{
+                                      ...styles.valueText,
+                                      maxWidth: isMobile ? "100px" : "200px",
+                                      fontSize: isMobile ? "8px" : "13px",
+                                    }}
+                                  >
+                                    {member.age || "—"} / {member.gender || "—"}
+                                  </span>
+                                </div>
+                                <div style={styles.detailRowAligned}>
+                                  <span style={styles.labelText}>RELATIONSHIP:</span>
+                                  <span
+                                    style={{
+                                      ...styles.valueText,
+                                      maxWidth: isMobile ? "100px" : "200px",
+                                      fontSize: isMobile ? "8px" : "13px",
+                                      textTransform: "capitalize",
+                                    }}
+                                  >
+                                    {member.relationship || "—"}
+                                  </span>
+                                </div>
+                                <div style={styles.detailRowAligned}>
+                                  <span style={styles.labelText}>BLOOD GROUP:</span>
+                                  <span
+                                    style={{
+                                      ...styles.bloodGroupText,
+                                      fontSize: isMobile ? "8px" : "13px",
+                                    }}
+                                  >
+                                    {member.blood_group || "—"}
+                                  </span>
+                                </div>
+                                <div
+                                  style={{
+                                    ...styles.detailRowAligned,
+                                    marginBottom: isMobile ? "3px" : "15px",
+                                  }}
+                                >
+                                  <span style={styles.labelText}>PRIMARY HOLDER:</span>
+                                  <span
+                                    style={{
+                                      ...styles.valueText,
+                                      maxWidth: isMobile ? "100px" : "200px",
+                                      fontSize: isMobile ? "8px" : "13px",
+                                    }}
+                                  >
+                                    {patient.full_name || "—"}
+                                  </span>
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  ...styles.cardPhoto,
+                                  ...(isMobile && {
+                                    flex: "none",
+                                    width: "70px",
+                                    marginLeft: "5px",
+                                  }),
+                                }}
+                              >
+                                <div style={styles.photoContainer}>
+                                  {member.profile_image ? (
+                                    <img
+                                      src={member.profile_image}
+                                      alt={member.full_name}
+                                      style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                      }}
+                                    />
+                                  ) : (
+                                    <div
+                                      style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        backgroundColor: "#f0f0f0",
+                                      }}
+                                    >
+                                      <User size={isMobile ? 15 : 24} color="#ccc" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div
+                                  style={{
+                                    ...styles.photoNameText,
+                                    fontSize: isMobile ? "8px" : "14px",
+                                    maxWidth: isMobile ? "70px" : "100%",
+                                    lineHeight: isMobile ? "1.1" : "normal",
+                                  }}
+                                >
+                                  {member.full_name || " "}
+                                </div>
+                              </div>
+                            </div>
+                            <div style={styles.blueStrip}>
+                              <div style={styles.stripItem}>
+                                <div style={styles.stripLabel}>WHATSAPP HELPLINE</div>
+                                <div
+                                  style={{
+                                    ...styles.stripValue,
+                                    fontSize: isMobile ? "7px" : "12px",
+                                  }}
+                                >
+                                  +91 8535 8535 89
+                                </div>
+                              </div>
+                              <div style={styles.stripVerticalLine}></div>
+                              <div style={styles.stripItem}>
+                                <div style={styles.stripLabel}>EMAIL ID</div>
+                                <div
+                                  style={{
+                                    ...styles.stripValue,
+                                    fontSize: isMobile ? "7px" : "12px",
+                                  }}
+                                >
+                                  support@vaidyabandhu.com
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Back Card */}
+                          <div
+                            style={{
+                              ...styles.healthCard,
+                              ...styles.back,
+                              ...styles.cardFace,
+                              ...styles.cardFaceBack,
+                              ...(member.is_active === false && {
+                                opacity: 0.6,
+                                filter: 'grayscale(40%)',
+                              }),
+                            }}
+                          >
+                            <div style={styles.backContainer}>
+                              <div style={styles.cashbackBadge}>
+                                10% CASHBACK ON YOUR
+                                <br />
+                                TOTAL HOSPITAL BILL
+                                <br />
+                                <span style={{ fontSize: isMobile ? "3px" : "5px" }}>
+                                  EXCLUDING PHARMACY AND IMPLANTS
+                                </span>
+                              </div>
+                              <div style={styles.benefitsSection}>
+                                <div style={styles.benefitsTitle}>BENEFITS OF THIS CARD</div>
+                                <ul style={styles.benefitsList}>
+                                  <li style={styles.benefitItem}>
+                                    <span style={styles.checkMark}>✓</span>
+                                    <span>Save 10% to 40% on surgeries, treatments, and diagnostics Services.</span>
+                                  </li>
+                                  <li style={styles.benefitItem}>
+                                    <span style={styles.checkMark}>✓</span>
+                                    <span>Get 10% Cashback: Send your bill to Vaidya Bandhu via WhatsApp or Email.</span>
+                                  </li>
+                                  <li style={styles.benefitItem}>
+                                    <span style={styles.checkMark}>✓</span>
+                                    <span>Free surgeries under certain in need through our social programs.</span>
+                                  </li>
+                                  <li style={styles.benefitItem}>
+                                    <span style={styles.checkMark}>✓</span>
+                                    <span>Call our helpline from 9 AM to 6 PM for free medical advice.</span>
+                                  </li>
+                                </ul>
+                                <div style={styles.sectionDivider}></div>
+                              </div>
+                              <div style={styles.termsSection}>
+                                <div style={styles.termsTitle}>TERMS & CONDITIONS</div>
+                                <ul style={styles.termsList}>
+                                  <li style={styles.termItem}>
+                                    <span style={styles.bullet}>•</span>
+                                    <span>VALIDITY: CARD IS VALID FOR 1 YEAR FROM THE DATE OF ISSUE.</span>
+                                  </li>
+                                  <li style={styles.termItem}>
+                                    <span style={styles.bullet}>•</span>
+                                    <span>NON-TRANSFERABLE: USE IS LIMITED TO THE REGISTERED INDIVIDUAL ONLY.</span>
+                                  </li>
+                                  <li style={styles.termItem}>
+                                    <span style={styles.bullet}>•</span>
+                                    <span>DISCOUNTS AVAILABLE ON CONSULTATIONS, TREATMENTS, SURGERIES.</span>
+                                  </li>
+                                </ul>
+                                <div style={styles.sectionDivider}></div>
+                              </div>
+                              <div style={styles.instructionsSection}>
+                                <div style={styles.instructionsTitle}>INSTRUCTIONS TO USE</div>
+                                <ul style={styles.instructionsList}>
+                                  <li style={styles.instructionItem}>
+                                    <span style={styles.bullet}>•</span>
+                                    <span>CALL OR WHATSAPP US AT +91 8535 8535 89</span>
+                                  </li>
+                                  <li style={styles.instructionItem}>
+                                    <span style={styles.bullet}>•</span>
+                                    <span>SHARE YOUR MEMBERSHIP ID AND ISSUE</span>
+                                  </li>
+                                </ul>
+                              </div>
+                              <div style={styles.priceTag}>49/-</div>
+                              <div style={styles.bottomBanner}>
+                                <div style={styles.companyName}>
+                                  VAIDYA BANDHU (A UNIT OF MY COMPANYON HEALTHCARE PRIVATE LIMITED)
+                                </div>
+                                <div style={styles.tagline}>"SERVING WITH CARE & COMMITMENT"</div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                    <div
-                      style={{
-                        ...styles.photoNameText,
-                        fontSize: isMobile ? "8px" : "14px",
-                        maxWidth: isMobile ? "70px" : "100%",
-                        lineHeight: isMobile ? "1.1" : "normal",
+                        
+                        {/* Action Buttons */}
+                        <div style={styles.cardActions}>
+                          <button
+                            style={{ ...styles.actionButton, ...styles.viewButton }}
+                            onClick={() => toggleCardFlip(cardId)}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = "#095D7E";
+                              e.currentTarget.style.color = "#fff";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = "#fff";
+                              e.currentTarget.style.color = "#095D7E";
+                            }}
+                          >
+                            <Eye size={16} />
+                            {flippedCards[cardId] ? 'View Front' : 'View Back'}
+                          </button>
+                          <button
+                            style={{ 
+                              ...styles.actionButton, 
+                              ...styles.downloadActionButton,
+                              opacity: (isDownloadingThis || member.is_active === false) ? 0.5 : 1,
+                              cursor: (isDownloadingThis || member.is_active === false) ? 'not-allowed' : 'pointer',
+                            }}
+                            onClick={() => member.is_active !== false && handleDownload(member.id, member.full_name)}
+                            disabled={isDownloadingThis || member.is_active === false}
+                            onMouseEnter={(e) => {
+                              if (!isDownloadingThis && member.is_active !== false) {
+                                e.currentTarget.style.transform = "translateY(-2px)";
+                                e.currentTarget.style.boxShadow = "0 4px 12px rgba(9,93,126,0.4)";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "translateY(0)";
+                              e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
+                            }}
+                            title={member.is_active === false ? "Membership is inactive" : ""}
+                          >
+                            {isDownloadingThis ? (
+                              <>
+                                <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+                                Downloading...
+                              </>
+                            ) : (
+                              <>
+                                <Download size={16} />
+                                {member.is_active === false ? 'Inactive' : 'Download PDF'}
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  /* Empty State - No Family Members */
+                  <div style={styles.emptyFamilyCard}>
+                    <Users style={styles.emptyIcon} />
+                    <p style={styles.emptyText}>
+                      No family members added yet.<br />
+                      Add family members to create health cards for them.
+                    </p>
+                    <button
+                      style={styles.addMemberButton}
+                      onClick={() => navigate("/basic-details?mode=add-members")}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,122,126,0.4)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "0 4px 15px rgba(0,122,126,0.3)";
                       }}
                     >
-                      {patient.full_name || " "}
-                    </div>
+                      <UserPlus size={20} />
+                      Add Family Members
+                    </button>
                   </div>
-                </div>
-                <div style={styles.blueStrip}>
-                  <div style={styles.stripItem}>
-                    <div style={styles.stripLabel}>WHATSAPP HELPLINE</div>
-                    <div
-                      style={{
-                        ...styles.stripValue,
-                        fontSize: isMobile ? "7px" : "12px",
-                      }}
-                    >
-                      +91 8535 8535 89
-                    </div>
-                  </div>
-                  <div style={styles.stripVerticalLine}></div>
-                  <div style={styles.stripItem}>
-                    <div style={styles.stripLabel}>EMAIL ID</div>
-                    <div
-                      style={{
-                        ...styles.stripValue,
-                        fontSize: isMobile ? "7px" : "12px",
-                      }}
-                    >
-                      support@vaidyabandhu.com
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
-
-              {/* Back Card */}
-              <div
-                id="card-back"
-                style={{
-                  ...styles.healthCard,
-                  ...styles.back,
-                }}
-              >
-                <div style={styles.backContainer}>
-                  <div style={styles.cashbackBadge}>
-                    10% CASHBACK ON YOUR
-                    <br />
-                    TOTAL HOSPITAL BILL
-                    <br />
-                    <span style={{ fontSize: isMobile ? "3px" : "5px" }}>
-                      EXCLUDING PHARMACY AND IMPLANTS
-                    </span>
-                  </div>
-                  <div style={styles.benefitsSection}>
-                    <div style={styles.benefitsTitle}>BENEFITS OF THIS CARD</div>
-                    <ul style={styles.benefitsList}>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          Save 10% to 40% on surgeries, treatments, and
-                          diagnostics Services.
-                        </span>
-                      </li>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span className="whitespace: nowrap">
-                          Get 10% Cashback: Send your bill to Vaidya Bandhu via
-                          WhatsApp or Email. Cashback will be credited to your
-                          account within 7 working days.
-                        </span>
-                      </li>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          Free surgeries under certain in need through our social
-                          programs.
-                        </span>
-                      </li>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          Call our helpline from 9 AM to 6 PM for free medical
-                          advice.
-                        </span>
-                      </li>
-                      <li style={styles.benefitItem}>
-                        <span style={styles.checkMark}>✓</span>
-                        <span>
-                          We help you choose the right doctor, hospital, or
-                          diagnostic center.
-                        </span>
-                      </li>
-                    </ul>
-                    <div style={styles.sectionDivider}></div>
-                  </div>
-                  <div style={styles.termsSection}>
-                    <div style={styles.termsTitle}>TERMS & CONDITIONS</div>
-                    <ul style={styles.termsList}>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          VALIDITY: CARD IS VALID FOR 1 YEAR FROM THE DATE OF
-                          ISSUE.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          NON-TRANSFERABLE: USE IS LIMITED TO THE REGISTERED
-                          INDIVIDUAL ONLY.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          DISCOUNTS AVAILABLE ON CONSULTATIONS, TREATMENTS,
-                          SURGERIES, DIAGNOSTICS, AND MORE AT PARTNER CENTERS.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          BOOKING REQUIRED: CONTACT OUR TEAM BEFORE VISITING ANY
-                          FACILITY TO AVAIL BENEFITS.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          CARD DELIVERY: CARD WILL BE DELIVERED TO YOU POST
-                          MEMBERSHIP CONFIRMATION.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          LOST CARD: DUPLICATE CAN BE ISSUED WITH A SMALL REISSUE
-                          FEE.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          VALID LOCATIONS: BENEFITS APPLICABLE ONLY AT PARTNER
-                          HOSPITALS, DOCTORS, CLINICS, AND LABS.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          NO CASH VALUE: BENEFITS ARE NON-REDEEMABLE FOR CASH.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          MISUSE: MISUSE OF BENEFITS MAY RESULT IN MEMBERSHIP
-                          CANCELLATION.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          THE CARD DOES NOT COVER EMERGENCY SERVICES UNLESS
-                          PRE-APPROVED.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          IF THE MEMBERSHIP CARD IS NOT USED WITHIN ONE YEAR
-                          MEMBERS MUST INFORM US THROUGH THE HELPLINE NUMBER FOR
-                          THE FREE RENEWAL.
-                        </span>
-                      </li>
-                      <li style={styles.termItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>
-                          DISCOUNTS MAY VARY BASED ON LOCATION, SERVICE TYPE, AND
-                          AVAILABILITY.
-                        </span>
-                      </li>
-                    </ul>
-                    <div style={styles.sectionDivider}></div>
-                  </div>
-                  <div style={styles.instructionsSection}>
-                    <div style={styles.instructionsTitle}>
-                      INSTRUCTIONS TO USE
-                    </div>
-                    <ul style={styles.instructionsList}>
-                      <li style={styles.instructionItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>CALL OR WHATSAPP US AT +91 8535 8535 89</span>
-                      </li>
-                      <li style={styles.instructionItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>SHARE YOUR MEMBERSHIP ID AND ISSUE</span>
-                      </li>
-                      <li style={styles.instructionItem}>
-                        <span style={styles.bullet}>•</span>
-                        <span>GET INSTANT HELP FROM VAIDYA BANDHU TEAM</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <div style={styles.priceTag}>49/-</div>
-                  <div style={styles.bottomBanner}>
-                    <div style={styles.companyName}>
-                      VAIDYA BANDHU (A UNIT OF MY COMPANYON HEALTHCARE PRIVATE
-                      LIMITED)
-                    </div>
-                    <div style={styles.tagline}>
-                      "SERVING WITH CARE & COMMITMENT"
-                    </div>
-                  </div>
+              
+              {/* Add More Family Members Button (when members exist) */}
+              {patient.family_members && patient.family_members.length > 0 && (
+                <div style={{ display: "flex", justifyContent: "center", marginTop: "32px" }}>
+                  <button
+                    style={styles.addMemberButton}
+                    onClick={() => navigate("/basic-details?mode=add-members")}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,122,126,0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(0,122,126,0.3)";
+                    }}
+                  >
+                    <UserPlus size={20} />
+                    Add More Family Members
+                  </button>
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Buttons Container */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: "10px",
-                  justifyContent: "center",
-                  marginTop: "20px",
-                  flexDirection: isMobile ? "column" : "row",
-                }}
-              >
-                <button
-                  style={styles.downloadButton}
-                  onClick={handleDownload}
-                  disabled={downloading}
-                >
-                  {downloading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Downloading...
-                    </>
-                  ) : (
-                    "Download PDF"
-                  )}
-                </button>
-              </div>
-
-              {/* Logout Button */}
+            {/* Logout Button */}
+            <div style={{ display: "flex", justifyContent: "center", marginTop: "40px" }}>
               <button
                 style={styles.logoutButton}
                 onClick={handleLogout}
@@ -1426,22 +1971,7 @@ const formatAppointmentTimeRange = (timeString) => {
                   e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
                 }}
               >
-                <svg
-                  style={{ marginRight: "8px" }}
-                  xmlns="http://www.w3.org/2000/svg"
-                  width={isMobile ? "16" : "20"}
-                  height={isMobile ? "16" : "20"}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"
-                  />
-                </svg>
+                <LogOut size={isMobile ? 16 : 20} style={{ marginRight: "8px" }} />
                 Logout
               </button>
             </div>
