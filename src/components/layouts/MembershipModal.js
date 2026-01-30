@@ -273,7 +273,7 @@ const MembershipModal = () => {
 
   return (
     <>
-      <button onClick={handleShow} className="buy-membership-btn">
+      <button onClick={() => navigate('/userlogin')} className="buy-membership-btn">
         Become a member @49rs
       </button>
       <Modal

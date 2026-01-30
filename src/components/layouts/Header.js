@@ -2,9 +2,7 @@ import React, { Fragment, useState, useEffect, useCallback } from "react";
 import Mobilemenu from "./Mobilemenu";
 import { Link, useLocation, useNavigate } from "react-router-dom"; 
 import navigation from "../../data/navigation.json";
-import MembershipModal from "./MembershipModal";
 import "../../assets/css/Header.css";
-import LoginModal from "./LoginModal";
 
 // Custom Hamburger Menu Component
 const CustomHamburgerMenu = ({ isOpen, onClick }) => {
@@ -76,6 +74,57 @@ const CustomHamburgerMenu = ({ isOpen, onClick }) => {
     </div>
   );
 };
+
+// NewsTicker component for sticky news bar
+const NewsTicker = () => {
+  // The message to repeat
+  const message = `| Get the Vaidyabandhu Health Card for just ₹49 \u00A0|\u00A0 ಕೇವಲ ₹49ಕ್ಕೆ ವೈದ್ಯಬಂಧು ಆರೋಗ್ಯ ಕಾರ್ಡ್ ಪಡೆಯಿರಿ \u00A0|\u00A0 కేవలం ₹49కే వైద్యబంధు హెల్త్ కార్డ్ పొందండి \u00A0|\u00A0 வெறும் ₹49க்கு வைத்தியபந்து ஹெல்த் கார்டைப் பெறுங்கள் \u00A0|\u00A0 വെറും ₹49ക്ക് വൈദ്യബന്ധു ഹെൽത്ത് കാർഡ് നേടൂ \u00A0|\u00A0 सिर्फ ₹49 में वैद्यबंधु हेल्थ कार्ड प्राप्त करें` ;
+  // Repeat the message enough times to fill the ticker
+  const repeatCount = 8;
+  const repeated = Array(repeatCount).fill(message).join(' ');
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        zIndex: 1202,
+        background: "linear-gradient(90deg, #0f172a, #1e293b)",
+        color: "#fff",
+        fontWeight: 400,
+        fontSize: "16px",
+        letterSpacing: "0.5px",
+        overflow: "hidden",
+        height: "44px",
+        display: "flex",
+        alignItems: "center",
+        boxShadow: "0 2px 12px rgba(0,122,126,0.10)",
+        borderBottom: "2px solid #00ffe7cc",
+        fontFamily: 'inherit',
+      }}
+    >
+      <div
+        style={{
+          whiteSpace: "nowrap",
+          display: "inline-block",
+          animation: "ticker-scroll 120s linear infinite",
+          paddingLeft: 0,
+        }}
+      >
+        {repeated}
+      </div>
+      <style>{`
+        @keyframes ticker-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+const HEADER_OFFSET = 44; // px, height of the news ticker
 
 // Custom hook for nav actions
 const useNavHelper = () => {
@@ -245,18 +294,28 @@ const Header = () => {
     navigate("/");
   };
 
+  // Add handler for login button
+  const handleLoginPage = () => {
+    navigate("/userlogin");
+  };
+
   return (
     <Fragment>
+      <NewsTicker />
       {/* Mobile Menu */}
       <aside className={navMethod ? "sigma_aside aside-open" : "sigma_aside"}>
         <Mobilemenu />
-        {/* Added membership button in mobile menu */}
+        {/* Added login button in mobile menu */}
         {!isLoggedIn ? (
           <div className="p-3 text-center">
-            <MembershipModal />
-            {/* Added login button in mobile menu */}
             <div className="mt-2">
-              <LoginModal />
+              <button
+                className="buy-membership-btn"
+                style={{ width: '100%', padding: '10px 0', borderRadius: 8, background: 'linear-gradient(90deg, #6366f1 0%, #0ea5e9 100%)', color: '#fff', fontWeight: 600, fontSize: 16, border: 'none', marginTop: 8, marginBottom: 8, letterSpacing: 0.2, transition: 'background 0.2s' }}
+                onClick={handleLoginPage}
+              >
+                Log in
+              </button>
             </div>
           </div>
         ) : (
@@ -267,7 +326,6 @@ const Header = () => {
                 className="user-icon-btn" 
                 onClick={handleIconClick}
                 style={{
-                  // background: 'none',
                   border: 'none',
                   cursor: 'pointer',
                   padding: '8px',
@@ -293,12 +351,12 @@ const Header = () => {
                 </svg>
               </button>
             </div>
-            
-            {/* Membership button */}
+            {/* My Profile button for mobile */}
             <div className="mb-2">
-              <MembershipModal />
+              <Link to="/myprofile" className="sigma_btn btn-sm" style={{ width: '100%' }}>
+                My Profile
+              </Link>
             </div>
-            
             {/* Logout button */}
             <div>
               <button
@@ -348,7 +406,7 @@ const Header = () => {
         }`}
         style={{
           position: "fixed",
-          top: 0,
+          top: HEADER_OFFSET, // push header below ticker
           left: 0,
           right: 0,
           zIndex: navMethod ? 1001 : 1000,
@@ -596,10 +654,10 @@ const Header = () => {
               </ul>
               <div className="sigma_header-controls style-2">
                 <ul className="sigma_header-controls-inner">
-                  {userPhone ? (
+                  {isLoggedIn ? (
                     <>
                       <li className="d-none d-sm-block">
-                        <Link to="/profile" className="sigma_btn btn-sm">
+                        <Link to="/myprofile" className="sigma_btn btn-sm">
                           My Profile
                         </Link>
                       </li>
@@ -614,14 +672,15 @@ const Header = () => {
                     </>
                   ) : (
                     <>
-                     
-                      {/* Existing Membership Button */}
-                      <li className="d-none d-sm-block">
-                        <MembershipModal />
-                      </li>
                       {/* Login Button UI - Only for desktop */}
                       <li className="d-none d-sm-block">
-                        <LoginModal/>
+                        <button
+                          className="sigma_btn btn-sm"
+                          style={{ marginLeft: 8 }}
+                          onClick={handleLoginPage}
+                        >
+                          Log in
+                        </button>
                       </li>
                     </>
                   )}

@@ -50,7 +50,7 @@ const Contact = React.lazy(() => import("./components/pages/Contact"));
 const Errorpage = React.lazy(() => import("./components/pages/Errorpage"));
 
 const HospitalList = React.lazy(()=> import('./components/pages/HospitalList'));
-
+const UserLogin = React.lazy(() => import("./components/pages/UserLogin"));
 
 // Scroll to top on route change
 function ScrollToTop({ children }) {
@@ -137,6 +137,7 @@ function AppRoutes() {
 
       <Route path="/contact" element={<Contact />} />
       <Route path="/basic-details" element={<BasicDetail />} />
+      <Route path="/userlogin" element={<UserLogin />} />
 
       <Route path="/hospital-list" element={<HospitalList />} />
 

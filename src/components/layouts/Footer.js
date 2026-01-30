@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import FloatingCallButton from "./helpline";
+import FloatingVaidyabandhuCardButton from "./FloatingVaidyabandhuCardButton";
 import { Link } from "react-router-dom";
 
 // Dummy serviceblock data as we cannot access local JSON files
@@ -339,6 +340,7 @@ const Footer = () => {
       }}
     >
       <FloatingCallButton />
+      <FloatingVaidyabandhuCardButton className="vb-fancy-float" />
       {/* Decorative background elements (optional, but consistent with previous components) */}
       <div
         style={{
@@ -1162,6 +1164,25 @@ const Footer = () => {
             0% { transform: translate(0, 0); }
             50% { transform: translate(-15px, -15px); }
             100% { transform: translate(0, 0); }
+          }
+          @keyframes floatY {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-18px) scale(1.06); }
+            100% { transform: translateY(0); }
+          }
+          .vb-fancy-float {
+            animation: floatY 2.8s ease-in-out infinite, pulse 2s infinite;
+            box-shadow: 0 8px 32px 0 rgba(0,122,126,0.25), 0 1.5px 8px 0 rgba(30,41,59,0.10);
+            filter: drop-shadow(0 0 16px #00ffe7cc);
+            background: linear-gradient(90deg, #1e293b 0%, #007a7e 100%);
+            border: 2.5px solid #00ffe7cc;
+            transition: box-shadow 0.3s, filter 0.3s, border 0.3s;
+          }
+          .vb-fancy-float:hover {
+            box-shadow: 0 12px 40px 0 #00ffe7cc, 0 2px 12px 0 #007a7e99;
+            filter: drop-shadow(0 0 32px #00ffe7cc);
+            border: 2.5px solid #00ffe7cc;
+            background: linear-gradient(90deg, #007a7e 0%, #1e293b 100%);
           }
           
           /* Responsive styles */
