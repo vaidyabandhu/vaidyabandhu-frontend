@@ -12,6 +12,8 @@ import {
   UserPlus,
   Trash2,
   Users,
+  Camera,
+  User,
 } from "lucide-react";
 import { Form, Col, Row, Card, Image, Modal } from "react-bootstrap";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -494,6 +496,14 @@ const VaidyaBandhuForm = () => {
       if (!member.relationship) {
         newErrors[`member_${member.id}_relationship`] =
           languagesType[selectedLanguage].familyMembers?.memberRelationshipRequired || "Relationship is required";
+      }
+      if (!member.blood_group) {
+        newErrors[`member_${member.id}_blood_group`] =
+          languagesType[selectedLanguage].familyMembers?.memberBloodGroupRequired || "Blood group is required";
+      }
+      if (!member.profile_image) {
+        newErrors[`member_${member.id}_photo`] =
+          languagesType[selectedLanguage].familyMembers?.memberPhotoRequired || "Member photo is required";
       }
     });
 
@@ -1544,12 +1554,13 @@ const VaidyaBandhuForm = () => {
                             <Col md={4}>
                               <Form.Group className="mb-3">
                                 <Form.Label style={{ fontWeight: "500", color: "#333" }}>
-                                  {languagesType[selectedLanguage].form?.blood_group || "Blood Group"}
+                                  {languagesType[selectedLanguage].form?.blood_group || "Blood Group"} <span className="text-danger">*</span>
                                 </Form.Label>
                                 <Form.Control
                                   as="select"
                                   value={member.blood_group}
                                   onChange={(e) => updateFamilyMember(member.id, "blood_group", e.target.value)}
+                                  isInvalid={!!errors[`member_${member.id}_blood_group`]}
                                   style={{ borderRadius: "8px", padding: "10px 14px" }}
                                 >
                                   <option value="">Select Blood Group</option>
@@ -1559,74 +1570,135 @@ const VaidyaBandhuForm = () => {
                                     </option>
                                   ))}
                                 </Form.Control>
+                                <Form.Control.Feedback type="invalid">
+                                  {errors[`member_${member.id}_blood_group`]}
+                                </Form.Control.Feedback>
                               </Form.Group>
                             </Col>
-                            <Col md={4}>
-                              <Form.Group className="mb-3">
-                                <Form.Label style={{ fontWeight: "500", color: "#333" }}>
-                                  {languagesType[selectedLanguage].familyMembers?.memberPhoto || "Photo"} <small className="text-muted">(Optional)</small>
+                            <Col md={4} className="d-flex flex-column align-items-center justify-content-center">
+                              <Form.Group className="mb-0 text-center">
+                                <Form.Label style={{ fontWeight: "600", color: "#333", marginBottom: "12px", display: "block" }}>
+                                  {languagesType[selectedLanguage].familyMembers?.memberPhoto || "Member Photo"} <span className="text-danger">*</span>
                                 </Form.Label>
-                                {!member.imagePreview ? (
-                                  <div>
-                                    <Form.Control
-                                      type="file"
-                                      accept="image/*"
-                                      onChange={(e) => handleMemberPhotoChange(member.id, e)}
-                                      className="d-none"
-                                      id={`member-photo-${member.id}`}
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => triggerFileInput(member.id)}
-                                      className="btn btn-sm w-100 d-flex align-items-center justify-content-center"
-                                      style={{
-                                        backgroundColor: "#f8f9fa",
-                                        border: "2px dashed #dee2e6",
-                                        borderRadius: "8px",
-                                        cursor: "pointer",
-                                        padding: "10px",
-                                        transition: "all 0.2s ease"
-                                      }}
-                                    >
-                                      <Upload size={16} className="me-2" style={{ color: "#6c757d" }} />
-                                      <span style={{ color: "#6c757d" }}>
-                                        {languagesType[selectedLanguage].familyMembers?.uploadPhoto || "Upload"}
-                                      </span>
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <div className="position-relative d-inline-block" style={{ width: "60px" }}>
-                                    <Image
-                                      src={member.imagePreview}
-                                      alt="Preview"
-                                      rounded
-                                      style={{
-                                        width: "60px",
-                                        height: "60px",
-                                        objectFit: "cover",
-                                        border: "2px solid #007a7e"
-                                      }}
-                                    />
-                                    <button
-                                      type="button"
-                                      className="position-absolute bg-danger text-white rounded-circle p-0 border-0 d-flex align-items-center justify-content-center"
-                                      onClick={() => removeMemberPhoto(member.id)}
-                                      style={{
-                                        top: "-8px",
-                                        right: "-8px",
-                                        width: "22px",
-                                        height: "22px",
-                                        fontSize: "14px",
-                                        lineHeight: "1",
-                                        boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
-                                      }}
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                )}
+                                <div className="member-photo-avatar-wrapper" style={{ position: "relative", width: "120px", height: "120px", margin: "0 auto" }}>
+                                  {!member.imagePreview ? (
+                                    <div className="w-100 h-100">
+                                      <Form.Control
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleMemberPhotoChange(member.id, e)}
+                                        className="d-none"
+                                        isInvalid={!!errors[`member_${member.id}_photo`]}
+                                        id={`member-photo-${member.id}`}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => triggerFileInput(member.id)}
+                                        className="btn p-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center"
+                                        style={{
+                                          backgroundColor: "#f0f7f7",
+                                          border: errors[`member_${member.id}_photo`] ? "2px dashed #dc3545" : "2px dashed #007a7e",
+                                          borderRadius: "50%",
+                                          cursor: "pointer",
+                                          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                          position: "relative",
+                                          overflow: "hidden"
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          e.currentTarget.style.backgroundColor = "#e0f2ef";
+                                          e.currentTarget.style.transform = "scale(1.05)";
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.currentTarget.style.backgroundColor = "#f0f7f7";
+                                          e.currentTarget.style.transform = "scale(1)";
+                                        }}
+                                      >
+                                        <User size={48} style={{ color: errors[`member_${member.id}_photo`] ? "#dc3545" : "#007a7e", opacity: 0.5 }} />
+                                        <div style={{
+                                          position: "absolute",
+                                          bottom: "0",
+                                          width: "100%",
+                                          backgroundColor: "rgba(0, 122, 126, 0.8)",
+                                          padding: "4px 0",
+                                          color: "white",
+                                          fontSize: "10px",
+                                          fontWeight: "600"
+                                        }}>
+                                          ADD PHOTO
+                                        </div>
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div className="w-100 h-100 position-relative group" style={{ borderRadius: "50%", overflow: "hidden", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", border: "3px solid white" }}>
+                                      <Image
+                                        src={member.imagePreview}
+                                        alt="Member Preview"
+                                        style={{
+                                          width: "100%",
+                                          height: "100%",
+                                          objectFit: "cover"
+                                        }}
+                                      />
+                                      <div
+                                        className="photo-overlay"
+                                        style={{
+                                          position: "absolute",
+                                          top: 0,
+                                          left: 0,
+                                          width: "100%",
+                                          height: "100%",
+                                          backgroundColor: "rgba(0,0,0,0.4)",
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          opacity: 0,
+                                          transition: "opacity 0.2s ease",
+                                          cursor: "pointer"
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+                                        onMouseLeave={(e) => e.currentTarget.style.opacity = 0}
+                                        onClick={() => triggerFileInput(member.id)}
+                                      >
+                                        <Camera size={24} color="white" className="mb-1" />
+                                        <span style={{ color: "white", fontSize: "10px", fontWeight: "600" }}>CHANGE</span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        className="btn btn-danger btn-sm shadow-sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          removeMemberPhoto(member.id);
+                                        }}
+                                        style={{
+                                          position: "absolute",
+                                          bottom: "5px",
+                                          right: "5px",
+                                          width: "28px",
+                                          height: "28px",
+                                          borderRadius: "50%",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          padding: 0,
+                                          border: "2px solid white",
+                                          zIndex: 2
+                                        }}
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                      <Form.Control
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleMemberPhotoChange(member.id, e)}
+                                        className="d-none"
+                                        id={`member-photo-${member.id}`}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
                                 {errors[`member_${member.id}_photo`] && (
-                                  <div className="text-danger small mt-1">
+                                  <div className="text-danger small mt-2 fw-500">
                                     {errors[`member_${member.id}_photo`]}
                                   </div>
                                 )}
@@ -1904,15 +1976,53 @@ const VaidyaBandhuForm = () => {
         </Modal.Body>
         <Modal.Footer>
           <button
-            className="btn btn-secondary"
+            className="btn"
             onClick={() => setCropModalOpen(false)}
+            style={{
+              backgroundColor: "#f8f9fa",
+              border: "1px solid #dee2e6",
+              color: "#6c757d",
+              padding: "8px 20px",
+              borderRadius: "8px",
+              fontWeight: "500",
+              transition: "all 0.2s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#e9ecef";
+              e.currentTarget.style.borderColor = "#ced4da";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#f8f9fa";
+              e.currentTarget.style.borderColor = "#dee2e6";
+            }}
           >
             Cancel
           </button>
           <button
-            className="btn btn-primary"
+            className="btn"
             onClick={handleCropSave}
             disabled={!completedCrop?.width || !completedCrop?.height}
+            style={{
+              background: "linear-gradient(135deg, #007a7e 0%, #095D7E 100%)",
+              color: "white",
+              border: "none",
+              padding: "8px 25px",
+              borderRadius: "8px",
+              fontWeight: "600",
+              boxShadow: "0 4px 12px rgba(0, 122, 126, 0.2)",
+              transition: "all 0.3s ease",
+              opacity: (!completedCrop?.width || !completedCrop?.height) ? 0.65 : 1
+            }}
+            onMouseEnter={(e) => {
+              if (!e.currentTarget.disabled) {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 6px 15px rgba(153, 193, 195, 0.3)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(252, 252, 252, 1)";
+            }}
           >
             Upload Photo
           </button>
