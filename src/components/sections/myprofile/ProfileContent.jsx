@@ -76,73 +76,73 @@ const MyProfile = () => {
   };
 
   const formatAppointmentDateOnly = (timeString) => {
-  if (!timeString || typeof timeString !== 'string') {
-    return 'N/A';
-  }
+    if (!timeString || typeof timeString !== 'string') {
+      return 'N/A';
+    }
 
-  try {
-    // Split by " - " and take the first part
-    const firstPart = timeString.split(' - ')[0]?.trim();
-    if (!firstPart) return 'N/A';
+    try {
+      // Split by " - " and take the first part
+      const firstPart = timeString.split(' - ')[0]?.trim();
+      if (!firstPart) return 'N/A';
 
-    // Extract YYYY-MM-DD part
-    const dateOnly = firstPart.split(' ')[0];
-    if (!dateOnly) return 'N/A';
+      // Extract YYYY-MM-DD part
+      const dateOnly = firstPart.split(' ')[0];
+      if (!dateOnly) return 'N/A';
 
-    const date = new Date(dateOnly);
-    return isNaN(date.getTime())
-      ? 'Invalid Date'
-      : date.toLocaleDateString('en-IN');
-  } catch (error) {
-    return 'N/A';
-  }
-};
+      const date = new Date(dateOnly);
+      return isNaN(date.getTime())
+        ? 'Invalid Date'
+        : date.toLocaleDateString('en-IN');
+    } catch (error) {
+      return 'N/A';
+    }
+  };
 
-const formatTimeIST = (isoString) => {
-  if (!isoString || typeof isoString !== 'string') return 'N/A';
+  const formatTimeIST = (isoString) => {
+    if (!isoString || typeof isoString !== 'string') return 'N/A';
 
-  try {
-    // Remove trailing +00:00 if present and treat as UTC
-    const cleaned = isoString.replace('+00:00', '').trim();
-    const utcDate = new Date(cleaned + 'Z'); // Force UTC
+    try {
+      // Remove trailing +00:00 if present and treat as UTC
+      const cleaned = isoString.replace('+00:00', '').trim();
+      const utcDate = new Date(cleaned + 'Z'); // Force UTC
 
-    if (isNaN(utcDate.getTime())) return 'N/A';
+      if (isNaN(utcDate.getTime())) return 'N/A';
 
-    // Format in 12-hour with 2-digit padding and proper AM/PM
-    return utcDate.toLocaleTimeString('en-US', {
-      timeZone: 'Asia/Kolkata', // Explicitly IST
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-  } catch (error) {
-    return 'N/A';
-  }
-};
+      // Format in 12-hour with 2-digit padding and proper AM/PM
+      return utcDate.toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Kolkata', // Explicitly IST
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+    } catch (error) {
+      return 'N/A';
+    }
+  };
 
-// Extract Start Time
-const formatAppointmentStartTime = (timeString) => {
-  if (!timeString) return 'N/A';
-  const parts = timeString.split(' - ');
-  if (parts.length < 2) return 'N/A';
-  return formatTimeIST(parts[0].trim());
-};
+  // Extract Start Time
+  const formatAppointmentStartTime = (timeString) => {
+    if (!timeString) return 'N/A';
+    const parts = timeString.split(' - ');
+    if (parts.length < 2) return 'N/A';
+    return formatTimeIST(parts[0].trim());
+  };
 
-// Extract End Time
-const formatAppointmentEndTime = (timeString) => {
-  if (!timeString) return 'N/A';
-  const parts = timeString.split(' - ');
-  if (parts.length < 2) return 'N/A';
-  return formatTimeIST(parts[1].trim());
-};
+  // Extract End Time
+  const formatAppointmentEndTime = (timeString) => {
+    if (!timeString) return 'N/A';
+    const parts = timeString.split(' - ');
+    if (parts.length < 2) return 'N/A';
+    return formatTimeIST(parts[1].trim());
+  };
 
-// Full Range
-const formatAppointmentTimeRange = (timeString) => {
-  const start = formatAppointmentStartTime(timeString);
-  const end = formatAppointmentEndTime(timeString);
-  if (start === 'N/A' || end === 'N/A') return 'N/A';
-  return `${start} - ${end}`;
-};
+  // Full Range
+  const formatAppointmentTimeRange = (timeString) => {
+    const start = formatAppointmentStartTime(timeString);
+    const end = formatAppointmentEndTime(timeString);
+    if (start === 'N/A' || end === 'N/A') return 'N/A';
+    return `${start} - ${end}`;
+  };
 
   // Update window width on resize
   useEffect(() => {
@@ -273,19 +273,18 @@ const formatAppointmentTimeRange = (timeString) => {
   }, [activeTab, patient?.id]);
 
   // membership card download handler
-  const handleDownload = async (memberId = null, memberName = null) => {
-    if (memberId) {
-      setDownloadingMemberId(memberId);
+  const handleDownload = async (membershipId = null, memberName = null) => {
+    if (membershipId) {
+      setDownloadingMemberId(membershipId);
     } else {
       setDownloading(true);
     }
     try {
       const token = localStorage.getItem("token");
-      // Use different endpoint for family members vs primary member
-      const endpoint = memberId 
-        ? `https://admin.vaidyabandhu.com/api/user/family/card/pdf/${memberId}/`
-        : "https://admin.vaidyabandhu.com/api/user/card/pdf/";
-      
+
+      // Use the provided API with membership_id as a query parameter
+      const endpoint = `https://admin.vaidyabandhu.com/api/user/card/pdf/?membership_id=${membershipId}`;
+
       const response = await fetch(endpoint, {
         method: "GET",
         headers: {
@@ -1154,7 +1153,7 @@ const formatAppointmentTimeRange = (timeString) => {
                 <Crown style={styles.sectionHeaderIcon} />
                 <h2 style={styles.sectionHeaderTitle}>Primary Member</h2>
               </div>
-              
+
               <div style={styles.cardsGrid}>
                 {/* Primary Member Card */}
                 <div style={styles.memberCardWrapper}>
@@ -1163,16 +1162,16 @@ const formatAppointmentTimeRange = (timeString) => {
                     <Crown size={isMobile ? 12 : 14} />
                     Primary Member
                   </div>
-                  
+
                   {/* Status Badge */}
-                  <div style={{ 
-                    ...styles.statusBadge, 
-                    ...(patient.is_active !== false ? styles.activeBadge : styles.inactiveBadge) 
+                  <div style={{
+                    ...styles.statusBadge,
+                    ...(patient.is_active !== false ? styles.activeBadge : styles.inactiveBadge)
                   }}>
                     {patient.is_active !== false ? 'Active' : 'Inactive'}
                   </div>
-                  
-                  <div 
+
+                  <div
                     style={{
                       ...styles.memberCardInner,
                       ...(flippedCards['primary'] ? styles.memberCardFlipped : {})
@@ -1474,7 +1473,7 @@ const formatAppointmentTimeRange = (timeString) => {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Action Buttons */}
                   <div style={styles.cardActions}>
                     <button
@@ -1494,7 +1493,7 @@ const formatAppointmentTimeRange = (timeString) => {
                     </button>
                     <button
                       style={{ ...styles.actionButton, ...styles.downloadActionButton }}
-                      onClick={() => handleDownload(null, patient.full_name)}
+                      onClick={() => handleDownload(patient.membership_id, patient.full_name)}
                       disabled={downloading}
                       onMouseEnter={(e) => {
                         if (!downloading) {
@@ -1530,20 +1529,20 @@ const formatAppointmentTimeRange = (timeString) => {
                 <Users style={styles.sectionHeaderIcon} />
                 <h2 style={styles.sectionHeaderTitle}>Family Members</h2>
               </div>
-              
+
               <div style={styles.cardsGrid}>
                 {patient.family_members && patient.family_members.length > 0 ? (
                   patient.family_members.map((member) => {
                     const relationDetails = getRelationshipDetails(member.relationship);
                     const RelationIcon = relationDetails.icon;
                     const cardId = `family-${member.id}`;
-                    const isDownloadingThis = downloadingMemberId === member.id;
-                    
+                    const isDownloadingThis = downloadingMemberId === member.membership_id;
+
                     return (
                       <div key={member.id} style={styles.memberCardWrapper}>
                         {/* Relationship Badge */}
-                        <div style={{ 
-                          ...styles.memberBadge, 
+                        <div style={{
+                          ...styles.memberBadge,
                           ...styles.familyBadge,
                           borderColor: relationDetails.color,
                           backgroundColor: relationDetails.bgColor,
@@ -1552,16 +1551,16 @@ const formatAppointmentTimeRange = (timeString) => {
                           <RelationIcon size={isMobile ? 12 : 14} />
                           {relationDetails.label}
                         </div>
-                        
+
                         {/* Status Badge */}
-                        <div style={{ 
-                          ...styles.statusBadge, 
-                          ...(member.is_active ? styles.activeBadge : styles.inactiveBadge) 
+                        <div style={{
+                          ...styles.statusBadge,
+                          ...(member.is_active ? styles.activeBadge : styles.inactiveBadge)
                         }}>
                           {member.is_active ? 'Active' : 'Inactive'}
                         </div>
-                        
-                        <div 
+
+                        <div
                           style={{
                             ...styles.memberCardInner,
                             ...(flippedCards[cardId] ? styles.memberCardFlipped : {}),
@@ -1636,6 +1635,20 @@ const formatAppointmentTimeRange = (timeString) => {
                                     }}
                                   >
                                     {" "}{member.membership_id || " "}
+                                  </span>
+                                </div>
+                                <div style={styles.detailRowAligned}>
+                                  <span style={styles.labelText}>VALIDITY:</span>
+                                  <span
+                                    style={{
+                                      ...styles.valueText,
+                                      maxWidth: isMobile ? "100px" : "200px",
+                                      fontSize: isMobile ? "8px" : "13px",
+                                      whiteSpace: isMobile ? "normal" : "nowrap",
+                                    }}
+                                  >
+                                    {formatDate(member.start_date)} to{" "}
+                                    {formatDate(member.end_date)}
                                   </span>
                                 </div>
                                 <div style={styles.detailRowAligned}>
@@ -1853,7 +1866,7 @@ const formatAppointmentTimeRange = (timeString) => {
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Action Buttons */}
                         <div style={styles.cardActions}>
                           <button
@@ -1872,13 +1885,13 @@ const formatAppointmentTimeRange = (timeString) => {
                             {flippedCards[cardId] ? 'View Front' : 'View Back'}
                           </button>
                           <button
-                            style={{ 
-                              ...styles.actionButton, 
+                            style={{
+                              ...styles.actionButton,
                               ...styles.downloadActionButton,
                               opacity: (isDownloadingThis || member.is_active === false) ? 0.5 : 1,
                               cursor: (isDownloadingThis || member.is_active === false) ? 'not-allowed' : 'pointer',
                             }}
-                            onClick={() => member.is_active !== false && handleDownload(member.id, member.full_name)}
+                            onClick={() => member.is_active !== false && handleDownload(member.membership_id, member.full_name)}
                             disabled={isDownloadingThis || member.is_active === false}
                             onMouseEnter={(e) => {
                               if (!isDownloadingThis && member.is_active !== false) {
@@ -1934,7 +1947,7 @@ const formatAppointmentTimeRange = (timeString) => {
                   </div>
                 )}
               </div>
-              
+
               {/* Add More Family Members Button (when members exist) */}
               {patient.family_members && patient.family_members.length > 0 && (
                 <div style={{ display: "flex", justifyContent: "center", marginTop: "32px" }}>

@@ -495,6 +495,14 @@ const VaidyaBandhuForm = () => {
         newErrors[`member_${member.id}_relationship`] =
           languagesType[selectedLanguage].familyMembers?.memberRelationshipRequired || "Relationship is required";
       }
+      if (!member.blood_group) {
+        newErrors[`member_${member.id}_blood_group`] =
+          languagesType[selectedLanguage].familyMembers?.memberBloodGroupRequired || "Blood group is required";
+      }
+      if (!member.profile_image) {
+        newErrors[`member_${member.id}_photo`] =
+          languagesType[selectedLanguage].familyMembers?.memberPhotoRequired || "Member photo is required";
+      }
     });
 
     // In add-members mode, require at least one member
@@ -1544,12 +1552,13 @@ const VaidyaBandhuForm = () => {
                             <Col md={4}>
                               <Form.Group className="mb-3">
                                 <Form.Label style={{ fontWeight: "500", color: "#333" }}>
-                                  {languagesType[selectedLanguage].form?.blood_group || "Blood Group"}
+                                  {languagesType[selectedLanguage].form?.blood_group || "Blood Group"} <span className="text-danger">*</span>
                                 </Form.Label>
                                 <Form.Control
                                   as="select"
                                   value={member.blood_group}
                                   onChange={(e) => updateFamilyMember(member.id, "blood_group", e.target.value)}
+                                  isInvalid={!!errors[`member_${member.id}_blood_group`]}
                                   style={{ borderRadius: "8px", padding: "10px 14px" }}
                                 >
                                   <option value="">Select Blood Group</option>
@@ -1559,77 +1568,112 @@ const VaidyaBandhuForm = () => {
                                     </option>
                                   ))}
                                 </Form.Control>
+                                <Form.Control.Feedback type="invalid">
+                                  {errors[`member_${member.id}_blood_group`]}
+                                </Form.Control.Feedback>
                               </Form.Group>
                             </Col>
                             <Col md={4}>
                               <Form.Group className="mb-3">
                                 <Form.Label style={{ fontWeight: "500", color: "#333" }}>
-                                  {languagesType[selectedLanguage].familyMembers?.memberPhoto || "Photo"} <small className="text-muted">(Optional)</small>
+                                  {languagesType[selectedLanguage].familyMembers?.memberPhoto || "Member Photo"} <span className="text-danger">*</span>
                                 </Form.Label>
-                                {!member.imagePreview ? (
-                                  <div>
-                                    <Form.Control
-                                      type="file"
-                                      accept="image/*"
-                                      onChange={(e) => handleMemberPhotoChange(member.id, e)}
-                                      className="d-none"
-                                      id={`member-photo-${member.id}`}
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => triggerFileInput(member.id)}
-                                      className="btn btn-sm w-100 d-flex align-items-center justify-content-center"
-                                      style={{
-                                        backgroundColor: "#f8f9fa",
-                                        border: "2px dashed #dee2e6",
-                                        borderRadius: "8px",
-                                        cursor: "pointer",
-                                        padding: "10px",
-                                        transition: "all 0.2s ease"
-                                      }}
-                                    >
-                                      <Upload size={16} className="me-2" style={{ color: "#6c757d" }} />
-                                      <span style={{ color: "#6c757d" }}>
-                                        {languagesType[selectedLanguage].familyMembers?.uploadPhoto || "Upload"}
-                                      </span>
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <div className="position-relative d-inline-block" style={{ width: "60px" }}>
-                                    <Image
-                                      src={member.imagePreview}
-                                      alt="Preview"
-                                      rounded
-                                      style={{
-                                        width: "60px",
-                                        height: "60px",
-                                        objectFit: "cover",
-                                        border: "2px solid #007a7e"
-                                      }}
-                                    />
-                                    <button
-                                      type="button"
-                                      className="position-absolute bg-danger text-white rounded-circle p-0 border-0 d-flex align-items-center justify-content-center"
-                                      onClick={() => removeMemberPhoto(member.id)}
-                                      style={{
-                                        top: "-8px",
-                                        right: "-8px",
-                                        width: "22px",
-                                        height: "22px",
-                                        fontSize: "14px",
-                                        lineHeight: "1",
-                                        boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
-                                      }}
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                )}
-                                {errors[`member_${member.id}_photo`] && (
-                                  <div className="text-danger small mt-1">
-                                    {errors[`member_${member.id}_photo`]}
-                                  </div>
-                                )}
+                                <div className="member-photo-upload-container">
+                                  {!member.imagePreview ? (
+                                    <div className="w-100">
+                                      <Form.Control
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleMemberPhotoChange(member.id, e)}
+                                        className="d-none"
+                                        isInvalid={!!errors[`member_${member.id}_photo`]}
+                                        id={`member-photo-${member.id}`}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => triggerFileInput(member.id)}
+                                        className={`btn w-100 d-flex flex-column align-items-center justify-content-center ${errors[`member_${member.id}_photo`] ? 'border-danger' : ''}`}
+                                        style={{
+                                          backgroundColor: "#f8f9fa",
+                                          border: errors[`member_${member.id}_photo`] ? "2px dashed #dc3545" : "2px dashed #dee2e6",
+                                          borderRadius: "12px",
+                                          cursor: "pointer",
+                                          padding: "15px 10px",
+                                          transition: "all 0.3s ease",
+                                          minHeight: "100px"
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          e.currentTarget.style.backgroundColor = "#eef7f6";
+                                          e.currentTarget.style.borderColor = "#007a7e";
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.currentTarget.style.backgroundColor = "#f8f9fa";
+                                          e.currentTarget.style.borderColor = errors[`member_${member.id}_photo`] ? "#dc3545" : "#dee2e6";
+                                        }}
+                                      >
+                                        <div style={{
+                                          width: "40px",
+                                          height: "40px",
+                                          borderRadius: "50%",
+                                          backgroundColor: errors[`member_${member.id}_photo`] ? "#fbe9eb" : "#e0f2ef",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          marginBottom: "8px"
+                                        }}>
+                                          <Upload size={20} style={{ color: errors[`member_${member.id}_photo`] ? "#dc3545" : "#007a7e" }} />
+                                        </div>
+                                        <span style={{
+                                          color: errors[`member_${member.id}_photo`] ? "#dc3545" : "#555",
+                                          fontSize: "13px",
+                                          fontWeight: "500"
+                                        }}>
+                                          {languagesType[selectedLanguage].familyMembers?.uploadPhoto || "Upload Member Photo"}
+                                        </span>
+                                      </button>
+                                      {errors[`member_${member.id}_photo`] && (
+                                        <div className="text-danger small mt-1 d-block">
+                                          {errors[`member_${member.id}_photo`]}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div className="position-relative d-inline-block shadow-sm rounded-lg overflow-hidden" style={{ borderRadius: "12px" }}>
+                                      <Image
+                                        src={member.imagePreview}
+                                        alt="Member Preview"
+                                        style={{
+                                          width: "100px",
+                                          height: "100px",
+                                          objectFit: "cover",
+                                          borderRadius: "12px",
+                                          border: "2px solid #e0f2ef"
+                                        }}
+                                      />
+                                      <button
+                                        type="button"
+                                        className="position-absolute d-flex align-items-center justify-content-center shadow-sm"
+                                        onClick={() => removeMemberPhoto(member.id)}
+                                        style={{
+                                          top: "5px",
+                                          right: "5px",
+                                          width: "24px",
+                                          height: "24px",
+                                          backgroundColor: "#dc3545",
+                                          color: "white",
+                                          border: "none",
+                                          borderRadius: "50%",
+                                          cursor: "pointer",
+                                          transition: "transform 0.2s ease"
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.1)"}
+                                        onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                                      >
+                                        <X size={14} />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               </Form.Group>
                             </Col>
                           </Row>
@@ -1904,15 +1948,53 @@ const VaidyaBandhuForm = () => {
         </Modal.Body>
         <Modal.Footer>
           <button
-            className="btn btn-secondary"
+            className="btn"
             onClick={() => setCropModalOpen(false)}
+            style={{
+              backgroundColor: "#f8f9fa",
+              border: "1px solid #dee2e6",
+              color: "#6c757d",
+              padding: "8px 20px",
+              borderRadius: "8px",
+              fontWeight: "500",
+              transition: "all 0.2s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#e9ecef";
+              e.currentTarget.style.borderColor = "#ced4da";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#f8f9fa";
+              e.currentTarget.style.borderColor = "#dee2e6";
+            }}
           >
             Cancel
           </button>
           <button
-            className="btn btn-primary"
+            className="btn"
             onClick={handleCropSave}
             disabled={!completedCrop?.width || !completedCrop?.height}
+            style={{
+              background: "linear-gradient(135deg, #007a7e 0%, #095D7E 100%)",
+              color: "white",
+              border: "none",
+              padding: "8px 25px",
+              borderRadius: "8px",
+              fontWeight: "600",
+              boxShadow: "0 4px 12px rgba(0, 122, 126, 0.2)",
+              transition: "all 0.3s ease",
+              opacity: (!completedCrop?.width || !completedCrop?.height) ? 0.65 : 1
+            }}
+            onMouseEnter={(e) => {
+              if (!e.currentTarget.disabled) {
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 6px 15px rgba(153, 193, 195, 0.3)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(252, 252, 252, 1)";
+            }}
           >
             Upload Photo
           </button>
