@@ -12,6 +12,8 @@ import {
   UserPlus,
   Trash2,
   Users,
+  Camera,
+  User,
 } from "lucide-react";
 import { Form, Col, Row, Card, Image, Modal } from "react-bootstrap";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -1573,14 +1575,14 @@ const VaidyaBandhuForm = () => {
                                 </Form.Control.Feedback>
                               </Form.Group>
                             </Col>
-                            <Col md={4}>
-                              <Form.Group className="mb-3">
-                                <Form.Label style={{ fontWeight: "500", color: "#333" }}>
+                            <Col md={4} className="d-flex flex-column align-items-center justify-content-center">
+                              <Form.Group className="mb-0 text-center">
+                                <Form.Label style={{ fontWeight: "600", color: "#333", marginBottom: "12px", display: "block" }}>
                                   {languagesType[selectedLanguage].familyMembers?.memberPhoto || "Member Photo"} <span className="text-danger">*</span>
                                 </Form.Label>
-                                <div className="member-photo-upload-container">
+                                <div className="member-photo-avatar-wrapper" style={{ position: "relative", width: "120px", height: "120px", margin: "0 auto" }}>
                                   {!member.imagePreview ? (
-                                    <div className="w-100">
+                                    <div className="w-100 h-100">
                                       <Form.Control
                                         type="file"
                                         accept="image/*"
@@ -1592,88 +1594,114 @@ const VaidyaBandhuForm = () => {
                                       <button
                                         type="button"
                                         onClick={() => triggerFileInput(member.id)}
-                                        className={`btn w-100 d-flex flex-column align-items-center justify-content-center ${errors[`member_${member.id}_photo`] ? 'border-danger' : ''}`}
+                                        className="btn p-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center"
                                         style={{
-                                          backgroundColor: "#f8f9fa",
-                                          border: errors[`member_${member.id}_photo`] ? "2px dashed #dc3545" : "2px dashed #dee2e6",
-                                          borderRadius: "12px",
+                                          backgroundColor: "#f0f7f7",
+                                          border: errors[`member_${member.id}_photo`] ? "2px dashed #dc3545" : "2px dashed #007a7e",
+                                          borderRadius: "50%",
                                           cursor: "pointer",
-                                          padding: "15px 10px",
-                                          transition: "all 0.3s ease",
-                                          minHeight: "100px"
+                                          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                          position: "relative",
+                                          overflow: "hidden"
                                         }}
                                         onMouseEnter={(e) => {
-                                          e.currentTarget.style.backgroundColor = "#eef7f6";
-                                          e.currentTarget.style.borderColor = "#007a7e";
+                                          e.currentTarget.style.backgroundColor = "#e0f2ef";
+                                          e.currentTarget.style.transform = "scale(1.05)";
                                         }}
                                         onMouseLeave={(e) => {
-                                          e.currentTarget.style.backgroundColor = "#f8f9fa";
-                                          e.currentTarget.style.borderColor = errors[`member_${member.id}_photo`] ? "#dc3545" : "#dee2e6";
+                                          e.currentTarget.style.backgroundColor = "#f0f7f7";
+                                          e.currentTarget.style.transform = "scale(1)";
                                         }}
                                       >
+                                        <User size={48} style={{ color: errors[`member_${member.id}_photo`] ? "#dc3545" : "#007a7e", opacity: 0.5 }} />
                                         <div style={{
-                                          width: "40px",
-                                          height: "40px",
-                                          borderRadius: "50%",
-                                          backgroundColor: errors[`member_${member.id}_photo`] ? "#fbe9eb" : "#e0f2ef",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          marginBottom: "8px"
+                                          position: "absolute",
+                                          bottom: "0",
+                                          width: "100%",
+                                          backgroundColor: "rgba(0, 122, 126, 0.8)",
+                                          padding: "4px 0",
+                                          color: "white",
+                                          fontSize: "10px",
+                                          fontWeight: "600"
                                         }}>
-                                          <Upload size={20} style={{ color: errors[`member_${member.id}_photo`] ? "#dc3545" : "#007a7e" }} />
+                                          ADD PHOTO
                                         </div>
-                                        <span style={{
-                                          color: errors[`member_${member.id}_photo`] ? "#dc3545" : "#555",
-                                          fontSize: "13px",
-                                          fontWeight: "500"
-                                        }}>
-                                          {languagesType[selectedLanguage].familyMembers?.uploadPhoto || "Upload Member Photo"}
-                                        </span>
                                       </button>
-                                      {errors[`member_${member.id}_photo`] && (
-                                        <div className="text-danger small mt-1 d-block">
-                                          {errors[`member_${member.id}_photo`]}
-                                        </div>
-                                      )}
                                     </div>
                                   ) : (
-                                    <div className="position-relative d-inline-block shadow-sm rounded-lg overflow-hidden" style={{ borderRadius: "12px" }}>
+                                    <div className="w-100 h-100 position-relative group" style={{ borderRadius: "50%", overflow: "hidden", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", border: "3px solid white" }}>
                                       <Image
                                         src={member.imagePreview}
                                         alt="Member Preview"
                                         style={{
-                                          width: "100px",
-                                          height: "100px",
-                                          objectFit: "cover",
-                                          borderRadius: "12px",
-                                          border: "2px solid #e0f2ef"
+                                          width: "100%",
+                                          height: "100%",
+                                          objectFit: "cover"
                                         }}
                                       />
+                                      <div
+                                        className="photo-overlay"
+                                        style={{
+                                          position: "absolute",
+                                          top: 0,
+                                          left: 0,
+                                          width: "100%",
+                                          height: "100%",
+                                          backgroundColor: "rgba(0,0,0,0.4)",
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          opacity: 0,
+                                          transition: "opacity 0.2s ease",
+                                          cursor: "pointer"
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+                                        onMouseLeave={(e) => e.currentTarget.style.opacity = 0}
+                                        onClick={() => triggerFileInput(member.id)}
+                                      >
+                                        <Camera size={24} color="white" className="mb-1" />
+                                        <span style={{ color: "white", fontSize: "10px", fontWeight: "600" }}>CHANGE</span>
+                                      </div>
                                       <button
                                         type="button"
-                                        className="position-absolute d-flex align-items-center justify-content-center shadow-sm"
-                                        onClick={() => removeMemberPhoto(member.id)}
-                                        style={{
-                                          top: "5px",
-                                          right: "5px",
-                                          width: "24px",
-                                          height: "24px",
-                                          backgroundColor: "#dc3545",
-                                          color: "white",
-                                          border: "none",
-                                          borderRadius: "50%",
-                                          cursor: "pointer",
-                                          transition: "transform 0.2s ease"
+                                        className="btn btn-danger btn-sm shadow-sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          removeMemberPhoto(member.id);
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.1)"}
-                                        onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                                        style={{
+                                          position: "absolute",
+                                          bottom: "5px",
+                                          right: "5px",
+                                          width: "28px",
+                                          height: "28px",
+                                          borderRadius: "50%",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          padding: 0,
+                                          border: "2px solid white",
+                                          zIndex: 2
+                                        }}
                                       >
-                                        <X size={14} />
+                                        <Trash2 size={14} />
                                       </button>
+                                      <Form.Control
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleMemberPhotoChange(member.id, e)}
+                                        className="d-none"
+                                        id={`member-photo-${member.id}`}
+                                      />
                                     </div>
                                   )}
                                 </div>
+                                {errors[`member_${member.id}_photo`] && (
+                                  <div className="text-danger small mt-2 fw-500">
+                                    {errors[`member_${member.id}_photo`]}
+                                  </div>
+                                )}
                               </Form.Group>
                             </Col>
                           </Row>
