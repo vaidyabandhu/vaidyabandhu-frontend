@@ -1088,7 +1088,7 @@ const MyProfile = () => {
   if (error) {
     return (
       <div style={styles.errorContainer}>
-        <h3>Error Loading Profile</h3>
+        <h3>My Appointments</h3>
         <p>{error}</p>
       </div>
     );
