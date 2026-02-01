@@ -30,6 +30,7 @@ const FloatingVaidyabandhuCardButton = () => {
         {/* Flip Text */}
         <div className="vb-flip">
           <div className="vb-flip-inner">
+            <div className="vb-flip-item">₹49ಕ್ಕೆ ವೈದ್ಯಬಂಧು ಆರೋಗ್ಯ ಕಾರ್ಡ್</div>
             <div className="vb-flip-item">Vaidya Bandhu Card @ ₹49</div>
             <div className="vb-flip-item">₹49కే వైద్యబంధు హెల్త్ కార్డ్</div>
             <div className="vb-flip-item">₹49 में वैद्य बंधु हेल्थ कार्ड</div>
