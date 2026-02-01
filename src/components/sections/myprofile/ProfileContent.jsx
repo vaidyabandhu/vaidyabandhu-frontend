@@ -282,8 +282,11 @@ const MyProfile = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // Use the provided API with membership_id as a query parameter
-      const endpoint = `https://admin.vaidyabandhu.com/api/user/card/pdf/?membership_id=${membershipId}`;
+      // Use primary endpoint for user's own card, use membership_id query for family members
+      const isPrimaryCard = membershipId === patient.membership_id;
+      const endpoint = isPrimaryCard
+        ? "https://admin.vaidyabandhu.com/api/user/card/pdf/"
+        : `https://admin.vaidyabandhu.com/api/user/card/pdf/?membership_id=${membershipId}`;
 
       const response = await fetch(endpoint, {
         method: "GET",
