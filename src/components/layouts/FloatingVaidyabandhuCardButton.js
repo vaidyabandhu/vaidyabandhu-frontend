@@ -47,7 +47,7 @@ const FloatingVaidyabandhuCardButton = () => {
             bottom: 90px;
             right: 20px;
             height: 64px;
-            padding: 0 22px;
+            padding: 0 10px;
             display: inline-flex;
             align-items: center;
             gap: 14px;
@@ -100,7 +100,7 @@ const FloatingVaidyabandhuCardButton = () => {
           /* Mobile */
           @media (max-width: 768px) {
             .vb-float-btn {
-              bottom: 70px;
+              bottom: 170px;
               right: 14px;
               height: 50px;
               padding: 0 16px;
