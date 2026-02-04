@@ -86,6 +86,7 @@ const VaidyaBandhuForm = () => {
 
 
   const FullScreenLoader = ({ text = "Please wait..." }) => (
+
     <div
       style={{
         position: "fixed",
