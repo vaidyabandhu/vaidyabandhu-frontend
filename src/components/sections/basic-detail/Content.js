@@ -80,6 +80,11 @@ const VaidyaBandhuForm = () => {
   const [apiProcessing, setApiProcessing] = useState(false);
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+  // Payment state tracking
+  const [hasPendingDraft, setHasPendingDraft] = useState(false);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  const DRAFT_KEY = 'vaidyabandhu_draft_registration';
+
 
 
   const FullScreenLoader = ({ text = "Please wait..." }) => (
@@ -172,6 +177,28 @@ const VaidyaBandhuForm = () => {
             // Count existing family members if available
             if (data.family_members && Array.isArray(data.family_members)) {
               setExistingMembersCount(data.family_members.length);
+            }
+            // Clear any saved draft if user is now active
+            localStorage.removeItem(DRAFT_KEY);
+          } else {
+            // Check for pending draft if user is not active
+            const savedDraft = localStorage.getItem(DRAFT_KEY);
+            if (savedDraft) {
+              try {
+                const draft = JSON.parse(savedDraft);
+                // Check if draft is not too old (24 hours)
+                const draftAge = Date.now() - draft.timestamp;
+                if (draftAge < 24 * 60 * 60 * 1000) {
+                  setHasPendingDraft(true);
+                  setShowResumeBanner(true);
+                } else {
+                  // Remove old draft
+                  localStorage.removeItem(DRAFT_KEY);
+                }
+              } catch (e) {
+                console.error('Error parsing draft:', e);
+                localStorage.removeItem(DRAFT_KEY);
+              }
             }
           }
         }
@@ -564,6 +591,81 @@ const VaidyaBandhuForm = () => {
     }
   };
 
+  // Save draft to localStorage
+  const saveDraftToLocalStorage = () => {
+    try {
+      const draft = {
+        formData: {
+          ...formData,
+          photo: null, // Don't save file objects
+        },
+        familyMembers: familyMembers.map(m => ({
+          ...m,
+          profile_image: null, // Don't save file objects
+          imagePreview: null,
+        })),
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      console.log('Draft saved to localStorage');
+    } catch (e) {
+      console.error('Error saving draft:', e);
+    }
+  };
+
+  // Load draft from localStorage
+  const loadDraftFromLocalStorage = () => {
+    try {
+      const savedDraft = localStorage.getItem(DRAFT_KEY);
+      if (savedDraft) {
+        const draft = JSON.parse(savedDraft);
+        setFormData(draft.formData);
+        setFamilyMembers(draft.familyMembers);
+        setShowResumeBanner(false);
+        setHasPendingDraft(false);
+        console.log('Draft loaded from localStorage');
+      }
+    } catch (e) {
+      console.error('Error loading draft:', e);
+    }
+  };
+
+  // Clear draft from localStorage
+  const clearDraft = () => {
+    localStorage.removeItem(DRAFT_KEY);
+    setHasPendingDraft(false);
+    setShowResumeBanner(false);
+    console.log('Draft cleared from localStorage');
+  };
+
+  // Handle resume registration
+  const handleResumeRegistration = () => {
+    loadDraftFromLocalStorage();
+    // Just restore data, let user edit and click pay manually
+  };
+
+  // Handle start fresh
+  const handleStartFresh = () => {
+    clearDraft();
+    // Reset form
+    setFormData({
+      full_name: "",
+      age: "",
+      gender: "",
+      blood_group: "",
+      mobile: "",
+      alternate_mobile: "",
+      address: "",
+      pin_code: "",
+      aadhaar_number: "",
+      pan_number: "",
+      photo: null,
+    });
+    setFamilyMembers([]);
+    setPhotoPreview(null);
+    setErrors({});
+  };
+
   // Load Razorpay script
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -603,6 +705,9 @@ const VaidyaBandhuForm = () => {
 
     try {
       const token = localStorage.getItem("token");
+
+      /* ---------- SAVE DRAFT BEFORE PAYMENT ---------- */
+      saveDraftToLocalStorage();
 
       /* ---------- 1. CREATE ORDER (Payment First) ---------- */
       const orderRes = await fetch(
@@ -772,6 +877,8 @@ const VaidyaBandhuForm = () => {
               }
             }
 
+            /* ---------- CLEAR DRAFT ON SUCCESS ---------- */
+            clearDraft();
             setShowWelcomeModal(true);
           } catch (err) {
             console.error("Error after payment:", err);
@@ -786,6 +893,9 @@ const VaidyaBandhuForm = () => {
           ondismiss: () => {
             setIsSubmitting(false);
             setApiProcessing(false);
+            // Show notification about saved draft
+            setShowResumeBanner(true);
+            setHasPendingDraft(true);
           },
         },
       };
@@ -866,6 +976,84 @@ const VaidyaBandhuForm = () => {
             </select>
           </div>
         </div>
+
+        {/* Resume Banner for Pending Draft */}
+        {showResumeBanner && hasPendingDraft && !isAddMembersMode && (
+          <div
+            style={{
+              backgroundColor: "#fff3cd",
+              border: "1px solid #ffc107",
+              borderRadius: "8px",
+              padding: "16px",
+              marginBottom: "24px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "12px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: "1" }}>
+              <AlertCircle
+                style={{ color: "#856404", flexShrink: 0 }}
+                size={24}
+              />
+              <div>
+                <h5 style={{ margin: 0, color: "#856404", fontSize: "16px", fontWeight: 600 }}>
+                  Incomplete Registration Found
+                </h5>
+                <p style={{ margin: "4px 0 0 0", color: "#856404", fontSize: "14px" }}>
+                  You have an incomplete registration. Would you like to continue where you left off?
+                </p>
+                <p style={{ margin: "2px 0 0 0", color: "#856404", fontSize: "12px", fontStyle: "italic" }}>
+                  Note: Uploaded photos must be re-selected.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              <button
+                onClick={handleResumeRegistration}
+                style={{
+                  backgroundColor: "#28a745",
+                  color: "white",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+                disabled={isSubmitting}
+              >
+                <CreditCard size={16} />
+                Restore Saved Data
+              </button>
+              <button
+                onClick={handleStartFresh}
+                style={{
+                  backgroundColor: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  padding: "10px 20px",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+                disabled={isSubmitting}
+              >
+                <X size={16} />
+                Start Fresh
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="text-center mb-5">
           <h1 className="display-4 mb-2 " style={{ fontFamily: "Poppins" }}>
