@@ -340,7 +340,7 @@ const Footer = () => {
       }}
     >
       <FloatingCallButton />
-      <FloatingVaidyabandhuCardButton className="vb-fancy-float" />
+      {/* <FloatingVaidyabandhuCardButton className="vb-fancy-float" /> */}
       {/* Decorative background elements (optional, but consistent with previous components) */}
       <div
         style={{

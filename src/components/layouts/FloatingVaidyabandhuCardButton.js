@@ -6,38 +6,11 @@ const FloatingVaidyabandhuCardButton = () => {
 
   return (
     <>
-      {/* Floating Vaidyabandhu Card Button */}
       <div
         onClick={() => navigate("/userlogin")}
-        style={{
-          position: "fixed",
-          bottom: "90px", // Above the call button
-          right: "20px",
-          width: "auto",
-          minWidth: "210px",
-          height: "60px",
-          background: "linear-gradient(90deg, #1e293b 0%, #007a7e 100%)",
-          borderRadius: "30px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          boxShadow: "0 4px 20px rgba(30, 41, 59, 0.25)",
-          zIndex: 1000,
-          transition: "all 0.3s ease",
-          animation: "pulse 2s infinite",
-          padding: "0 24px",
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.transform = "scale(1.05)";
-          e.currentTarget.style.background = "linear-gradient(90deg, #007a7e 0%, #1e293b 100%)";
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.transform = "scale(1)";
-          e.currentTarget.style.background = "linear-gradient(90deg, #1e293b 0%, #007a7e 100%)";
-        }}
+        className="vb-float-btn"
       >
-        {/* Card Icon */}
+        {/* Icon */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="26"
@@ -48,54 +21,107 @@ const FloatingVaidyabandhuCardButton = () => {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ marginRight: "12px" }}
+          className="vb-icon"
         >
           <rect x="2" y="5" width="20" height="14" rx="3" />
           <line x1="2" y1="10" x2="22" y2="10" />
         </svg>
-        <span
-          style={{
-            color: "#fff",
-            fontSize: "14px",
-            fontWeight: 700,
-            letterSpacing: "0.5px",
-            textShadow: "0 2px 8px rgba(0,0,0,0.12)",
-            fontFamily: 'inherit',
-          }}
-        >
-          ಕೇವಲ 49 ರೂಪಾಯಿಗೆ ವೈದ್ಯಬಂಧು ಆರೋಗ್ಯ ಕಾರ್ಡ್‌ ಪಡೆಯಿರಿ.
-        </span>
+
+        {/* Flip Text */}
+        <div className="vb-flip">
+          <div className="vb-flip-inner">
+            <div className="vb-flip-item">₹49ಕ್ಕೆ ವೈದ್ಯಬಂಧು ಆರೋಗ್ಯ ಕಾರ್ಡ್</div>
+            <div className="vb-flip-item">Vaidya Bandhu Card @ ₹49</div>
+            <div className="vb-flip-item">₹49కే వైద్యబంధు హెల్త్ కార్డ్</div>
+            <div className="vb-flip-item">₹49 में वैद्य बंधु हेल्थ कार्ड</div>
+            <div className="vb-flip-item">₹49க்கு வைத்யா பந்து ஹெல்த் கார்ட்</div>
+            <div className="vb-flip-item">₹49ക്ക് വൈദ്യ ബന്ധു ഹെൽത്ത് കാർഡ്</div>
+          </div>
+        </div>
       </div>
-      {/* Styles */}
+
       <style>
         {`
-          @keyframes pulse {
-            0% {
-              box-shadow: 0 4px 20px rgba(30, 41, 59, 0.25);
-            }
-            50% {
-              box-shadow: 0 4px 20px rgba(30, 41, 59, 0.25), 0 0 0 10px rgba(0, 122, 126, 0.15);
-            }
-            100% {
-              box-shadow: 0 4px 20px rgba(30, 41, 59, 0.25), 0 0 0 20px rgba(0, 122, 126, 0);
-            }
+          .vb-float-btn {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            height: 64px;
+            padding: 0 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            background: linear-gradient(90deg, #1e293b 0%, #007a7e 100%);
+            border-radius: 36px;
+            cursor: pointer;
+            box-shadow: 0 8px 26px rgba(30, 41, 59, 0.3);
+            z-index: 1000;
+            overflow: hidden;
+            width: fit-content;          /* ✅ auto width */
+            max-width: calc(100vw - 40px); /* ✅ safe on small screens */
           }
+
+          .vb-icon {
+            flex-shrink: 0;
+          }
+
+          /* Flip container */
+          .vb-flip {
+            height: 22px;
+            overflow: hidden;
+            white-space: nowrap;
+          }
+
+          .vb-flip-inner {
+            display: flex;
+            flex-direction: column;
+            animation: vb-flip 12s infinite;
+          }
+
+          .vb-flip-item {
+            height: 22px;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+          }
+
+          @keyframes vb-flip {
+            0%,16% { transform: translateY(0); }
+            20%,36% { transform: translateY(-22px); }
+            40%,56% { transform: translateY(-44px); }
+            60%,76% { transform: translateY(-66px); }
+            80%,100% { transform: translateY(-88px); }
+          }
+
+          /* Mobile */
           @media (max-width: 768px) {
-            div[style*="bottom: 90px"][style*="right: 20px"] {
-              bottom: 70px !important;
-              right: 15px !important;
-              min-width: 160px !important;
-              height: 45px !important;
-              border-radius: 25px !important;
-              padding: 0 12px !important;
+            .vb-float-btn {
+              bottom: 170px;
+              right: 14px;
+              height: 50px;
+              padding: 0 16px;
+              border-radius: 28px;
             }
-            span[style*="fontSize: 16px"] {
-              font-size: 13px !important;
+
+            .vb-flip {
+              height: 18px;
             }
-            svg[style*="marginRight: 12px"] {
-              width: 20px !important;
-              height: 20px !important;
-              margin-right: 8px !important;
+
+            .vb-flip-item {
+              height: 18px;
+              font-size: 12px;
+            }
+
+            @keyframes vb-flip {
+              0%,16% { transform: translateY(0); }
+              20%,36% { transform: translateY(-18px); }
+              40%,56% { transform: translateY(-36px); }
+              60%,76% { transform: translateY(-54px); }
+              80%,100% { transform: translateY(-72px); }
             }
           }
         `}

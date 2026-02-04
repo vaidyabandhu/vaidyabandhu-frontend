@@ -3,6 +3,7 @@ import Mobilemenu from "./Mobilemenu";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import navigation from "../../data/navigation.json";
 import "../../assets/css/Header.css";
+import FloatingVaidyabandhuCardButton from "./FloatingVaidyabandhuCardButton";
 
 // Custom Hamburger Menu Component
 const CustomHamburgerMenu = ({ isOpen, onClick }) => {
@@ -313,10 +314,60 @@ const Header = () => {
         <Mobilemenu />
         {!isLoggedIn ? (
           <div className="p-3 text-center">
+            
             <div className="mt-2">
+               <button
+  onClick={handleLoginPage}
+  className="sigma_btn btn-sm premium-btn vb-flip-highlight"
+  style={{
+    width: "100%",
+    borderRadius: 12,
+    background: "linear-gradient(90deg, #C62828 0%, #8E0000 100%)",
+    color: "#fff",
+    fontWeight: 800,
+    padding: "12px 0",
+    fontSize: 18,
+    boxShadow:
+      "0 4px 16px rgba(198,40,40,0.45), 0 2px 8px rgba(0,0,0,0.25)",
+    border: "none",
+    letterSpacing: 0.3,
+    overflow: "hidden",
+    height: 46,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    outline: "2px solid #fff176",
+    outlineOffset: "2px",
+    animation: "vb-flip-highlight-glow 1.5s infinite alternate",
+  }}
+  aria-label="Vaidyabandhu Health Card Offer"
+>
+  <div
+    className="vb-flip-inner"
+    style={{
+      lineHeight: 1,
+      minWidth: 200,
+      minHeight: 24,
+      fontSize: 18,
+      fontWeight: 800,
+      letterSpacing: 0.3,
+      textShadow: "0 2px 8px rgba(0,0,0,0.35)",
+      textAlign: "center",
+    }}
+  >
+    <span className="vb-flip-item">₹49 ಆರೋಗ್ಯ ಕಾರ್ಡ್</span>
+    <span className="vb-flip-item">Health Card @ ₹49</span>
+    <span className="vb-flip-item">₹49 హెల్త్ కార్డ్</span>
+    <span className="vb-flip-item">₹49 हेल्थ कार्ड</span>
+    <span className="vb-flip-item">₹49 ஹெல்த் கார்ட்</span>
+    <span className="vb-flip-item">₹49 ഹെൽത്ത് കാർഡ്</span>
+  </div>
+</button>
+
               <button
                 className="buy-membership-btn"
-                style={{ width: '100%', padding: '10px 0', borderRadius: 8, background: 'linear-gradient(90deg, #6366f1 0%, #0ea5e9 100%)', color: '#fff', fontWeight: 600, fontSize: 16, border: 'none', marginTop: 8, marginBottom: 8, letterSpacing: 0.2, transition: 'background 0.2s' }}
+                style={{ width: '100%', padding: '10px 0', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 16, border: 'none', marginTop: 8, marginBottom: 8, letterSpacing: 0.2, transition: 'background 0.2s' }}
                 onClick={handleLoginPage}
               >
                 Log in
@@ -356,6 +407,7 @@ const Header = () => {
                 </svg>
               </button>
             </div>
+
             {/* My Profile button for mobile */}
             <div className="mb-2">
               <Link to="/myprofile" className="sigma_btn btn-sm" style={{ width: '100%' }}>
@@ -454,6 +506,7 @@ const Header = () => {
               {/* Desktop Navigation: only show on desktop (>=768px) */}
               <nav className="navbar-nav responsive-navbar-nav d-none d-md-flex" style={{ display: 'flex', alignItems: 'center', gap: 8 }} aria-label="Main Navigation">
                 {navigation.map((item, i) => (
+
                   <li
                     key={i}
                     className={`menu-item ${item.child ? "menu-item-has-children" : ""} ${isActiveItem(item, currentPath) ? "active" : ""}`}
@@ -501,6 +554,7 @@ const Header = () => {
                 <ul className="sigma_header-controls-inner" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   {isLoggedIn ? (
                     <>
+
                       <li className="d-none d-sm-block">
                         <Link to="/myprofile" className="sigma_btn btn-sm premium-btn" style={{ borderRadius: 22, background: 'linear-gradient(90deg, #00908d 0%, #1e293b 100%)', color: '#fff', fontWeight: 700, padding: '10px 28px', fontSize: 18, boxShadow: '0 2px 8px #b2f5ea33', border: 'none', letterSpacing: 0.2 }}>
                           My Profile
@@ -518,17 +572,69 @@ const Header = () => {
                     </>
                   ) : (
                     <>
-                      {/* Login Button UI - Only for desktop */}
+                      {/* Flip Login Button (ONLY FIRST SLOT) */}
+                      <li className="d-none d-sm-block">
+                        <button
+                          onClick={handleLoginPage}
+                          className="sigma_btn btn-sm premium-btn vb-flip-highlight"
+                          style={{
+                            borderRadius: 22,
+                            background: "linear-gradient(90deg, #C62828 0%, #8E0000 100%)",
+                            color: "#fff",
+                            fontWeight: 800,
+                            padding: "10px 28px",
+                            fontSize: 16,
+                            boxShadow: "0 4px 16px #ffb30055, 0 2px 8px #b2f5ea33",
+                            border: "none",
+                            letterSpacing: 0.2,
+                            overflow: "hidden",
+                            height: 42,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            position: "relative",
+                            zIndex: 2,
+                            outline: "3px solid #fff176",
+                            outlineOffset: "2px",
+                            transition: "box-shadow 0.3s, outline 0.3s",
+                            animation: "vb-flip-highlight-glow 1.5s infinite alternate"
+                          }}
+                          aria-label="Vaidyabandhu Card Offer"
+                        >
+                          <div className="vb-flip-inner" style={{ lineHeight: 1, minWidth: 180, minHeight: 24, fontSize: 18, fontWeight: 800, letterSpacing: 0.2, textShadow: '0 2px 8px #ffb30055' }}>
+                            <span className="vb-flip-item">₹49 ಆರೋಗ್ಯ ಕಾರ್ಡ್</span>
+                            <span className="vb-flip-item">Health Card @ ₹49</span>
+                            <span className="vb-flip-item">₹49 హెల్త్ కార్డ్</span>
+                            <span className="vb-flip-item">₹49 हेल्थ कार्ड</span>
+                            <span className="vb-flip-item">₹49 ஹெல்த் கார்ட்</span>
+                            <span className="vb-flip-item">₹49 ഹെൽത്ത് കാർഡ്</span>
+                          </div>
+                        </button>
+                      </li>
+
+                      {/* Normal Login Button (SECOND ONE – unchanged) */}
                       <li className="d-none d-sm-block">
                         <button
                           className="sigma_btn btn-sm premium-btn"
-                          style={{ borderRadius: 22, background: 'linear-gradient(90deg, #00908d 0%, #1e293b 100%)', color: '#fff', fontWeight: 700, padding: '10px 28px', fontSize: 18, boxShadow: '0 2px 8px #b2f5ea33', border: 'none', letterSpacing: 0.2 }}
+                          style={{
+                            borderRadius: 22,
+                            background: "linear-gradient(90deg, #00908d 0%, #1e293b 100%)",
+                            color: "#fff",
+                            fontWeight: 700,
+                            padding: "10px 28px",
+                            fontSize: 18,
+                            boxShadow: "0 2px 8px #b2f5ea33",
+                            border: "none",
+                            letterSpacing: 0.2,
+                          }}
                           onClick={handleLoginPage}
                         >
                           Log in
                         </button>
                       </li>
                     </>
+
+
                   )}
                   {/* Hamburger menu: only visible below md (mobile/tablet) */}
                   <li className="d-block d-md-none mobile-hamburger">
@@ -592,6 +698,61 @@ const Header = () => {
             font-weight: 600 !important;
             border-radius: 22px !important;
           }
+        }
+        .vb-flip-inner {
+          display: inline-block;
+          position: relative;
+          height: 24px;
+          min-width: 180px;
+          font-size: 18px;
+          font-weight: 800;
+          color: #fff;
+          overflow: hidden;
+          vertical-align: middle;
+        }
+        .vb-flip-item {
+          display: block;
+          height: 24px;
+          line-height: 24px;
+          text-align: center;
+          animation: vb-flip-vertical 7.2s cubic-bezier(0.77,0,0.175,1) infinite;
+          will-change: transform;
+        }
+        .vb-flip-item:nth-child(1) { animation-delay: 0s; }
+        .vb-flip-item:nth-child(2) { animation-delay: 1.2s; }
+        .vb-flip-item:nth-child(3) { animation-delay: 2.4s; }
+        .vb-flip-item:nth-child(4) { animation-delay: 3.6s; }
+        .vb-flip-item:nth-child(5) { animation-delay: 4.8s; }
+        .vb-flip-item:nth-child(6) { animation-delay: 6.0s; }
+        @keyframes vb-flip-vertical {
+          0% { opacity: 0; transform: translateY(100%); }
+          5% { opacity: 1; transform: translateY(0); }
+          15% { opacity: 1; transform: translateY(0); }
+          20% { opacity: 0; transform: translateY(-100%); }
+          100% { opacity: 0; transform: translateY(-100%); }
+        }
+        .vb-flip-inner .vb-flip-item {
+          position: absolute;
+          left: 0; right: 0;
+          top: 0;
+          width: 100%;
+          opacity: 0;
+          pointer-events: none;
+        }
+        .vb-flip-inner .vb-flip-item:nth-child(1) { animation-delay: 0s; }
+        .vb-flip-inner .vb-flip-item:nth-child(2) { animation-delay: 1.2s; }
+        .vb-flip-inner .vb-flip-item:nth-child(3) { animation-delay: 2.4s; }
+        .vb-flip-inner .vb-flip-item:nth-child(4) { animation-delay: 3.6s; }
+        .vb-flip-inner .vb-flip-item:nth-child(5) { animation-delay: 4.8s; }
+        .vb-flip-inner .vb-flip-item:nth-child(6) { animation-delay: 6.0s; }
+        .vb-flip-inner .vb-flip-item {
+          animation-duration: 7.2s;
+          animation-timing-function: cubic-bezier(0.77,0,0.175,1);
+          animation-iteration-count: infinite;
+        }
+        @keyframes vb-flip-highlight-glow {
+          0% { box-shadow: 0 0 0 0 #fff17655, 0 4px 16px #ffb30055; }
+          100% { box-shadow: 0 0 16px 8px #fff17655, 0 4px 32px #ffb30099; }
         }
       `}</style>
       <style>

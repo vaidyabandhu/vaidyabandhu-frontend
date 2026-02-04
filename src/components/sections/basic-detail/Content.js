@@ -58,8 +58,6 @@ const VaidyaBandhuForm = () => {
     alternate_mobile: "",
     address: "",
     pin_code: "",
-    aadhaar_number: "",
-    pan_number: "",
     photo: null,
   });
 
@@ -489,18 +487,6 @@ const VaidyaBandhuForm = () => {
         newErrors.alternate_mobile =
           languagesType[selectedLanguage].validation.alternateValid;
       }
-      if (formData.aadhaar_number && !/^\d{12}$/.test(formData.aadhaar_number)) {
-        newErrors.aadhaar_number =
-          languagesType[selectedLanguage].validation.aadhaarValid;
-      }
-
-      if (
-        formData.pan_number &&
-        !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.pan_number)
-      ) {
-        newErrors.pan_number =
-          languagesType[selectedLanguage].validation.panValid;
-      }
     }
 
     // Validate family members
@@ -547,10 +533,6 @@ const VaidyaBandhuForm = () => {
     const { name, value } = e.target;
     let cleanedValue = value;
 
-    if (name === "pan_number") {
-      cleanedValue = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    }
-
     setFormData((prev) => ({
       ...prev,
       [name]: cleanedValue,
@@ -572,9 +554,7 @@ const VaidyaBandhuForm = () => {
         ? 6
         : fieldName === "mobile_number"
           ? 10
-          : fieldName === "aadhaar_number"
-            ? 12
-            : 3;
+          : 3;
 
     if (/^[0-9]*$/.test(value) && value.length <= maxLength) {
       setFormData((prev) => ({
@@ -778,8 +758,6 @@ const VaidyaBandhuForm = () => {
                 pin_code: formData.pin_code,
                 mobile: formData.mobile,
                 alternate_number: formData.alternate_mobile || "",
-                aadhaar_number: formData.aadhaar_number || "NA",
-                pan_number: formData.pan_number?.toUpperCase() || "NA",
               };
 
               console.log("Profile data being sent:", profileData);
@@ -1454,67 +1432,6 @@ const VaidyaBandhuForm = () => {
                           </Form.Group>
                         </Col>
                       </Row>
-                      <Form.Group controlId="formEmailId" className="mb-3">
-                        <Form.Label>
-                          {languagesType[selectedLanguage].form.email}
-                        </Form.Label>
-                        <Form.Control
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          isInvalid={!!errors.email}
-                          placeholder={
-                            languagesType[selectedLanguage].form.placeholders.email
-                          }
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.email}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-
-                      <Form.Group controlId="formAadhaarNumber" className="mb-3">
-                        <Form.Label>
-                          {languagesType[selectedLanguage].form.aadhaar_number}
-                        </Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="aadhaar_number"
-                          value={formData.aadhaar_number}
-                          onChange={(e) => handleNumberChange(e, "aadhaar_number")}
-                          isInvalid={!!errors.aadhaar_number}
-                          placeholder={
-                            languagesType[selectedLanguage].form.placeholders
-                              .aadhaar_number
-                          }
-                          maxLength="12"
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.aadhaar_number}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-
-                      <Form.Group controlId="formPanNumber" className="mb-3">
-                        <Form.Label>
-                          {languagesType[selectedLanguage].form.pan_number}
-                        </Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="pan_number"
-                          value={formData.pan_number}
-                          onChange={handleInputChange}
-                          isInvalid={!!errors.pan_number}
-                          placeholder={
-                            languagesType[selectedLanguage].form.placeholders
-                              .pan_number
-                          }
-                          maxLength="10"
-                          style={{ textTransform: "uppercase" }}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.pan_number}
-                        </Form.Control.Feedback>
-                      </Form.Group>
                     </>
                   )}
 

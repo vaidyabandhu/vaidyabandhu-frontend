@@ -84,8 +84,8 @@ const UserLogin = () => {
       });
 
       const raw = await response.text();
-      console.log("✅ SEND OTP STATUS:", response.status);
-      console.log("✅ SEND OTP RAW RESPONSE:", raw);
+      console.log("SEND OTP STATUS:", response.status);
+      console.log("SEND OTP RAW RESPONSE:", raw);
 
       if (response.ok) {
         setStep(2);
@@ -98,7 +98,7 @@ const UserLogin = () => {
         setErrors((prev) => ({ ...prev, mobile: msg }));
       }
     } catch (error) {
-      console.error("❌ Send OTP Error:", error);
+      console.error("Send OTP Error:", error);
       setErrors((prev) => ({
         ...prev,
         mobile: "Network/CORS error. Please try again.",
@@ -131,8 +131,8 @@ const UserLogin = () => {
       });
 
       const raw = await response.text();
-      console.log("✅ VERIFY OTP STATUS:", response.status);
-      console.log("✅ VERIFY OTP RAW RESPONSE:", raw);
+      console.log("VERIFY OTP STATUS:", response.status);
+      console.log("VERIFY OTP RAW RESPONSE:", raw);
 
       let data = null;
       try {
@@ -184,7 +184,7 @@ const UserLogin = () => {
         setErrors((prev) => ({ ...prev, otp: msg }));
       }
     } catch (error) {
-      console.error("❌ Verify OTP Error:", error);
+      console.error("Verify OTP Error:", error);
       setErrors((prev) => ({
         ...prev,
         otp: "Network/CORS error. Please try again.",
@@ -214,8 +214,8 @@ const UserLogin = () => {
       });
 
       const raw = await response.text();
-      console.log("✅ RESEND OTP STATUS:", response.status);
-      console.log("✅ RESEND OTP RAW RESPONSE:", raw);
+      console.log("RESEND OTP STATUS:", response.status);
+      console.log("RESEND OTP RAW RESPONSE:", raw);
 
       if (response.ok) {
         alert("OTP sent successfully!");
@@ -228,7 +228,7 @@ const UserLogin = () => {
         alert(msg);
       }
     } catch (error) {
-      console.error("❌ Resend OTP Error:", error);
+      console.error("Resend OTP Error:", error);
       alert("Network/CORS error. Please try again.");
     } finally {
       setIsLoading(false);
@@ -254,35 +254,69 @@ const UserLogin = () => {
         position: 'relative',
         margin: '32px 0',
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-          <img src={'/assets/img/vb-logo.png'} alt="Logo" style={{ width: 64, height: 64, marginBottom: 8, borderRadius: 12, boxShadow: '0 2px 8px #e0e7ff' }} />
-          <h2 style={{ fontWeight: 700, fontSize: 28, color: '#1e293b', marginBottom: 0, letterSpacing: 0.5 }}>Welcome Back</h2>
-          <div style={{ color: '#64748b', fontSize: 15, marginTop: 4, marginBottom: 0 }}>Sign in to your account</div>
-        </div>
+       <div
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  }}
+>
+  <img
+    src={"/assets/img/vb-logo.png"}
+    alt="Logo"
+    style={{
+      width: 64,
+      height: 64,
+      marginBottom: 8,
+      borderRadius: 12,
+      boxShadow: "0 2px 8px #e0e7ff",
+    }}
+  />
+
+  <h2
+    style={{
+      fontWeight: 600,
+      fontSize: "clamp(16px, 5vw, 24px)", // 🔥 auto scales per screen
+      color: "#1e293b",
+      marginBottom: 0,
+      letterSpacing: "0.3px",
+      whiteSpace: "nowrap", // 🔑 always single line
+      lineHeight: 1.2,
+    }}
+  >
+    Welcome to Vaidya Bandhu
+  </h2>
+</div>
+
 
         {/* STEP 1 */}
         {step === 1 && (
           <Form style={{ minHeight: 180 }}>
             <Form.Group controlId="formMobileNumber" className="mb-4">
-              <Form.Label style={{ fontWeight: 500, color: '#334155', fontSize: 15 }}>Mobile Number</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter your mobile number"
-                value={mobileNumber}
-                onChange={handleMobChange}
-                isInvalid={!!errors.mobile}
-                maxLength={10}
-                inputMode="numeric"
-                style={{
-                  borderRadius: 12,
-                  border: '1.5px solid #cbd5e1',
-                  fontSize: 17,
-                  padding: '12px 16px',
-                  background: '#f1f5f9',
-                  boxShadow: 'none',
-                  transition: 'border 0.2s',
-                }}
-              />
+              <Form.Label style={{ fontWeight: 500, color: '#334155', fontSize: 15 }}></Form.Label>
+          <Form.Control
+  type="text"
+  placeholder="Enter your mobile number"
+  value={mobileNumber}
+  onChange={handleMobChange}
+  isInvalid={!!errors.mobile}
+  maxLength={10}
+  inputMode="numeric"
+  style={{
+    width: "100%",              // 🔑 always full width
+    minWidth: 0,                // 🔑 fixes flex shrink issue
+    boxSizing: "border-box",    // 🔑 padding included in width
+    borderRadius: 12,
+    border: "1.5px solid #cbd5e1",
+    fontSize: "clamp(15px, 4vw, 17px)", // responsive text
+    padding: "12px 16px",
+    background: "#f1f5f9",
+    boxShadow: "none",
+    transition: "border 0.2s",
+    whiteSpace: "nowrap",       // never wrap
+  }}
+/>
+
               <Form.Control.Feedback type="invalid" style={{ fontSize: 13, marginTop: 4 }}>
                 {errors.mobile}
               </Form.Control.Feedback>
