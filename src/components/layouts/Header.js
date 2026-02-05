@@ -410,9 +410,9 @@ const Header = () => {
 
             {/* My Profile button for mobile */}
             <div className="mb-2">
-              <Link to="/myprofile" className="sigma_btn btn-sm" style={{ width: '100%' }}>
+              <button onClick={handleIconClick} className="sigma_btn btn-sm" style={{ width: '100%', border: 'none', cursor: 'pointer' }}>
                 My Profile
-              </Link>
+              </button>
             </div>
             {/* Logout button */}
             <div>
@@ -556,9 +556,9 @@ const Header = () => {
                     <>
 
                       <li className="d-none d-sm-block">
-                        <Link to="/myprofile" className="sigma_btn btn-sm premium-btn" style={{ borderRadius: 22, background: 'linear-gradient(90deg, #00908d 0%, #1e293b 100%)', color: '#fff', fontWeight: 700, padding: '10px 28px', fontSize: 18, boxShadow: '0 2px 8px #b2f5ea33', border: 'none', letterSpacing: 0.2 }}>
+                        <button onClick={handleIconClick} className="sigma_btn btn-sm premium-btn" style={{ borderRadius: 22, background: 'linear-gradient(90deg, #00908d 0%, #1e293b 100%)', color: '#fff', fontWeight: 700, padding: '10px 28px', fontSize: 18, boxShadow: '0 2px 8px #b2f5ea33', border: 'none', letterSpacing: 0.2, cursor: 'pointer' }}>
                           My Profile
-                        </Link>
+                        </button>
                       </li>
                       <li className="d-none d-sm-block">
                         <button
