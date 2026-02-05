@@ -1,6 +1,6 @@
 import React, { Fragment, useState, useEffect, useCallback } from "react";
 import Mobilemenu from "./Mobilemenu";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import navigation from "../../data/navigation.json";
 import MembershipModal from "./MembershipModal";
 import "../../assets/css/Header.css";
@@ -136,12 +136,49 @@ const useNavHelper = () => {
 const Header = () => {
   const { navMethod, toggleNav } = useNavHelper();
   const [userPhone, setUserPhone] = useState(null);
+  const navigate = useNavigate();
+  
   useEffect(() => {
     const storedUserPhone = localStorage.getItem("userPhone");
     if (storedUserPhone) {
       setUserPhone(storedUserPhone);
     }
   }, []);
+  
+  // Handle profile click - check is_active status
+  const handleIconClick = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/basic-details");
+      return;
+    }
+    try {
+      const response = await fetch(
+        "https://admin.vaidyabandhu.com/api/user/profile/",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        if (data?.is_active === true) {
+          navigate("/myprofile");
+        } else {
+          navigate("/basic-details");
+        }
+      } else {
+        navigate("/basic-details");
+      }
+    } catch (error) {
+      console.error("Error in handleIconClick:", error);
+      navigate("/basic-details");
+    }
+  };
+  
   const handleLogout = () => {
     localStorage.removeItem("userPhone");
     window.location.reload();
@@ -417,9 +454,9 @@ const Header = () => {
                   {userPhone ? (
                     <>
                       <li className="d-none d-sm-block">
-                        <Link to="/profile" className="sigma_btn btn-sm">
+                        <button onClick={handleIconClick} className="sigma_btn btn-sm" style={{ border: 'none', cursor: 'pointer' }}>
                           My Profile
-                        </Link>
+                        </button>
                       </li>
                       <li className="d-none d-sm-block">
                         <button

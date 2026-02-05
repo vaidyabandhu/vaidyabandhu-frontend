@@ -14,6 +14,44 @@ const ProfileDropdown = () => {
 	const { user } = useAuthContext()
 
 	const navigate = useNavigate()
+	
+	const handleProfileClick = () => {
+		try {
+			const userData = localStorage.getItem("userData");
+			console.log("userData from localStorage:", userData);
+			
+			if (!userData) {
+				console.log("No userData found, redirecting to basic-details");
+				navigate('/basic-details');
+				return;
+			}
+			
+			const parsed = JSON.parse(userData);
+			console.log("Parsed userData:", parsed);
+			console.log("is_active value:", parsed?.is_active);
+			console.log("primary_member:", parsed?.primary_member);
+			
+			// Check if primary member is active
+			const isActive = 
+				parsed?.is_active !== undefined 
+					? parsed.is_active === true 
+					: parsed?.primary_member?.is_active === true;
+			
+			console.log("isActive:", isActive);
+			
+			if (isActive) {
+				console.log("Active - navigating to /myprofile");
+				navigate('/myprofile');
+			} else {
+				console.log("Inactive - navigating to /basic-details");
+				navigate('/basic-details');
+			}
+		} catch (err) {
+			console.error("Error reading userData for profile navigation", err);
+			navigate('/basic-details');
+		}
+	}
+	
 	const logout = () => {
 		navigate('/logout')
 	}	
@@ -33,7 +71,7 @@ const ProfileDropdown = () => {
 				</div>
 			</DropdownToggle>
 			<DropdownMenu align="end">
-				<DropdownItem href="#" onClick={() => navigate('/doctorprofile')}>
+				<DropdownItem href="#" onClick={handleProfileClick}>
 					<i className="ti ti-user font-16 me-1 align-text-bottom" /> Profile
 				</DropdownItem>
 				{/* <DropdownItem href="#">
