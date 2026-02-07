@@ -314,56 +314,57 @@ const Header = () => {
         <Mobilemenu />
         {!isLoggedIn ? (
           <div className="p-3 text-center">
-            
+
             <div className="mt-2">
-               <button
-  onClick={handleLoginPage}
-  className="sigma_btn btn-sm premium-btn vb-flip-highlight"
-  style={{
-    width: "100%",
-    borderRadius: 12,
-    background: "linear-gradient(90deg, #C62828 0%, #8E0000 100%)",
-    color: "#fff",
-    fontWeight: 800,
-    padding: "12px 0",
-    fontSize: 18,
-    boxShadow:
-      "0 4px 16px rgba(198,40,40,0.45), 0 2px 8px rgba(0,0,0,0.25)",
-    border: "none",
-    letterSpacing: 0.3,
-    overflow: "hidden",
-    height: 46,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    outline: "2px solid #fff176",
-    outlineOffset: "2px",
-    animation: "vb-flip-highlight-glow 1.5s infinite alternate",
-  }}
-  aria-label="Vaidyabandhu Health Card Offer"
->
-  <div
-    className="vb-flip-inner"
-    style={{
-      lineHeight: 1,
-      minWidth: 200,
-      minHeight: 24,
-      fontSize: 18,
-      fontWeight: 800,
-      letterSpacing: 0.3,
-      textShadow: "0 2px 8px rgba(0,0,0,0.35)",
-      textAlign: "center",
-    }}
-  >
-    <span className="vb-flip-item">₹49 ಆರೋಗ್ಯ ಕಾರ್ಡ್</span>
-    <span className="vb-flip-item">Health Card @ ₹49</span>
-    <span className="vb-flip-item">₹49 హెల్త్ కార్డ్</span>
-    <span className="vb-flip-item">₹49 हेल्थ कार्ड</span>
-    <span className="vb-flip-item">₹49 ஹெல்த் கார்ட்</span>
-    <span className="vb-flip-item">₹49 ഹെൽത്ത് കാർഡ്</span>
-  </div>
-</button>
+              <button
+                onClick={handleLoginPage}
+                className="sigma_btn btn-sm premium-btn vb-flip-highlight"
+                style={{
+                  width: "100%",
+                  borderRadius: 12,
+                  background: "linear-gradient(90deg, #C62828 0%, #8E0000 100%)",
+                  color: "#fff",
+                  fontWeight: 800,
+                  padding: "12px 0",
+                  fontSize: 18,
+                  boxShadow:
+                    "0 4px 16px rgba(198,40,40,0.45), 0 2px 8px rgba(0,0,0,0.25)",
+                  border: "none",
+                  letterSpacing: 0.3,
+                  overflow: "hidden",
+                  height: 46,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  position: "relative",
+                  outline: "2px solid #fff176",
+                  outlineOffset: "2px",
+                  animation: "vb-flip-highlight-glow 1.5s infinite alternate",
+                }}
+                aria-label="Vaidyabandhu Health Card Offer"
+              >
+                <div
+                  className="vb-flip-inner"
+                  style={{
+                    lineHeight: 1,
+                    minWidth: 200,
+                    minHeight: 24,
+                    fontSize: 18,
+                    fontWeight: 800,
+                    letterSpacing: 0.3,
+                    textShadow: "0 2px 8px rgba(0,0,0,0.35)",
+                    textAlign: "center",
+                  }}
+                >
+                  <div className="vb-flip-inner vb-flip-mobile">
+                    <span className="vb-flip-item">₹49 Card</span>
+                    <span className="vb-flip-item">₹49 ಕಾರ್ಡ್</span>
+                    <span className="vb-flip-item">₹49 कार्ड</span>
+                    <span className="vb-flip-item">₹49 కార్డ్</span>
+                  </div>
+
+                </div>
+              </button>
 
               <button
                 className="buy-membership-btn"
@@ -482,14 +483,20 @@ const Header = () => {
         <div className="sigma_header-middle">
           <div className="container-fluid">
             <div className="navbar" style={{ minHeight: 90, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div className="sigma_logo-wrapper premium-logo-wrapper" style={{ display: 'flex', alignItems: 'center' }}>
-                <Link to="/" className="sigma_logo premium-logo-link" style={{
-                  borderRadius: 24,
-                  display: 'flex',
-                  alignItems: 'center',
-                  marginRight: 22,
-                  transition: 'box-shadow 0.3s',
-                }} aria-label="Vaidyabandhu Home">
+              <div
+                className="sigma_logo-wrapper premium-logo-wrapper"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                {/* LOGO */}
+                <Link
+                  to="/"
+                  className="sigma_logo premium-logo-link"
+                  aria-label="Vaidyabandhu Home"
+                >
                   <img
                     src={process.env.PUBLIC_URL + "/assets/img/logoo.png"}
                     alt="Vaidyabandhu Logo"
@@ -502,7 +509,52 @@ const Header = () => {
                     }}
                   />
                 </Link>
+
+                {/* 🔴 MOBILE ₹49 FLIP BUTTON (ONLY MOBILE, BEFORE HAMBURGER) */}
+                <div className="mobile-header-flip d-block d-md-none">
+                  <button
+                    onClick={handleLoginPage}
+                    className="sigma_btn btn-sm premium-btn vb-flip-highlight"
+                    style={{
+                      borderRadius: 16,
+                      background: "linear-gradient(90deg, #C62828 0%, #8E0000 100%)",
+                      color: "#fff",
+                      fontWeight: 800,
+                      padding: "6px 12px",
+                      fontSize: 12,
+                      height: 34,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      border: "none",
+                      outline: "2px solid #fff176",
+                      outlineOffset: "2px",
+                      boxShadow: "0 4px 14px rgba(198,40,40,0.45)",
+                    }}
+                    aria-label="Health Card ₹49"
+                  >
+                    <div
+                      className="vb-flip-inner"
+                      style={{
+                        height: 20,
+                        minWidth: 90,
+                        fontSize: 12,
+                        fontWeight: 800,
+                      }}
+                    >
+                      <div className="vb-flip-inner vb-flip-mobile">
+                        <span className="vb-flip-item">₹49 Card</span>
+                        <span className="vb-flip-item">₹49 ಕಾರ್ಡ್</span>
+                        <span className="vb-flip-item">₹49 कार्ड</span>
+                        <span className="vb-flip-item">₹49 కార్డ్</span>
+                      </div>
+
+                    </div>
+                  </button>
+                </div>
               </div>
+
               {/* Desktop Navigation: only show on desktop (>=768px) */}
               <nav className="navbar-nav responsive-navbar-nav d-none d-md-flex" style={{ display: 'flex', alignItems: 'center', gap: 8 }} aria-label="Main Navigation">
                 {navigation.map((item, i) => (
@@ -602,12 +654,13 @@ const Header = () => {
                           aria-label="Vaidyabandhu Card Offer"
                         >
                           <div className="vb-flip-inner" style={{ lineHeight: 1, minWidth: 180, minHeight: 24, fontSize: 18, fontWeight: 800, letterSpacing: 0.2, textShadow: '0 2px 8px #ffb30055' }}>
-                            <span className="vb-flip-item">₹49 ಆರೋಗ್ಯ ಕಾರ್ಡ್</span>
-                            <span className="vb-flip-item">Health Card @ ₹49</span>
-                            <span className="vb-flip-item">₹49 హెల్త్ కార్డ్</span>
-                            <span className="vb-flip-item">₹49 हेल्थ कार्ड</span>
-                            <span className="vb-flip-item">₹49 ஹெல்த் கார்ட்</span>
-                            <span className="vb-flip-item">₹49 ഹെൽത്ത് കാർഡ്</span>
+                            <div className="vb-flip-inner vb-flip-mobile">
+                              <span className="vb-flip-item">₹49 Card</span>
+                              <span className="vb-flip-item">₹49 ಕಾರ್ಡ್</span>
+                              <span className="vb-flip-item">₹49 कार्ड</span>
+                              <span className="vb-flip-item">₹49 కార్డ్</span>
+                            </div>
+
                           </div>
                         </button>
                       </li>
@@ -710,20 +763,8 @@ const Header = () => {
           overflow: hidden;
           vertical-align: middle;
         }
-        .vb-flip-item {
-          display: block;
-          height: 24px;
-          line-height: 24px;
-          text-align: center;
-          animation: vb-flip-vertical 7.2s cubic-bezier(0.77,0,0.175,1) infinite;
-          will-change: transform;
-        }
-        .vb-flip-item:nth-child(1) { animation-delay: 0s; }
-        .vb-flip-item:nth-child(2) { animation-delay: 1.2s; }
-        .vb-flip-item:nth-child(3) { animation-delay: 2.4s; }
-        .vb-flip-item:nth-child(4) { animation-delay: 3.6s; }
-        .vb-flip-item:nth-child(5) { animation-delay: 4.8s; }
-        .vb-flip-item:nth-child(6) { animation-delay: 6.0s; }
+      
+        
         @keyframes vb-flip-vertical {
           0% { opacity: 0; transform: translateY(100%); }
           5% { opacity: 1; transform: translateY(0); }
@@ -745,11 +786,34 @@ const Header = () => {
         .vb-flip-inner .vb-flip-item:nth-child(4) { animation-delay: 3.6s; }
         .vb-flip-inner .vb-flip-item:nth-child(5) { animation-delay: 4.8s; }
         .vb-flip-inner .vb-flip-item:nth-child(6) { animation-delay: 6.0s; }
-        .vb-flip-inner .vb-flip-item {
-          animation-duration: 7.2s;
-          animation-timing-function: cubic-bezier(0.77,0,0.175,1);
-          animation-iteration-count: infinite;
-        }
+     /* 🔁 CONTINUOUS FLIP LOOP (MOBILE HEADER SAFE) */
+.vb-flip-item {
+  display: block;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  opacity: 0;
+  animation-name: vb-flip-vertical;
+  animation-duration: 4.8s; /* 4 items × 1.2s */
+  animation-timing-function: cubic-bezier(0.77,0,0.175,1);
+  animation-iteration-count: infinite;
+}
+.vb-flip-item {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+               Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-variant-numeric: lining-nums;
+}
+
+/* EXACT DELAYS FOR 4 ITEMS */
+.vb-flip-item:nth-child(1) { animation-delay: 0s; }
+.vb-flip-item:nth-child(2) { animation-delay: 1.2s; }
+.vb-flip-item:nth-child(3) { animation-delay: 2.4s; }
+.vb-flip-item:nth-child(4) { animation-delay: 3.6s; }
+
         @keyframes vb-flip-highlight-glow {
           0% { box-shadow: 0 0 0 0 #fff17655, 0 4px 16px #ffb30055; }
           100% { box-shadow: 0 0 16px 8px #fff17655, 0 4px 32px #ffb30099; }
@@ -947,6 +1011,60 @@ const Header = () => {
           .navbar-nav .menu-item > a:hover {
             color: #00908d;
           }
+            @media (max-width: 768px) {
+  .premium-logo-wrapper {
+    max-width: calc(100% - 80px); /* room for hamburger */
+  }
+
+  .mobile-header-flip {
+    flex-shrink: 0;
+  }
+
+  .vb-flip-inner {
+    min-width: 90px !important;
+  }
+}
+  /* ================================
+   MOBILE FLIP – SMOOTH & STABLE
+================================ */
+
+.vb-flip-mobile {
+  position: relative;
+  height: 20px;
+  width: 90px;
+  overflow: hidden;
+  will-change: transform;
+}
+
+.vb-flip-mobile .vb-flip-item {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0;
+  transform: translateY(100%);
+  animation: vb-mobile-flip 4.8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* EXACT TIMING — 4 ITEMS */
+.vb-flip-mobile .vb-flip-item:nth-child(1) { animation-delay: 0s; }
+.vb-flip-mobile .vb-flip-item:nth-child(2) { animation-delay: 1.2s; }
+.vb-flip-mobile .vb-flip-item:nth-child(3) { animation-delay: 2.4s; }
+.vb-flip-mobile .vb-flip-item:nth-child(4) { animation-delay: 3.6s; }
+
+@keyframes vb-mobile-flip {
+  0%   { opacity: 0; transform: translateY(100%); }
+  8%   { opacity: 1; transform: translateY(0); }
+  25%  { opacity: 1; transform: translateY(0); }
+  33%  { opacity: 0; transform: translateY(-100%); }
+  100% { opacity: 0; transform: translateY(-100%); }
+}
+
+
         `}
       </style>
     </Fragment>

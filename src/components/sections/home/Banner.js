@@ -3,19 +3,19 @@ import { ArrowRight, CheckCircle } from "lucide-react";
 
 // Dummy data for the banner
 const dummyBannerData = [
-{
-  id: 1,
-  image: "assets/img/ban1.jpeg",
-  title:
-    "India's Premier All-in-One Healthcare Ecosystem.\nSeamless Access to Top Doctors, Hospitals, and Diagnostics",
-  benefits: [
-    "Save 10% to 40% on surgeries, treatments, and diagnostics Services.",
-    "Get 10% Cashback: Send your medical bill to Vaidya Bandhu via WhatsApp or Email. Cashback will be credited to your account within 7 working days.",
-    "Free surgeries available for those in need through our social programs.",
-    "Call our helpline from 9 AM to 6 PM for free medical advice.",
-    "We help you choose the right doctor, hospital, or diagnostic center.",
-  ],
-},
+  {
+    id: 1,
+    // image: "assets/img/ban1.jpeg",
+    title:
+      "India's Premier All-in-One Healthcare Ecosystem.\nSeamless Access to Top Doctors, Hospitals, and Diagnostics",
+    benefits: [
+      "Save 10% to 40% on surgeries, treatments, and diagnostics Services.",
+      "Get 10% Cashback: Send your medical bill to Vaidya Bandhu via WhatsApp or Email. Cashback will be credited to your account within 7 working days.",
+      "Free surgeries available for those in need through our social programs.",
+      "Call our helpline from 9 AM to 6 PM for free medical advice.",
+      "We help you choose the right doctor, hospital, or diagnostic center.",
+    ],
+  },
 
 ];
 
@@ -65,7 +65,8 @@ const Banner = () => {
             width: "100%",
             height: "100%",
             background:
-              "linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.6) 100%)",
+              "linear-gradient(to top, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.08) 50%, rgba(0, 0, 0, 0.25) 100%)",
+
             zIndex: 2,
           }}
         />

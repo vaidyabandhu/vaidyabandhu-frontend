@@ -129,7 +129,7 @@ const VaidyaBandhuForm = () => {
         return;
       }
 
-      if (file.size > 2 * 1024 * 1024) {
+      if (file.size > 4 * 1024 * 1024) {
         setErrors((prev) => ({
           ...prev,
           photo: languagesType[selectedLanguage].validation.photoSize,
@@ -391,10 +391,10 @@ const VaidyaBandhuForm = () => {
         }));
         return;
       }
-      if (file.size > 2 * 1024 * 1024) {
+      if (file.size > 4 * 1024 * 1024) {
         setErrors((prev) => ({
           ...prev,
-          [`member_${memberId}_photo`]: "Photo size must be less than 2MB",
+          [`member_${memberId}_photo`]: "Photo size must be less than 4MB",
         }));
         return;
       }
