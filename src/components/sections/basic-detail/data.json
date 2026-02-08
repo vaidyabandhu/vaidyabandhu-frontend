@@ -80,7 +80,13 @@
         "son": "Son",
         "daughter": "Daughter",
         "father": "Father",
-        "mother": "Mother"
+        "mother": "Mother",
+        "grandfather": "Grandfather",
+        "grandmother": "Grandmother",
+        "relative": "Relative",
+        "friend": "Friend",
+        "neighbour": "Neighbour",
+        "employee": "Employee"
       },
       "removeMember": "Remove",
       "noMembers": "No family members added yet",
@@ -198,7 +204,13 @@
         "son": "बेटा",
         "daughter": "बेटी",
         "father": "पिता",
-        "mother": "माता"
+        "mother": "माता",
+        "grandfather": "दादा",
+        "grandmother": "दादी",
+        "relative": "रिश्तेदार",
+        "friend": "दोस्त",
+        "neighbour": "पड़ोसी",
+        "employee": "कर्मचारी"
       },
       "removeMember": "हटाएं",
       "noMembers": "अभी तक कोई परिवार का सदस्य नहीं जोड़ा गया",
@@ -316,7 +328,13 @@
         "son": "ಮಗ",
         "daughter": "ಮಗಳು",
         "father": "ತಂದೆ",
-        "mother": "ತಾಯಿ"
+        "mother": "ತಾಯಿ",
+        "grandfather": "ಅಜ್ಜ",
+        "grandmother": "ಅಜ್ಜಿ",
+        "relative": "ಸಂಬಂಧಿ",
+        "friend": "ಸ್ನೇಹಿತ",
+        "neighbour": "ನೆರೆಹೊರೆಯವ",
+        "employee": "ಉದ್ಯೋಗಿ"
       },
       "removeMember": "ತೆಗೆದುಹಾಕಿ",
       "noMembers": "ಇನ್ನೂ ಯಾವುದೇ ಕುಟುಂಬ ಸದಸ್ಯರನ್ನು ಸೇರಿಸಲಾಗಿಲ್ಲ",
@@ -434,7 +452,13 @@
         "son": "மகன்",
         "daughter": "மகள்",
         "father": "தந்தை",
-        "mother": "தாய்"
+        "mother": "தாய்",
+        "grandfather": "தாத்தா",
+        "grandmother": "பாட்டி",
+        "relative": "உறவினர்",
+        "friend": "நண்பர்",
+        "neighbour": "அண்ணை",
+        "employee": "பணியாளர்"
       },
       "removeMember": "நீக்கவும்",
       "noMembers": "இதுவரை குடும்ப உறுப்பினர்கள் சேர்க்கப்படவில்லை",
@@ -552,7 +576,13 @@
         "son": "కుమారుడు",
         "daughter": "కుమార్తె",
         "father": "తండ్రి",
-        "mother": "తల్లి"
+        "mother": "తల్లి",
+        "grandfather": "తాతయ్య",
+        "grandmother": "అమ్మచెయ్య",
+        "relative": "బంధువు",
+        "friend": "స్నేహితుడు",
+        "neighbour": "పొరుగువారు",
+        "employee": "ఉద్యోగి"
       },
       "removeMember": "తొలగించండి",
       "noMembers": "ఇంకా కుటుంబ సభ్యులు జోడించలేదు",
@@ -670,7 +700,13 @@
         "son": "മകൻ",
         "daughter": "മകൾ",
         "father": "അച്ഛൻ",
-        "mother": "അമ്മ"
+        "mother": "അമ്മ",
+        "grandfather": "മുത്തച്ഛൻ",
+        "grandmother": "മുത്തശ്ശി",
+        "relative": "ബന്ധുവ്",
+        "friend": "സുഹൃത്ത്",
+        "neighbour": "അയല്വാസി",
+        "employee": "ജീവനക്കാരൻ"
       },
       "removeMember": "നീക്കം ചെയ്യുക",
       "noMembers": "ഇതുവരെ കുടുംബാംഗങ്ങളെ ചേർത്തിട്ടില്ല",
