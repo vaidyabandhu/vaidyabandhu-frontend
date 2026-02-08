@@ -71,6 +71,12 @@ const MyProfile = () => {
       daughter: { icon: Baby, color: '#9C27B0', label: 'Daughter', bgColor: '#F3E5F5' },
       father: { icon: UserCheck, color: '#4CAF50', label: 'Father', bgColor: '#E8F5E9' },
       mother: { icon: UserCheck, color: '#FF9800', label: 'Mother', bgColor: '#FFF3E0' },
+      grandfather: { icon: Users, color: '#795548', label: 'Grandfather', bgColor: '#EFEBE9' },
+      grandmother: { icon: Users, color: '#C2185B', label: 'Grandmother', bgColor: '#FCE4EC' },
+      relative: { icon: Users, color: '#512DA8', label: 'Relative', bgColor: '#F3E5F5' },
+      friend: { icon: UserCheck, color: '#00BCD4', label: 'Friend', bgColor: '#E0F2F1' },
+      neighbour: { icon: Users, color: '#FF5722', label: 'Neighbour', bgColor: '#FFEBEE' },
+      employee: { icon: UserCheck, color: '#607D8B', label: 'Employee', bgColor: '#ECEFF1' },
     };
     return relationshipMap[relationship?.toLowerCase()] || { icon: Users, color: '#9E9E9E', label: 'Family', bgColor: '#F5F5F5' };
   };

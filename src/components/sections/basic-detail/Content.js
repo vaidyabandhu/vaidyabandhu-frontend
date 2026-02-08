@@ -40,6 +40,12 @@ const RELATIONSHIP_CHOICES = [
   { value: "daughter", label: "Daughter" },
   { value: "father", label: "Father" },
   { value: "mother", label: "Mother" },
+  { value: "grandfather", label: "Grandfather" },
+  { value: "grandmother", label: "Grandmother" },
+  { value: "relative", label: "Relative" },
+  { value: "friend", label: "Friend" },
+  { value: "neighbour", label: "Neighbour" },
+  { value: "employee", label: "Employee" },
 ];
 
 const MEMBERSHIP_PRICE = 49;
