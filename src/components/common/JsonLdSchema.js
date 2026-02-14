@@ -137,6 +137,12 @@ export function WebSiteSchema() {
         alternateName: 'VaidyaBandhu - Bangalore Medical Directory',
         url: BASE_URL,
         description: "Bangalore's premier verified medical directory connecting patients with trusted Ayurvedic doctors, clinics, and hospitals.",
+        sameAs: [
+            "https://www.facebook.com/profile.php?id=61578623333168",
+            "https://www.instagram.com/vaidyabandhu/",
+            "https://www.youtube.com/@VaidyaBandhu",
+            "https://x.com/vaidya_bandhu"
+        ],
         publisher: {
             '@type': 'Organization',
             name: 'Vaidyabandhu',
@@ -144,6 +150,12 @@ export function WebSiteSchema() {
                 '@type': 'ImageObject',
                 url: `${BASE_URL}/logo512.png`,
             },
+            sameAs: [
+                "https://www.facebook.com/profile.php?id=61578623333168",
+                "https://www.instagram.com/vaidyabandhu/",
+                "https://www.youtube.com/@VaidyaBandhu",
+                "https://x.com/vaidya_bandhu"
+            ],
         },
         potentialAction: {
             '@type': 'SearchAction',
