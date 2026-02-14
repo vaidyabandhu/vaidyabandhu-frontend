@@ -1,29 +1,27 @@
 import React, { Fragment } from 'react';
-import { Helmet } from "react-helmet-async";
 import Breadcrumbs from '../layouts/Breadcrumbs';
 import Footer from '../layouts/Footer';
 import Content from '../sections/clinic-details/Content';
-import { useParams } from 'react-router-dom'; // To get the params from the URL
+import { useParams } from 'react-router-dom';
 import Header from '../layouts/Header';
+import DynamicSEOHead from '../common/DynamicSEOHead';
 
 const pagelocation = "Clinic Details";
 
 const Clinicdetails = () => {
-  // Using useParams hook to get the 'id' from the URL
   const { id } = useParams();
 
   return (
     <Fragment>
-      <Helmet>
-        <title>VaidyaBandhu - Doctors Appointment Booking | {pagelocation}</title>
-        <meta
-          name="description"
-          content="#"
-        />
-      </Helmet>
+      <DynamicSEOHead
+        title="Clinic Details - Verified Healthcare Facility"
+        description="View verified clinic details, services, contact information, and patient reviews. Book appointments at trusted healthcare facilities in Bangalore."
+        canonicalPath={`/clinic-details/${id}`}
+        keywords="clinic details, verified clinic Bangalore, healthcare facility, book appointment"
+      />
       <Header />
       <Breadcrumbs breadcrumb={{ pagename: pagelocation }} />
-      <Content detailId={id} /> {/* Pass the 'id' as prop to the Content component */}
+      <Content detailId={id} />
       <Footer />
     </Fragment>
   );

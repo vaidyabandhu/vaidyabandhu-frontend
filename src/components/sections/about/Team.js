@@ -21,10 +21,10 @@ class Team extends Component {
                                     </div>
                                     <div className="sigma_team-body">
                                         <h5>
-                                            <Link to={"/doctor-details?id=" + item.id}>{item.name}</Link>
+                                            <Link to={"/doctor/" + item.id}>{item.name}</Link>
                                         </h5>
                                         <div className="sigma_team-categories">
-                                            <Link to={"/doctor-details?id" + item.id} className="sigma_team-category">{item.specialist}</Link>
+                                            <Link to={"/doctor/" + item.id} className="sigma_team-category">{item.specialist}</Link>
                                         </div>
                                         <ul className="sigma_social-icons">
                                             {/* Data */}

@@ -15,15 +15,16 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { getAppRoutes } from "./components/AppRoute";
 import BasicDetail from "./components/pages/BasicDetail";
 import { SuspenseFallback } from "./components/SuspenseFallback";
+import AutoSEO from './components/common/AutoSEO';
 
 // Lazy imports
 const Home = React.lazy(() => import("./components/pages/Home"));
 const Hometwo = React.lazy(() => import("./components/pages/Hometwo"));
-const Blog = React.lazy(() => import("./components/pages/Blog"));
-const Blogstandard = React.lazy(() =>
-  import("./components/pages/Blogstandard")
-);
-const Blogdetails = React.lazy(() => import("./components/pages/Blogdetails"));
+// const Blog = React.lazy(() => import("./components/pages/Blog"));
+// const Blogstandard = React.lazy(() =>
+//   import("./components/pages/Blogstandard")
+// );
+// const Blogdetails = React.lazy(() => import("./components/pages/Blogdetails"));
 const About = React.lazy(() => import("./components/pages/About"));
 const MyProfile = React.lazy(() => import("./components/pages/MyProfile"));
 const DoctorProfile = React.lazy(() => import("./components/pages/DoctorProfile"));
@@ -49,8 +50,9 @@ const Doctordetails = React.lazy(() =>
 const Contact = React.lazy(() => import("./components/pages/Contact"));
 const Errorpage = React.lazy(() => import("./components/pages/Errorpage"));
 
-const HospitalList = React.lazy(()=> import('./components/pages/HospitalList'));
+const HospitalList = React.lazy(() => import('./components/pages/HospitalList'));
 const UserLogin = React.lazy(() => import("./components/pages/UserLogin"));
+const RedirectLegacyDoctor = React.lazy(() => import("./components/common/RedirectLegacyDoctor"));
 
 // Scroll to top on route change
 function ScrollToTop({ children }) {
@@ -71,7 +73,8 @@ function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/home-v2" element={<Hometwo />} />
 
-      <Route path="/blog" element={<Blog />} />
+      {/* Blog routes — commented out for now */}
+      {/* <Route path="/blog" element={<Blog />} />
       <Route path="/blog-standard" element={<Blogstandard />} />
       <Route
         path="/blog-details/:id"
@@ -92,9 +95,9 @@ function AppRoutes() {
       <Route
         path="/blog/author/:authorId"
         element={<Blog key={window.location.pathname} />}
-      />
-       <Route path="/myprofile" element={<MyProfile />} />
-       <Route path="/doctorprofile" element={<DoctorProfile />}/>
+      /> */}
+      <Route path="/myprofile" element={<MyProfile />} />
+      <Route path="/doctorprofile" element={<DoctorProfile />} />
       <Route path="/about" element={<About />} />
       <Route path="/services" element={<Services />} />
       <Route
@@ -132,6 +135,10 @@ function AppRoutes() {
       />
       <Route
         path="/doctor-details"
+        element={<RedirectLegacyDoctor />}
+      />
+      <Route
+        path="/doctor/:slug"
         element={<Doctordetails key={window.location.pathname} />}
       />
 
@@ -167,6 +174,7 @@ function App() {
                 }
               >
                 <ScrollToTop>
+                  <AutoSEO />
                   <AppRoutes />
                 </ScrollToTop>
               </Suspense>

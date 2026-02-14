@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Rating } from "../../../helper/helper";
 import { useFetch } from "../../hooks/usefetch";
+import { getDoctorUrl } from "../../../helper/slugHelper";
+import { PhysicianSchema, BreadcrumbSchema } from "../../common/JsonLdSchema";
+import DynamicSEOHead from "../../common/DynamicSEOHead";
 import html2canvas from "html2canvas";
 
 const Content = ({ detailId }) => {
@@ -187,8 +190,27 @@ const Content = ({ detailId }) => {
       .map((item) => item.trim())
     : [];
 
+  // Build SEO title and description from doctor data
+  const seoTitle = `${item.full_name || 'Doctor'} - ${item.speciality?.[0]?.title || 'Specialist'} in Bangalore`;
+  const seoDescription = `Book appointment with ${item.full_name}, a verified ${item.speciality?.[0]?.title || 'medical'} specialist in Bangalore with ${item.experience || 'several'} years of experience. ${item.qualification || ''}`;
+  const doctorSlugUrl = getDoctorUrl(item);
+
   return (
     <div className="section sigma_post-details">
+      {/* Dynamic SEO Head & JSON-LD Schema */}
+      <DynamicSEOHead
+        title={seoTitle}
+        description={seoDescription}
+        canonicalPath={doctorSlugUrl}
+        ogType="profile"
+        keywords={`${item.full_name}, ${item.speciality?.map(s => s.title).join(', ') || 'doctor'}, Bangalore, appointment, verified doctor`}
+      />
+      <PhysicianSchema doctor={item} />
+      <BreadcrumbSchema items={[
+        { name: 'Home', url: '/' },
+        { name: 'Doctors', url: '/doctor-list' },
+        { name: item.full_name || 'Doctor', url: doctorSlugUrl },
+      ]} />
       <div className="container">
         <div className="row">
           {/* Main Content */}
@@ -215,7 +237,7 @@ const Content = ({ detailId }) => {
                       <div className="sigma_team-body">
                         <h5 style={{ fontSize: "18px" }}>
                           <Link
-                            to={"/doctor-details?id=" + (item.id || "unknown")}
+                            to={getDoctorUrl(item)}
                             style={{ fontSize: "18px" }}
                           >
                             <i className="fas fa-user-md me-2" style={{ color: "#555" }}></i>

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { isNotEmptyArray } from "../../utiles/utils";
 import { useFetch } from "../../hooks/usefetch";
+import { getDoctorUrl } from "../../../helper/slugHelper";
 
 // Responsive filter sidebar for mobile + desktop
 function FilterSidebar({
@@ -179,7 +180,7 @@ const Content = () => {
     if (citiesData && citiesData.data) {
       const transformedCities = citiesData.data.map(city => ({
         id: city.id,
-        name: city.city_name 
+        name: city.city_name
       }));
       setLocations(transformedCities);
     }
@@ -752,7 +753,7 @@ const Content = () => {
                             <div className="sigma_team-body">
                               <h5>
                                 <i className="fas fa-user-md me-2" style={{ color: "#555" }}></i>
-                                <Link to={`/doctor-details?id=${item.id}`}>
+                                <Link to={getDoctorUrl(item)}>
                                   {item.full_name}
                                 </Link>
                               </h5>
@@ -821,7 +822,7 @@ const Content = () => {
 
                               <div className="d-flex align-items-center mt-4">
                                 <Link
-                                  to={`/doctor-details?id=${item.id}`}
+                                  to={getDoctorUrl(item)}
                                   className="sigma_btn"
                                 >
                                   View More

@@ -1,26 +1,24 @@
 import React from 'react';
-import { Helmet } from "react-helmet-async";
 import Breadcrumbs from '../layouts/Breadcrumbs';
 import Footer from '../layouts/Footer';
 import Content from '../sections/blog/Content';
-import { useParams } from 'react-router-dom'; // To get the params from the URL
+import { useParams } from 'react-router-dom';
 import Header from '../layouts/Header';
+import DynamicSEOHead from '../common/DynamicSEOHead';
 
 const pagelocation = "Blog Grid";
 
 const Blog = () => {
-  // Using useParams hook to get the dynamic parameters from the URL
   const { catId, tagId, authorId, query } = useParams();
 
   return (
     <>
-      <Helmet>
-        <title>VaidyaBandhu - Doctors Appointment Booking | {pagelocation}</title>
-        <meta
-          name="description"
-          content="#"
-        />
-      </Helmet>
+      <DynamicSEOHead
+        title="Health Blog - Medical Tips & Wellness Articles"
+        description="Read expert health articles, Ayurvedic wellness tips, and medical advice from verified doctors in Bangalore. Stay informed about health, nutrition, and preventive care."
+        canonicalPath="/blogs"
+        keywords="health blog, medical articles, Ayurvedic tips, wellness advice, doctor articles Bangalore"
+      />
       <Header />
       <Breadcrumbs breadcrumb={{ pagename: pagelocation }} />
       <Content

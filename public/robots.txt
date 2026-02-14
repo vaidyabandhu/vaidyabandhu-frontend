@@ -1,3 +1,37 @@
-# https://www.robotstxt.org/robotstxt.html
+# Robots.txt for Vaidyabandhu - Bangalore Medical Directory
+# https://www.vaidyabandhu.com
+
+# Allow all crawlers
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /myprofile
+Disallow: /doctorprofile
+Disallow: /basic-details
+Disallow: /userlogin
+
+# Google
+User-agent: Googlebot
+Allow: /
+
+# AI Search Crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# Sitemap
+Sitemap: https://www.vaidyabandhu.com/sitemap.xml
+
+# AI Context Files
+# LLMs.txt: https://www.vaidyabandhu.com/llms.txt
+# LLMs-full.txt: https://www.vaidyabandhu.com/llms-full.txt

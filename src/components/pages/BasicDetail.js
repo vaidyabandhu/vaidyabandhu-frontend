@@ -1,9 +1,9 @@
 import React, { Component, Fragment } from 'react';
-import { Helmet } from "react-helmet-async";
 import Header from '../layouts/Header';
 import Breadcrumbs from '../layouts/Breadcrumbs';
 import Footer from '../layouts/Footer';
 import Content from '../sections/basic-detail/Content';
+import DynamicSEOHead from '../common/DynamicSEOHead';
 
 const pagelocation = "Membership Form";
 
@@ -11,14 +11,12 @@ class BasicDetail extends Component {
     render() {
         return (
             <Fragment>
-                <Helmet>
-                    <title>VaidyaBandhu</title>
-                    <meta
-                        name="description"
-                        content="#"
-                    />
-                </Helmet>
-               <Header />
+                <DynamicSEOHead
+                    title="Membership Form"
+                    description="Complete your Vaidyabandhu membership registration to access verified doctor profiles, appointment booking, and healthcare services in Bangalore."
+                    noIndex={true}
+                />
+                <Header />
                 <Breadcrumbs breadcrumb={{ pagename: pagelocation }} />
                 <Content
                 />

@@ -1,67 +1,44 @@
 import React, { Component, Fragment } from 'react';
-import { Helmet } from "react-helmet-async";
 import Header from '../layouts/Header';
 import Footer from '../layouts/Footer';
 import Content from '../sections/home/Content';
-import  Banner from '../sections/home/Banner';
+import Banner from '../sections/home/Banner';
+import DynamicSEOHead from '../common/DynamicSEOHead';
+import { WebSiteSchema, FAQPageSchema } from '../common/JsonLdSchema';
 
-const pagelocation = "Homepage";
-
-// const NewsTicker = () => (
-//   <div
-//     style={{
-//       position: "sticky",
-//       top: 0,
-//       zIndex: 1200,
-//       width: "100%",
-//       background: "linear-gradient(90deg, #007a7e 0%, #1e293b 100%)",
-//       color: "#fff",
-//       fontWeight: 700,
-//       fontSize: "18px",
-//       letterSpacing: "0.5px",
-//       overflow: "hidden",
-//       height: "44px",
-//       display: "flex",
-//       alignItems: "center",
-//       boxShadow: "0 2px 12px rgba(0,122,126,0.10)",
-//       borderBottom: "2px solid #00ffe7cc",
-//     }}
-//   >
-//     <div
-//       style={{
-//         whiteSpace: "nowrap",
-//         display: "inline-block",
-//         animation: "ticker-scroll 18s linear infinite",
-//         paddingLeft: "100%",
-//         fontFamily: 'inherit',
-//       }}
-//     >
-//       Become a member at 49rs &nbsp;|&nbsp; ಕೇವಲ 49 ರೂಪಾಯಿಗೆ ವೈದ್ಯಬಂಧು ಆರೋಗ್ಯ ಕಾರ್ಡ್‌ ಪಡೆಯಿರಿ.
-//     </div>
-//     <style>{`
-//       @keyframes ticker-scroll {
-//         0% { transform: translateX(0); }
-//         100% { transform: translateX(-100%); }
-//       }
-//     `}</style>
-//   </div>
-// );
+const homeFaqs = [
+    {
+        question: "How do I find a verified doctor in Bangalore on Vaidyabandhu?",
+        answer: "Visit our Doctor List page, use the search bar or filters to find specialists by name, specialty, location, or availability. All listed doctors have verified medical registration numbers."
+    },
+    {
+        question: "What types of doctors are available on Vaidyabandhu?",
+        answer: "Vaidyabandhu covers 30+ specialties including Ayurvedic Medicine, General Practice, Cardiology, Orthopedics, Dermatology, Pediatrics, Dental Care, and more — all verified practitioners in Bangalore."
+    },
+    {
+        question: "How does Vaidyabandhu verify its doctors?",
+        answer: "Every doctor undergoes a multi-step verification process including medical registration number validation with state medical councils, credential checks, and ongoing patient review monitoring for E-E-A-T compliance."
+    },
+    {
+        question: "Can I book a doctor appointment online in Bangalore?",
+        answer: "Yes! Vaidyabandhu allows you to book appointments online with verified doctors across Bangalore neighborhoods including Indiranagar, Koramangala, Jayanagar, Whitefield, and more."
+    },
+];
 
 class Home extends Component {
     render() {
         return (
             <Fragment>
-                <Helmet>
-                    <title>Vaidya Bandhu</title>
-                    <meta
-                        name="description"
-                        content="#"
-                    />
-                </Helmet>
-                {/* <NewsTicker /> */}
+                <DynamicSEOHead
+                    title="Bangalore's Verified Medical Directory - Find Trusted Doctors"
+                    description="Find verified doctors, clinics, and hospitals in Bangalore. Book appointments with trusted Ayurvedic and medical specialists. Verified registration numbers, patient trust scores, 30+ specialties."
+                    canonicalPath="/"
+                    keywords="doctors in Bangalore, Ayurvedic doctors Bangalore, book doctor appointment, verified doctors, clinics Bangalore, hospitals Bangalore, Vaidyabandhu"
+                />
+                <WebSiteSchema />
+                <FAQPageSchema faqs={homeFaqs} />
                 <Header />
-                  <Banner />
-                
+                <Banner />
                 <Content />
                 <Footer />
             </Fragment>

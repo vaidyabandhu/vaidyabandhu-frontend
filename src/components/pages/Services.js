@@ -1,32 +1,31 @@
-import React, { Component, Fragment } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Helmet } from "react-helmet-async";
 import Header from '../layouts/Header';
 import Breadcrumbs from '../layouts/Breadcrumbs';
 import Footer from '../layouts/Footer';
 import Content from '../sections/services/Content';
+import DynamicSEOHead from '../common/DynamicSEOHead';
 
 const pagelocation = "Bandhu Seva";
 
 // Class component (renamed)
-class ServicesClass extends Component {
+class ServicesClass extends React.Component {
     render() {
         return (
-            <Fragment>
-                <Helmet>
-                    <title>VaidyaBandhu</title>
-                    <meta
-                        name="description"
-                        content="#"
-                    />
-                </Helmet>
-             <Header />
+            <>
+                <DynamicSEOHead
+                    title="Healthcare Services - Bandhu Seva"
+                    description="Explore Vaidyabandhu's healthcare services in Bangalore — Ayurvedic consultations, specialist doctor appointments, diagnostic tests, wellness packages, and more. Book verified practitioners today."
+                    canonicalPath="/services"
+                    keywords="healthcare services Bangalore, Ayurvedic consultation, doctor appointment, diagnostic tests, wellness packages"
+                />
+                <Header />
                 <Breadcrumbs breadcrumb={{ pagename: pagelocation }} />
                 <Content
                     catId={this.props.catId}
                 />
                 <Footer />
-            </Fragment>
+            </>
         );
     }
 }
@@ -34,7 +33,7 @@ class ServicesClass extends Component {
 // Wrapper function component using hooks
 function Services() {
     const { catId } = useParams();
-    
+
     return <ServicesClass catId={catId} />;
 }
 

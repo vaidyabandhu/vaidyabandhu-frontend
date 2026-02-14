@@ -1,50 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#005963" />
+
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://admin.vaidyabandhu.com" crossorigin />
+  <link rel="dns-prefetch" href="https://admin.vaidyabandhu.com" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
   <!-- ✅ SEO -->
   <title>VaidyaBandhu - Doctors Appointment Booking</title>
-  <meta
-    name="description"
-    content="Right Time Care | Expert Doctor | Honest Treatment | Near Your Home | Affordable Cost"
-  />
+  <meta name="description"
+    content="Vaidyabandhu - Bangalore's verified medical directory. Find trusted Ayurvedic doctors, clinics & hospitals. Book appointments with 30+ specialties. Verified registration numbers & patient trust scores." />
 
   <!-- ✅ Open Graph (WhatsApp / Facebook / LinkedIn Preview) -->
   <meta property="og:title" content="VaidyaBandhu - Doctors Appointment Booking" />
-  <meta
-    property="og:description"
-    content="India's Premier All-in-One Healthcare Ecosystem. Seamless Access to Top Doctors, Hospitals, and Diagnostics"
-  />
+  <meta property="og:description"
+    content="India's Premier All-in-One Healthcare Ecosystem. Seamless Access to Top Doctors, Hospitals, and Diagnostics" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.vaidyabandhu.com/" />
 
   <!-- ✅ IMPORTANT: Add a proper preview image -->
-  <meta property="og:image" content="https://www.vaidyabandhu.com/preview.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+  <meta property="og:image" content="https://www.vaidyabandhu.com/logo512.png" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
 
   <!-- ✅ Twitter Preview -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="VaidyaBandhu - Doctors Appointment Booking" />
-  <meta
-    name="twitter:description"
-    content="India's Premier All-in-One Healthcare Ecosystem. Seamless Access to Top Doctors, Hospitals, and Diagnostics"
-  />
-  <meta name="twitter:image" content="https://www.vaidyabandhu.com/preview.png" />
+  <meta name="twitter:description"
+    content="India's Premier All-in-One Healthcare Ecosystem. Seamless Access to Top Doctors, Hospitals, and Diagnostics" />
+  <meta name="twitter:image" content="https://www.vaidyabandhu.com/logo512.png" />
 
   <link rel="apple-touch-icon" href="%PUBLIC_URL%/newfile.png" />
   <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+  <!-- Canonical & Language -->
+  <link rel="canonical" href="https://www.vaidyabandhu.com/" />
+  <link rel="alternate" hreflang="en-in" href="https://www.vaidyabandhu.com/" />
+  <link rel="alternate" hreflang="x-default" href="https://www.vaidyabandhu.com/" />
+
+  <!-- Base Organization Schema (for crawlers that don't run JS) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Vaidyabandhu",
+    "url": "https://www.vaidyabandhu.com",
+    "logo": "https://www.vaidyabandhu.com/logo512.png",
+    "description": "Bangalore's verified medical directory connecting patients with trusted Ayurvedic doctors, clinics, and hospitals.",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+91-8535853589",
+      "contactType": "customer service",
+      "areaServed": "IN",
+      "availableLanguage": ["English", "Hindi", "Kannada"]
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Bangalore",
+      "addressRegion": "Karnataka",
+      "addressCountry": "IN"
+    },
+    "sameAs": []
+  }
+  </script>
 </head>
 
-  <body class="btn-style-5 sigma_header-absolute btn-rounded">
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="VaidyaBandhu"></div>
-    <!--
+<body class="btn-style-5 sigma_header-absolute btn-rounded">
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="VaidyaBandhu"></div>
+  <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.
 
@@ -54,5 +86,6 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-  </body>
+</body>
+
 </html>
