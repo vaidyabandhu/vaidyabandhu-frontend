@@ -749,6 +749,8 @@ const VaidyaBandhuForm = () => {
               }
             );
 
+            console.log("Payment callback response:", callbackRes);
+
             if (!callbackRes.ok) {
               throw new Error("Payment verification failed");
             }
@@ -803,6 +805,7 @@ const VaidyaBandhuForm = () => {
                 }
               );
 
+              console.log("Profile response:", profileRes);
               if (!profileRes.ok) {
                 const errorText = await profileRes.text();
                 console.error("Profile update failed:", profileRes.status, errorText);
@@ -944,7 +947,7 @@ const VaidyaBandhuForm = () => {
         `}
       </style>
 
-      <div className="container" style={{padding: '0 12px'}}>
+      <div className="container" style={{ padding: '0 12px' }}>
         <div className="d-flex justify-content-end">
           <div className="text-right mb-4" style={{ width: "200px" }}>
             <select
@@ -1040,7 +1043,7 @@ const VaidyaBandhuForm = () => {
           </div>
         )}
 
-        <div className="text-center mb-5" style={{padding: '0 12px'}}>
+        <div className="text-center mb-5" style={{ padding: '0 12px' }}>
           <h1 className="display-4 mb-2 " style={{ fontFamily: "Poppins" }}>
             {isAddMembersMode
               ? (languagesType[selectedLanguage].familyMembers?.addMembersTitle || "Add Family Members")
@@ -1159,7 +1162,7 @@ const VaidyaBandhuForm = () => {
           </Col>
 
           <Col md={8}>
-            <Card className="bg-white rounded-xl shadow-lg p-6 mb-4" style={{padding: '16px'}}>
+            <Card className="bg-white rounded-xl shadow-lg p-6 mb-4" style={{ padding: '16px' }}>
               <Card.Body>
                 <h2
                   className="h4 mb-6 secondary-color flex items-center"
@@ -1449,8 +1452,8 @@ const VaidyaBandhuForm = () => {
                     padding: "20px",
                     border: "1px solid #e0f2ef"
                   }}>
-                    <div className="d-flex align-items-center justify-content-between mb-3 family-header-wrapper" style={{flexWrap: 'wrap', gap: '12px'}}>
-                      <div className="d-flex align-items-center" style={{flex: '1 1 auto', minWidth: '200px'}}>
+                    <div className="d-flex align-items-center justify-content-between mb-3 family-header-wrapper" style={{ flexWrap: 'wrap', gap: '12px' }}>
+                      <div className="d-flex align-items-center" style={{ flex: '1 1 auto', minWidth: '200px' }}>
                         <div style={{
                           background: "linear-gradient(135deg, #007a7e 0%, #095D7E 100%)",
                           borderRadius: "10px",
@@ -1463,7 +1466,7 @@ const VaidyaBandhuForm = () => {
                           <h5 className="mb-0" style={{ fontFamily: "Poppins", color: "#095D7E", fontWeight: "600", fontSize: '1.1rem' }}>
                             {languagesType[selectedLanguage].familyMembers?.title || "Add Family Members"}
                           </h5>
-                          <small className="text-muted" style={{fontSize: '0.85rem', display: 'block', marginTop: '4px'}}>
+                          <small className="text-muted" style={{ fontSize: '0.85rem', display: 'block', marginTop: '4px' }}>
                             {languagesType[selectedLanguage].familyMembers?.addMemberHint || "Add family members to include them in your membership"}
                           </small>
                         </div>
