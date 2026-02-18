@@ -77,6 +77,9 @@ const MyProfile = () => {
       friend: { icon: UserCheck, color: '#00BCD4', label: 'Friend', bgColor: '#E0F2F1' },
       neighbour: { icon: Users, color: '#FF5722', label: 'Neighbour', bgColor: '#FFEBEE' },
       employee: { icon: UserCheck, color: '#607D8B', label: 'Employee', bgColor: '#ECEFF1' },
+      brother: { icon: Users, color: '#2196F3', label: 'Brother', bgColor: '#E3F2FD' },
+      sister: { icon: Users, color: '#E91E63', label: 'Sister', bgColor: '#FCE4EC' },
+      others: { icon: Users, color: '#9E9E9E', label: 'Others', bgColor: '#F5F5F5' },
     };
     return relationshipMap[relationship?.toLowerCase()] || { icon: Users, color: '#9E9E9E', label: 'Family', bgColor: '#F5F5F5' };
   };
