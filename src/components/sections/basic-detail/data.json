@@ -86,7 +86,10 @@
         "relative": "Relative",
         "friend": "Friend",
         "neighbour": "Neighbour",
-        "employee": "Employee"
+        "employee": "Employee",
+        "brother": "Brother",
+        "sister": "Sister",
+        "others": "Others"
       },
       "removeMember": "Remove",
       "noMembers": "No family members added yet",
@@ -210,7 +213,10 @@
         "relative": "रिश्तेदार",
         "friend": "दोस्त",
         "neighbour": "पड़ोसी",
-        "employee": "कर्मचारी"
+        "employee": "कर्मचारी",
+        "brother": "भाई",
+        "sister": "बहन",
+        "others": "अन्य"
       },
       "removeMember": "हटाएं",
       "noMembers": "अभी तक कोई परिवार का सदस्य नहीं जोड़ा गया",
@@ -334,7 +340,10 @@
         "relative": "ಸಂಬಂಧಿ",
         "friend": "ಸ್ನೇಹಿತ",
         "neighbour": "ನೆರೆಹೊರೆಯವ",
-        "employee": "ಉದ್ಯೋಗಿ"
+        "employee": "ಉದ್ಯೋಗಿ",
+        "brother": "ಸಹೋದರ",
+        "sister": "ಸಹೋದರಿ",
+        "others": "ಇತರರು"
       },
       "removeMember": "ತೆಗೆದುಹಾಕಿ",
       "noMembers": "ಇನ್ನೂ ಯಾವುದೇ ಕುಟುಂಬ ಸದಸ್ಯರನ್ನು ಸೇರಿಸಲಾಗಿಲ್ಲ",
@@ -458,7 +467,10 @@
         "relative": "உறவினர்",
         "friend": "நண்பர்",
         "neighbour": "அண்ணை",
-        "employee": "பணியாளர்"
+        "employee": "பணியாளர்",
+        "brother": "சகோதரர்",
+        "sister": "சகோதரி",
+        "others": "மற்றவர்கள்"
       },
       "removeMember": "நீக்கவும்",
       "noMembers": "இதுவரை குடும்ப உறுப்பினர்கள் சேர்க்கப்படவில்லை",
@@ -582,7 +594,10 @@
         "relative": "బంధువు",
         "friend": "స్నేహితుడు",
         "neighbour": "పొరుగువారు",
-        "employee": "ఉద్యోగి"
+        "employee": "ఉద్యోగి",
+        "brother": "సోదరుడు",
+        "sister": "సోదరి",
+        "others": "ఇతరులు"
       },
       "removeMember": "తొలగించండి",
       "noMembers": "ఇంకా కుటుంబ సభ్యులు జోడించలేదు",
@@ -706,7 +721,10 @@
         "relative": "ബന്ധുവ്",
         "friend": "സുഹൃത്ത്",
         "neighbour": "അയല്വാസി",
-        "employee": "ജീവനക്കാരൻ"
+        "employee": "ജീവനക്കാരൻ",
+        "brother": "സഹോദരൻ",
+        "sister": "സഹോദരി",
+        "others": "മറ്റുള്ളവ"
       },
       "removeMember": "നീക്കം ചെയ്യുക",
       "noMembers": "ഇതുവരെ കുടുംബാംഗങ്ങളെ ചേർത്തിട്ടില്ല",

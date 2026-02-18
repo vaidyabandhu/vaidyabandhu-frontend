@@ -46,6 +46,9 @@ const RELATIONSHIP_CHOICES = [
   { value: "friend", label: "Friend" },
   { value: "neighbour", label: "Neighbour" },
   { value: "employee", label: "Employee" },
+  { value: "brother", label: "Brother" },
+  { value: "sister", label: "Sister" },
+  { value: "others", label: "Others" },
 ];
 
 const MEMBERSHIP_PRICE = 49;
