@@ -1271,19 +1271,6 @@ const MyProfile = () => {
                             </span>
                           </div>
                           <div style={styles.detailRowAligned}>
-                            <span style={styles.labelText}>CONTACT:</span>
-                            <span
-                              style={{
-                                ...styles.valueText,
-                                maxWidth: isMobile ? "100px" : "200px",
-                                fontSize: isMobile ? "8px" : "13px",
-                              }}
-                            >
-                              {patient.mobile || " "}
-                            </span>
-                          </div>
-                          {/* age/gender added for primary member */}
-                          <div style={styles.detailRowAligned}>
                             <span style={styles.labelText}>AGE / GENDER:</span>
                             <span
                               style={{
@@ -1689,19 +1676,6 @@ const MyProfile = () => {
                                   </span>
                                 </div>
                                 <div style={styles.detailRowAligned}>
-                                  <span style={styles.labelText}>RELATIONSHIP:</span>
-                                  <span
-                                    style={{
-                                      ...styles.valueText,
-                                      maxWidth: isMobile ? "100px" : "200px",
-                                      fontSize: isMobile ? "8px" : "13px",
-                                      textTransform: "capitalize",
-                                    }}
-                                  >
-                                    {member.relationship || "—"}
-                                  </span>
-                                </div>
-                                <div style={styles.detailRowAligned}>
                                   <span style={styles.labelText}>BLOOD GROUP:</span>
                                   <span
                                     style={{
@@ -1718,15 +1692,16 @@ const MyProfile = () => {
                                     marginBottom: isMobile ? "3px" : "15px",
                                   }}
                                 >
-                                  <span style={styles.labelText}>PRIMARY HOLDER:</span>
+                                  <span style={styles.labelText}>RELATIONSHIP:</span>
                                   <span
                                     style={{
                                       ...styles.valueText,
                                       maxWidth: isMobile ? "100px" : "200px",
                                       fontSize: isMobile ? "8px" : "13px",
+                                      textTransform: "capitalize",
                                     }}
                                   >
-                                    {patient.full_name || "—"}
+                                    {member.relationship || "—"}
                                   </span>
                                 </div>
                               </div>
