@@ -1293,6 +1293,18 @@ const MyProfile = () => {
                               {patient.blood_group || " "}
                             </span>
                           </div>
+                          <div style={styles.detailRowAligned}>
+                            <span style={styles.labelText}>CONTACT:</span>
+                            <span
+                              style={{
+                                ...styles.valueText,
+                                maxWidth: isMobile ? "100px" : "200px",
+                                fontSize: isMobile ? "8px" : "13px",
+                              }}
+                            >
+                              {patient.mobile || " "}
+                            </span>
+                          </div>
                           <div
                             style={{
                               ...styles.detailRowAligned,
@@ -1702,6 +1714,23 @@ const MyProfile = () => {
                                     }}
                                   >
                                     {member.relationship || "—"}
+                                  </span>
+                                </div>
+                                <div
+                                  style={{
+                                    ...styles.detailRowAligned,
+                                    marginBottom: isMobile ? "3px" : "15px",
+                                  }}
+                                >
+                                  <span style={styles.labelText}>PRIMARY HOLDER:</span>
+                                  <span
+                                    style={{
+                                      ...styles.valueText,
+                                      maxWidth: isMobile ? "100px" : "200px",
+                                      fontSize: isMobile ? "8px" : "13px",
+                                    }}
+                                  >
+                                    {patient.full_name || "—"}
                                   </span>
                                 </div>
                               </div>
