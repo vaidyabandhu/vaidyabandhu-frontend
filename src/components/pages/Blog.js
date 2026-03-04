@@ -18,7 +18,7 @@ const Blog = () => {
         <title>VaidyaBandhu - Doctors Appointment Booking | {pagelocation}</title>
         <meta
           name="description"
-          content="#"
+          content="Vaidya Bandhu helps you find trusted clinics, doctors, and affordable healthcare services in India with guided support, transparent care options, and easy booking."
         />
       </Helmet>
       <Header />

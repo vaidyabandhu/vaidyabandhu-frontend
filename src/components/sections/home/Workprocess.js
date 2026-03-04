@@ -2,6 +2,11 @@ import React, { useEffect, useState } from "react";
 
 const Workprocess = () => {
   const [animated, setAnimated] = useState(false);
+  const [activeVideo, setActiveVideo] = useState(null);
+
+  const videoId = "MxAB93ylwKM";
+  const videoEmbedUrl = `https://www.youtube.com/embed/${videoId}`;
+  const videoThumbUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
   useEffect(() => {
     // Trigger animation after component mounts
@@ -11,31 +16,39 @@ const Workprocess = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const openVideoPopup = () => {
+    setActiveVideo(`${videoEmbedUrl}?autoplay=1`);
+  };
+
+  const closeVideoPopup = () => {
+    setActiveVideo(null);
+  };
+
   const steps = [
     {
       icon: "fas fa-id-card",
-      title: "Step 1: Get the Vaidya Bandhu Card for ₹49",
+      title: "Step 1: Get Your Vaidya Bandhu Card for ₹49",
       points: [
-        "Fill out the form with name, address, phone number, etc.",
-        "Big Savings. Full Support. Just ₹49/Year on Vaidya Bandhu Card.",
-        "Receive your digital card instantly via website or app.",
+        "Fill out a simple form with your name, address, and phone number.",
+        "Activate your membership for just ₹49 per year.",
+        "Receive your digital card instantly on the website or app.",
       ],
     },
     {
       icon: "flaticon-hospital",
       title: "Step 2: Access Quality Healthcare",
       points: [
-        "Contact us by call, WhatsApp, or email about your concerns.",
-        "Consult top doctors in our network.",
-        "Avail 10% – 40% discounts on surgeries, treatments, and diagnostics.",
+        "Contact us via call, WhatsApp, or email with your health concerns.",
+        "Consult trusted doctors, hospitals, and diagnostic centers in our network.",
+        "Save 10%–40% on surgeries, treatments, and diagnostics.",
       ],
     },
     {
       icon: "flaticon-doctor",
       title: "Step 3: Full Healthcare Support",
       points: [
-        "Get free medical advice from an experts.",
-        "We are with you even after treatment, with follow-ups, recovery tips, and ongoing guidance.",
+        "Get free medical guidance from experienced professionals.",
+        "We support you even after treatment with follow-ups and recovery guidance.",
         "Priority assistance for critical cases.",
       ],
     },
@@ -115,7 +128,7 @@ const Workprocess = () => {
           How Vaidya Bandhu Works:
           <br />{" "}
           <span style={{ color: "#007a7e" }}>
-            Easy Access to Affordable Healthcare Services in India
+            Simple Steps to Affordable and Trusted Healthcare in India
           </span>
         </h2>
         <p
@@ -133,10 +146,10 @@ const Workprocess = () => {
               "opacity 0.8s ease-out 0.2s, transform 0.8s ease-out 0.2s",
           }}
         >
-          At Vaidya Bandhu we simplify your search for the right doctors,
-          hospitals, and diagnostic centers near you. Just call or WhatsApp us,
-          and we’ll guide you to quality, affordable care, quickly and
-          effortlessly.
+          Vaidya Bandhu simplifies your healthcare journey by helping you find
+          the right doctors, hospitals, and diagnostic centers near you. Just
+          call or WhatsApp us, and we’ll guide you to quality and affordable
+          care quickly.
         </p>
       </div>
 
@@ -262,6 +275,160 @@ const Workprocess = () => {
           </div>
         ))}
       </div>
+
+      <div
+        style={{
+          maxWidth: 680,
+          margin: "30px auto 0",
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
+        <h3
+          style={{
+            textAlign: "center",
+            fontSize: "clamp(20px, 2.5vw, 28px)",
+            fontWeight: "700",
+            color: "#004d4f",
+            marginBottom: 14,
+            fontFamily: "Poppins",
+          }}
+        >
+          Step-by-Step Membership Card Process
+        </h3>
+
+        <div
+          onClick={openVideoPopup}
+          style={{
+            position: "relative",
+            width: "100%",
+            paddingTop: "56.25%",
+            borderRadius: 14,
+            overflow: "hidden",
+            boxShadow: "0 15px 30px rgba(0,0,0,0.14)",
+            cursor: "pointer",
+          }}
+        >
+          <img
+            src={videoThumbUrl}
+            alt="Watch how Vaidya Bandhu works"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.28)",
+            }}
+          >
+            <span
+              className="fas fa-play"
+              style={{
+                color: "#fff",
+                fontSize: 34,
+                background: "rgba(0, 122, 126, 0.9)",
+                width: 74,
+                height: 74,
+                borderRadius: "50%",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            />
+          </div>
+          <p
+            style={{
+              marginTop: 12,
+              marginBottom: 0,
+              textAlign: "center",
+              fontSize: 18,
+              fontWeight: 600,
+              color: "#004d4f",
+              fontFamily: "Poppins",
+            }}
+          >
+            Watch the Complete Flow
+          </p>
+        </div>
+      </div>
+
+      {activeVideo && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.75)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+          onClick={closeVideoPopup}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "900px",
+              background: "#000",
+              borderRadius: "12px",
+              overflow: "hidden",
+              position: "relative",
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeVideoPopup}
+              style={{
+                position: "absolute",
+                top: "10px",
+                right: "12px",
+                zIndex: 2,
+                background: "rgba(0,0,0,0.6)",
+                border: "none",
+                color: "#fff",
+                fontSize: "28px",
+                lineHeight: "1",
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                cursor: "pointer",
+              }}
+              aria-label="Close video popup"
+            >
+              ×
+            </button>
+            <div style={{ position: "relative", width: "100%", paddingTop: "56.25%" }}>
+              <iframe
+                src={activeVideo}
+                title="How Vaidya Bandhu works video"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  border: 0,
+                }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Keyframes for the floating background shapes */}
       <style>
         {`

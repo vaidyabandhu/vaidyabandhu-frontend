@@ -52,17 +52,30 @@ class Home extends Component {
         return (
             <Fragment>
                 <Helmet>
-                    <title>Vaidya Bandhu</title>
+                    <title>VaidyaBandhu - India's Premier All-in-One Healthcare Ecosystem</title>
                     <meta
                         name="description"
-                        content="#"
+                        content="VaidyaBandhu is India's premier all-in-one healthcare ecosystem. Book appointments with top doctors, hospitals, and diagnostics. Save 10% to 40% on treatments, get cashback, and access free surgeries for those in need. Trusted, affordable, and seamless healthcare for everyone."
                     />
+                    <link rel="canonical" href="https://www.vaidyabandhu.com/" />
+                    {/* Open Graph for social sharing */}
+                    <meta property="og:title" content="VaidyaBandhu - India's Premier All-in-One Healthcare Ecosystem" />
+                    <meta property="og:description" content="Book appointments with top doctors, hospitals, and diagnostics. Save 10% to 40% on treatments, get cashback, and access free surgeries for those in need." />
+                    <meta property="og:type" content="website" />
+                    <meta property="og:url" content="https://www.vaidyabandhu.com/" />
+                    <meta property="og:image" content="https://www.vaidyabandhu.com/preview.png" />
+                    {/* Twitter Card */}
+                    <meta name="twitter:card" content="summary_large_image" />
+                    <meta name="twitter:title" content="VaidyaBandhu - India's Premier All-in-One Healthcare Ecosystem" />
+                    <meta name="twitter:description" content="Book appointments with top doctors, hospitals, and diagnostics. Save 10% to 40% on treatments, get cashback, and access free surgeries for those in need." />
+                    <meta name="twitter:image" content="https://www.vaidyabandhu.com/preview.png" />
                 </Helmet>
                 {/* <NewsTicker /> */}
                 <Header />
                   <Banner />
                 
                 <Content />
+             
                 <Footer />
             </Fragment>
         );

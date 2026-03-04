@@ -16,7 +16,7 @@ function Doctordetails() {
         <Fragment>
             <Helmet>
                 <title>VaidyaBandhu</title>
-                <meta name="description" content="#" />
+                <meta name="description" content="Vaidya Bandhu helps you find trusted clinics, doctors, and affordable healthcare services in India with guided support, transparent care options, and easy booking." />
             </Helmet>
             <Header />
             <Breadcrumbs breadcrumb={{ pagename: pagelocation }} />

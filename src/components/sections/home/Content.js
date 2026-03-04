@@ -40,7 +40,7 @@ class Content extends Component {
         {/* <DoctorsComponent /> */}
         <ClientLogosCarousel />
         <Testimonials />
-        <ClientTestimonials />
+        {/* <ClientTestimonials /> */}
         <FAQSection />
         {/* <div className="container-fluid p-0">
                     <Galleryslider />
