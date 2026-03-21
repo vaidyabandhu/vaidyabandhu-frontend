@@ -52,6 +52,89 @@ const RELATIONSHIP_CHOICES = [
 ];
 
 const MEMBERSHIP_PRICE = 49;
+const API_BASE_URL = "https://admin.vaidyabandhu.com";
+
+const pickFirst = (...values) =>
+  values.find((value) => value !== undefined && value !== null && value !== "") ?? "";
+
+const toAbsoluteMediaUrl = (url) => {
+  if (!url || typeof url !== "string") return "";
+  if (/^(https?:|blob:|data:)/i.test(url)) return url;
+  return `${API_BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+};
+
+const normalizeIsActive = (value, fallback = false) => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "active", "paid", "captured", "verified", "success", "completed", "enabled"].includes(normalized)) {
+      return true;
+    }
+    if (["false", "0", "inactive", "pending", "failed", "cancelled", "disabled"].includes(normalized)) {
+      return false;
+    }
+  }
+  return fallback;
+};
+
+const normalizeProfileForForm = (data = {}) => ({
+  full_name: pickFirst(data.full_name, data.name, data.patient_name),
+  age: pickFirst(data.age, data.patient_age),
+  gender: pickFirst(data.gender, data.sex),
+  blood_group: pickFirst(data.blood_group, data.bloodGroup),
+  mobile: pickFirst(data.mobile, data.mobile_number, data.phone, data.phone_number),
+  alternate_mobile: pickFirst(data.alternate_mobile, data.alternate_number, data.secondary_mobile),
+  address: pickFirst(data.address, data.full_address, data.location),
+  pin_code: pickFirst(data.pin_code, data.pincode),
+  photo: null,
+});
+
+const toBool = (value) => {
+  if (value === true || value === 1) return true;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return ["true", "1", "yes"].includes(normalized);
+  }
+  return false;
+};
+
+const isPaymentVerified = (payload) => {
+  if (!payload || typeof payload !== "object") return true;
+
+  const statusValue = pickFirst(
+    payload.payment_status,
+    payload.status,
+    payload.paymentStatus,
+    payload.data?.payment_status,
+    payload.data?.status
+  );
+
+  const normalizedStatus = String(statusValue || "").trim().toLowerCase();
+  const successByStatus = ["success", "paid", "captured", "verified", "completed", "active"].includes(normalizedStatus);
+  const failureByStatus = ["failed", "failure", "cancelled", "error", "pending"].includes(normalizedStatus);
+
+  const successFlags = [
+    payload.success,
+    payload.verified,
+    payload.is_verified,
+    payload.data?.success,
+    payload.data?.verified,
+    payload.data?.is_verified,
+  ];
+
+  if (successFlags.some(toBool) || successByStatus) return true;
+
+  const explicitFailure = successFlags.some((flag) =>
+    flag === false ||
+    flag === 0 ||
+    (typeof flag === "string" && ["false", "0", "no"].includes(flag.trim().toLowerCase()))
+  );
+
+  if (explicitFailure || failureByStatus) return false;
+
+  return true;
+};
 
 const VaidyaBandhuForm = () => {
   const navigate = useNavigate();
@@ -175,12 +258,13 @@ const VaidyaBandhuForm = () => {
         );
         if (response.ok) {
           const data = await response.json();
-          setFormData(data);
+          const normalizedProfile = normalizeProfileForForm(data);
+          setFormData((prev) => ({ ...prev, ...normalizedProfile }));
           if (data.photo || data.profile_image) {
-            setPhotoPreview(data.photo || data.profile_image);
+            setPhotoPreview(toAbsoluteMediaUrl(data.photo || data.profile_image));
           }
           // Check if user is already active (existing member)
-          if (data.is_active === true) {
+          if (normalizeIsActive(data.is_active, false)) {
             setIsExistingUser(true);
             // Count existing family members if available
             if (data.family_members && Array.isArray(data.family_members)) {
@@ -672,6 +756,27 @@ const VaidyaBandhuForm = () => {
     });
   };
 
+  const refreshProfileAfterPayment = async (authToken) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/user/profile/`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authToken,
+        },
+      });
+
+      if (!response.ok) return null;
+
+      const latestProfile = await response.json();
+      localStorage.setItem("userData", JSON.stringify(latestProfile));
+      return latestProfile;
+    } catch (error) {
+      console.error("Failed to refresh profile after payment:", error);
+      return null;
+    }
+  };
+
   const handleSubmit = async () => {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
@@ -752,15 +857,37 @@ const VaidyaBandhuForm = () => {
               }
             );
 
-            console.log("Payment callback response:", callbackRes);
+            let callbackData = null;
+            try {
+              const callbackRaw = await callbackRes.text();
+              callbackData = callbackRaw ? JSON.parse(callbackRaw) : null;
+            } catch (parseError) {
+              callbackData = null;
+            }
+
+            console.log("Payment callback response:", callbackRes, callbackData);
 
             if (!callbackRes.ok) {
-              throw new Error("Payment verification failed");
+              throw new Error(
+                callbackData?.message ||
+                callbackData?.error ||
+                "Payment verification failed"
+              );
+            }
+
+            if (!isPaymentVerified(callbackData)) {
+              throw new Error(
+                callbackData?.message ||
+                callbackData?.error ||
+                "Payment verification is pending. Please wait and try again."
+              );
             }
 
             /* ---------- 5. SAVE PROFILE (after payment success) ---------- */
             if (!isAddMembersMode) {
               const formDataToSend = new FormData();
+              const resolvedMobile = pickFirst(formData.mobile, formData.mobile_number);
+              const resolvedAlternate = pickFirst(formData.alternate_mobile, formData.alternate_number);
               const profileData = {
                 full_name: formData.full_name,
                 age: formData.age,
@@ -768,8 +895,9 @@ const VaidyaBandhuForm = () => {
                 blood_group: formData.blood_group || "",
                 address: formData.address,
                 pin_code: formData.pin_code,
-                mobile: formData.mobile,
-                alternate_number: formData.alternate_mobile || "",
+                mobile: resolvedMobile,
+                mobile_number: resolvedMobile,
+                alternate_number: resolvedAlternate || "",
               };
 
               console.log("Profile data being sent:", profileData);
@@ -866,6 +994,11 @@ const VaidyaBandhuForm = () => {
                   throw new Error(`Failed to add member: ${member.full_name}`);
                 }
               }
+            }
+
+            const latestProfile = await refreshProfileAfterPayment(token);
+            if (latestProfile && !normalizeIsActive(latestProfile.is_active, false)) {
+              alert("Payment is complete, but membership activation is still processing. Please check My Profile again in a few minutes.");
             }
 
             /* ---------- CLEAR DRAFT ON SUCCESS ---------- */

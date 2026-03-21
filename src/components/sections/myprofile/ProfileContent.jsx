@@ -24,6 +24,96 @@ import {
 } from "lucide-react";
 // import LoginModal from "./LoginModal";
 
+const API_BASE_URL = "https://admin.vaidyabandhu.com";
+
+const pickFirst = (...values) =>
+  values.find((value) => value !== undefined && value !== null && value !== "") ?? "";
+
+const normalizeIsActive = (value, fallback = false) => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "active", "paid", "captured", "verified", "success", "completed", "enabled"].includes(normalized)) {
+      return true;
+    }
+    if (["false", "0", "inactive", "pending", "failed", "cancelled", "disabled"].includes(normalized)) {
+      return false;
+    }
+  }
+  return fallback;
+};
+
+const toAbsoluteMediaUrl = (url) => {
+  if (!url || typeof url !== "string") return "";
+  if (/^(https?:|blob:|data:)/i.test(url)) return url;
+  return `${API_BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+};
+
+const normalizeMember = (member = {}) => {
+  const statusRaw =
+    member.is_active ??
+    member.active ??
+    member.isActive ??
+    member.card_active ??
+    member.status;
+
+  return {
+    ...member,
+    full_name: pickFirst(member.full_name, member.name, member.member_name),
+    age: pickFirst(member.age, member.member_age),
+    gender: pickFirst(member.gender, member.sex),
+    blood_group: pickFirst(member.blood_group, member.bloodGroup),
+    relationship: pickFirst(member.relationship, member.relation),
+    membership_id: pickFirst(member.membership_id, member.member_membership_id, member.card_id),
+    start_date: pickFirst(member.start_date, member.membership_start_date, member.valid_from),
+    end_date: pickFirst(member.end_date, member.membership_end_date, member.valid_to),
+    mobile: pickFirst(member.mobile, member.mobile_number, member.phone, member.phone_number),
+    address: pickFirst(member.address, member.full_address),
+    profile_image: toAbsoluteMediaUrl(
+      pickFirst(member.profile_image, member.photo, member.image, member.profile_photo)
+    ),
+    is_active: normalizeIsActive(statusRaw, false),
+  };
+};
+
+const normalizePatient = (raw = {}) => {
+  const statusRaw =
+    raw.is_active ??
+    raw.active ??
+    raw.isActive ??
+    raw.membership_active ??
+    raw.status;
+
+  const familyMembers = Array.isArray(raw.family_members)
+    ? raw.family_members
+    : Array.isArray(raw.familyMembers)
+      ? raw.familyMembers
+      : [];
+
+  return {
+    ...raw,
+    full_name: pickFirst(raw.full_name, raw.name, raw.patient_name),
+    age: pickFirst(raw.age, raw.patient_age),
+    gender: pickFirst(raw.gender, raw.sex),
+    blood_group: pickFirst(raw.blood_group, raw.bloodGroup),
+    address: pickFirst(raw.address, raw.full_address, raw.location),
+    pin_code: pickFirst(raw.pin_code, raw.pincode),
+    mobile: pickFirst(raw.mobile, raw.mobile_number, raw.phone, raw.phone_number),
+    email: pickFirst(raw.email, raw.email_id),
+    Aadhar_number: pickFirst(raw.Aadhar_number, raw.aadhaar_number, raw.adhaar_number),
+    pan_number: pickFirst(raw.pan_number, raw.pan),
+    profile_image: toAbsoluteMediaUrl(
+      pickFirst(raw.profile_image, raw.photo, raw.image, raw.profile_photo)
+    ),
+    membership_id: pickFirst(raw.membership_id, raw.member_id, raw.card_id),
+    start_date: pickFirst(raw.start_date, raw.membership_start_date, raw.valid_from),
+    end_date: pickFirst(raw.end_date, raw.membership_end_date, raw.valid_to),
+    is_active: normalizeIsActive(statusRaw, false),
+    family_members: familyMembers.map(normalizeMember),
+  };
+};
+
 const MyProfile = () => {
   const navigate = useNavigate();
   const [patient, setPatient] = useState({
@@ -41,6 +131,7 @@ const MyProfile = () => {
     membership_id: "",
     start_date: "",
     end_date: "",
+    is_active: false,
     family_members: [],
   });
 
@@ -182,8 +273,9 @@ const MyProfile = () => {
         );
         if (response.ok) {
           const data = await response.json();
-          localStorage.setItem("userData", JSON.stringify(data))
-          setPatient(data);
+          const normalizedData = normalizePatient(data);
+          localStorage.setItem("userData", JSON.stringify(normalizedData));
+          setPatient(normalizedData);
         }
       } catch (err) {
         console.error("Error fetching user profile:", err);
@@ -283,50 +375,85 @@ const MyProfile = () => {
 
   // membership card download handler
   const handleDownload = async (membershipId = null, memberName = null) => {
-    if (membershipId) {
-      setDownloadingMemberId(membershipId);
+    const effectiveMembershipId = membershipId || patient.membership_id || null;
+    const isPrimaryRequest = !membershipId || membershipId === patient.membership_id;
+
+    if (isPrimaryRequest) {
+      setDownloading(true);
+    } else if (effectiveMembershipId) {
+      setDownloadingMemberId(effectiveMembershipId);
     } else {
       setDownloading(true);
     }
+
     try {
       const token = localStorage.getItem("token");
-
-      // Use primary endpoint for user's own card, use membership_id query for family members
-      const isPrimaryCard = membershipId === patient.membership_id;
-      const endpoint = isPrimaryCard
-        ? "https://admin.vaidyabandhu.com/api/user/card/pdf/"
-        : `https://admin.vaidyabandhu.com/api/user/card/pdf/?membership_id=${membershipId}`;
-
-      const response = await fetch(endpoint, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to download membership card");
+      if (!token) {
+        throw new Error("Session expired. Please login again.");
       }
 
-      // Get the filename from the response headers or use a default
-      const contentDisposition = response.headers.get("Content-Disposition");
-      const name = memberName || patient.full_name || "user";
-      let filename = `${name}_HealthCard.pdf`;
+      const downloadEndpoints = [];
+      if (effectiveMembershipId) {
+        downloadEndpoints.push(
+          `${API_BASE_URL}/api/user/card/pdf/?membership_id=${encodeURIComponent(effectiveMembershipId)}`
+        );
+      }
+      downloadEndpoints.push(`${API_BASE_URL}/api/user/card/pdf/`);
 
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1];
+      let lastError = new Error("Failed to download membership card");
+
+      for (const endpoint of [...new Set(downloadEndpoints)]) {
+        const response = await fetch(endpoint, {
+          method: "GET",
+          headers: {
+            Authorization: token,
+          },
+        });
+
+        if (response.status === 401) {
+          throw new Error("Session expired. Please login again.");
         }
+
+        if (!response.ok) {
+          lastError = new Error(`Download failed (${response.status})`);
+          continue;
+        }
+
+        const contentDisposition = response.headers.get("Content-Disposition");
+        const contentType = response.headers.get("Content-Type") || "";
+        const blob = await response.blob();
+        const looksLikePdf =
+          contentType.toLowerCase().includes("application/pdf") ||
+          (blob.type || "").toLowerCase().includes("application/pdf") ||
+          /filename=/i.test(contentDisposition || "");
+
+        if (!looksLikePdf) {
+          const maybeError = await blob.text().catch(() => "");
+          lastError = new Error(maybeError || "Invalid membership card file");
+          continue;
+        }
+
+        const name = memberName || patient.full_name || "user";
+        let filename = `${name}_HealthCard.pdf`;
+
+        if (contentDisposition) {
+          const utfMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+          const directMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+          if (utfMatch?.[1]) {
+            filename = decodeURIComponent(utfMatch[1]);
+          } else if (directMatch?.[1]) {
+            filename = directMatch[1];
+          }
+        }
+
+        saveAs(blob, filename);
+        return;
       }
 
-      // Convert the response to a blob and save it
-      const blob = await response.blob();
-      saveAs(blob, filename);
+      throw lastError;
     } catch (error) {
       console.error("Error downloading membership card:", error);
-      alert("Failed to download membership card. Please try again later.");
+      alert(error?.message || "Failed to download membership card. Please try again later.");
     } finally {
       setDownloading(false);
       setDownloadingMemberId(null);
@@ -1084,6 +1211,8 @@ const MyProfile = () => {
     },
   };
 
+  const canDownloadPrimaryCard = Boolean(patient.membership_id) && patient.is_active === true;
+
   // Show loading state while fetching data
   if (loading) {
     return (
@@ -1178,9 +1307,9 @@ const MyProfile = () => {
                   {/* Status Badge */}
                   <div style={{
                     ...styles.statusBadge,
-                    ...(patient.is_active !== false ? styles.activeBadge : styles.inactiveBadge)
+                    ...(patient.is_active ? styles.activeBadge : styles.inactiveBadge)
                   }}>
-                    {patient.is_active !== false ? 'Active' : 'Inactive'}
+                    {patient.is_active ? 'Active' : 'Inactive'}
                   </div>
 
                   <div
@@ -1516,11 +1645,16 @@ const MyProfile = () => {
                       {flippedCards['primary'] ? 'View Front' : 'View Back'}
                     </button>
                     <button
-                      style={{ ...styles.actionButton, ...styles.downloadActionButton }}
-                      onClick={() => handleDownload(patient.membership_id, patient.full_name)}
-                      disabled={downloading}
+                      style={{
+                        ...styles.actionButton,
+                        ...styles.downloadActionButton,
+                        opacity: (!canDownloadPrimaryCard || downloading) ? 0.5 : 1,
+                        cursor: (!canDownloadPrimaryCard || downloading) ? "not-allowed" : "pointer",
+                      }}
+                      onClick={() => canDownloadPrimaryCard && handleDownload(patient.membership_id, patient.full_name)}
+                      disabled={downloading || !canDownloadPrimaryCard}
                       onMouseEnter={(e) => {
-                        if (!downloading) {
+                        if (!downloading && canDownloadPrimaryCard) {
                           e.currentTarget.style.transform = "translateY(-2px)";
                           e.currentTarget.style.boxShadow = "0 4px 12px rgba(9,93,126,0.4)";
                         }
@@ -1529,6 +1663,7 @@ const MyProfile = () => {
                         e.currentTarget.style.transform = "translateY(0)";
                         e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
                       }}
+                      title={!patient.membership_id ? "Membership ID not generated yet" : !patient.is_active ? "Membership is inactive" : ""}
                     >
                       {downloading ? (
                         <>
@@ -1538,7 +1673,7 @@ const MyProfile = () => {
                       ) : (
                         <>
                           <Download size={16} />
-                          Download PDF
+                          {canDownloadPrimaryCard ? "Download PDF" : "Inactive"}
                         </>
                       )}
                     </button>
@@ -1556,14 +1691,17 @@ const MyProfile = () => {
 
               <div style={styles.cardsGrid}>
                 {patient.family_members && patient.family_members.length > 0 ? (
-                  patient.family_members.map((member) => {
+                  patient.family_members.map((member, index) => {
                     const relationDetails = getRelationshipDetails(member.relationship);
                     const RelationIcon = relationDetails.icon;
-                    const cardId = `family-${member.id}`;
+                    const memberKey = member.id ?? member.membership_id ?? `${member.full_name || "member"}-${index}`;
+                    const cardId = `family-${memberKey}`;
+                    const isMemberInactive = member.is_active === false;
+                    const canDownloadMemberCard = Boolean(member.membership_id) && !isMemberInactive;
                     const isDownloadingThis = downloadingMemberId === member.membership_id;
 
                     return (
-                      <div key={member.id} style={styles.memberCardWrapper}>
+                      <div key={memberKey} style={styles.memberCardWrapper}>
                         {/* Relationship Badge */}
                         <div style={{
                           ...styles.memberBadge,
@@ -1596,7 +1734,7 @@ const MyProfile = () => {
                               ...styles.healthCard,
                               ...styles.front,
                               ...styles.cardFace,
-                              ...(member.is_active === false && {
+                              ...(isMemberInactive && {
                                 opacity: 0.6,
                                 filter: 'grayscale(40%)',
                               }),
@@ -1816,7 +1954,7 @@ const MyProfile = () => {
                               ...styles.back,
                               ...styles.cardFace,
                               ...styles.cardFaceBack,
-                              ...(member.is_active === false && {
+                              ...(isMemberInactive && {
                                 opacity: 0.6,
                                 filter: 'grayscale(40%)',
                               }),
@@ -1917,13 +2055,13 @@ const MyProfile = () => {
                             style={{
                               ...styles.actionButton,
                               ...styles.downloadActionButton,
-                              opacity: (isDownloadingThis || member.is_active === false) ? 0.5 : 1,
-                              cursor: (isDownloadingThis || member.is_active === false) ? 'not-allowed' : 'pointer',
+                              opacity: (isDownloadingThis || !canDownloadMemberCard) ? 0.5 : 1,
+                              cursor: (isDownloadingThis || !canDownloadMemberCard) ? 'not-allowed' : 'pointer',
                             }}
-                            onClick={() => member.is_active !== false && handleDownload(member.membership_id, member.full_name)}
-                            disabled={isDownloadingThis || member.is_active === false}
+                            onClick={() => canDownloadMemberCard && handleDownload(member.membership_id, member.full_name)}
+                            disabled={isDownloadingThis || !canDownloadMemberCard}
                             onMouseEnter={(e) => {
-                              if (!isDownloadingThis && member.is_active !== false) {
+                              if (!isDownloadingThis && canDownloadMemberCard) {
                                 e.currentTarget.style.transform = "translateY(-2px)";
                                 e.currentTarget.style.boxShadow = "0 4px 12px rgba(9,93,126,0.4)";
                               }
@@ -1932,7 +2070,7 @@ const MyProfile = () => {
                               e.currentTarget.style.transform = "translateY(0)";
                               e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.1)";
                             }}
-                            title={member.is_active === false ? "Membership is inactive" : ""}
+                            title={!member.membership_id ? "Membership ID not generated yet" : isMemberInactive ? "Membership is inactive" : ""}
                           >
                             {isDownloadingThis ? (
                               <>
@@ -1942,7 +2080,7 @@ const MyProfile = () => {
                             ) : (
                               <>
                                 <Download size={16} />
-                                {member.is_active === false ? 'Inactive' : 'Download PDF'}
+                                {canDownloadMemberCard ? 'Download PDF' : 'Inactive'}
                               </>
                             )}
                           </button>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import ProfileContent from './ProfileContent';
 
@@ -48,11 +48,49 @@ describe('ProfileContent primary member card', () => {
 
     // wait for the fetch call to complete and patient data to render
     await waitFor(() => {
-      expect(screen.getByText(/MEMBERSHIP ID/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/MEMBERSHIP ID/i).length).toBeGreaterThan(0);
     });
 
     // verify the age/gender row
     expect(screen.getByText(/AGE \/ GENDER/i)).toBeInTheDocument();
     expect(screen.getByText(/30 \/ Male/)).toBeInTheDocument();
+  });
+
+  it('normalizes alternate profile fields for status and photo', async () => {
+    global.fetch.mockReset();
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        full_name: 'Jane Doe',
+        age: 27,
+        gender: 'Female',
+        mobile_number: '8888888888',
+        membership_id: 'XYZ789',
+        start_date: '2024-05-01',
+        end_date: '2025-05-01',
+        blood_group: 'A+',
+        address: '456 avenue',
+        photo: '/media/profile.jpg',
+        is_active: 'active',
+        family_members: [],
+      }),
+    });
+
+    render(
+      <MemoryRouter>
+        <ProfileContent />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/Primary Member/i).length).toBeGreaterThan(0);
+    });
+
+    expect(screen.getAllByText(/^Active$/i).length).toBeGreaterThan(0);
+    const profileImage = screen.getByAltText('Jane Doe');
+    expect(profileImage).toHaveAttribute(
+      'src',
+      expect.stringContaining('https://admin.vaidyabandhu.com/media/profile.jpg')
+    );
   });
 });
