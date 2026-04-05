@@ -8,6 +8,41 @@ const LOGIN_API = "https://admin.vaidyabandhu.com/api/users/login/";
 const VERIFY_OTP_API = "https://admin.vaidyabandhu.com/api/users/verify_login_otp/";
 const PROFILE_API = "https://admin.vaidyabandhu.com/api/user/profile/";
 
+const isProfileActive = (profile = {}) => {
+  const payload = profile?.data && typeof profile.data === "object" ? profile.data : profile;
+  const primary =
+    payload?.primary_member && typeof payload.primary_member === "object"
+      ? payload.primary_member
+      : payload?.primaryMember && typeof payload.primaryMember === "object"
+        ? payload.primaryMember
+        : {};
+
+  const rawStatus =
+    primary.is_active ??
+    primary.active ??
+    primary.isActive ??
+    primary.membership_active ??
+    payload.is_active ??
+    payload.active ??
+    payload.isActive ??
+    payload.membership_active ??
+    primary.status ??
+    payload.status;
+
+  if (typeof rawStatus === "boolean") return rawStatus;
+  if (typeof rawStatus === "number") return rawStatus === 1;
+  if (typeof rawStatus === "string") {
+    const normalized = rawStatus.trim().toLowerCase();
+    if (["true", "1", "active", "paid", "captured", "verified", "success", "completed", "enabled", "activated"].includes(normalized)) {
+      return true;
+    }
+    if (["false", "0", "inactive", "pending", "failed", "cancelled", "disabled"].includes(normalized)) {
+      return false;
+    }
+  }
+  return false;
+};
+
 const LoginModal = () => {
   /* ✅ open modal from anywhere */
   useEffect(() => {
@@ -188,7 +223,7 @@ const LoginModal = () => {
             profileData = null;
           }
 
-          if (profileRes.ok && profileData?.is_active === true) {
+          if (profileRes.ok && isProfileActive(profileData)) {
             navigate("/myprofile");
           } else {
             navigate("/basic-details");
@@ -284,7 +319,7 @@ const LoginModal = () => {
         data = null;
       }
 
-      if (response.ok && data?.is_active === true) {
+      if (response.ok && isProfileActive(data)) {
         navigate("/myprofile");
       } else {
         navigate("/basic-details");

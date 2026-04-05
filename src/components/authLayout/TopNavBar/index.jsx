@@ -3,6 +3,41 @@ import ProfileDropdown from "./components/ProfileDropdown";
 import { useAuthContext } from "../../context";
 import { useEffect, useState } from "react";
 
+const isProfileActive = (profile = {}) => {
+  const payload = profile?.data && typeof profile.data === "object" ? profile.data : profile;
+  const primary =
+    payload?.primary_member && typeof payload.primary_member === "object"
+      ? payload.primary_member
+      : payload?.primaryMember && typeof payload.primaryMember === "object"
+        ? payload.primaryMember
+        : {};
+
+  const rawStatus =
+    primary.is_active ??
+    primary.active ??
+    primary.isActive ??
+    primary.membership_active ??
+    payload.is_active ??
+    payload.active ??
+    payload.isActive ??
+    payload.membership_active ??
+    primary.status ??
+    payload.status;
+
+  if (typeof rawStatus === "boolean") return rawStatus;
+  if (typeof rawStatus === "number") return rawStatus === 1;
+  if (typeof rawStatus === "string") {
+    const normalized = rawStatus.trim().toLowerCase();
+    if (["true", "1", "active", "paid", "captured", "verified", "success", "completed", "enabled", "activated"].includes(normalized)) {
+      return true;
+    }
+    if (["false", "0", "inactive", "pending", "failed", "cancelled", "disabled"].includes(normalized)) {
+      return false;
+    }
+  }
+  return false;
+};
+
 const Topbar = () => {
   const { user } = useAuthContext();
   const [userType, setUserType] = useState(null);
@@ -20,10 +55,7 @@ const Topbar = () => {
         setUserType(parsed.user_type);
         
         // Check if primary member is active
-        const primaryActive =
-          parsed?.is_active !== undefined
-            ? parsed.is_active === true
-            : parsed?.primary_member?.is_active === true;
+        const primaryActive = isProfileActive(parsed);
         
         console.log("[TopNavBar] primaryActive:", primaryActive);
         setShowProfile(primaryActive);

@@ -93,4 +93,55 @@ describe('ProfileContent primary member card', () => {
       expect.stringContaining('https://admin.vaidyabandhu.com/media/profile.jpg')
     );
   });
+
+  it('normalizes nested primary_member and family member payloads', async () => {
+    global.fetch.mockReset();
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        primary_member: {
+          full_name: 'Nested Primary',
+          age: 45,
+          gender: 'Male',
+          membership_id: 'PM-1001',
+          start_date: '2026-01-01',
+          end_date: '2027-01-01',
+          blood_group: 'B+',
+          address: 'Nested Street',
+          mobile: '9000000000',
+          profile_image: '/media/primary_nested.jpg',
+          is_active: 'active',
+        },
+        family_members: [
+          {
+            member_name: 'Nested Family',
+            member_age: 12,
+            sex: 'Female',
+            member_membership_id: 'FM-2002',
+            membership_start_date: '2026-01-01',
+            membership_end_date: '2027-01-01',
+            blood_group: 'A+',
+            relation: 'daughter',
+            profile_photo: '/media/family_nested.jpg',
+            membership_status: 'active',
+          },
+        ],
+      }),
+    });
+
+    render(
+      <MemoryRouter>
+        <ProfileContent />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/PM-1001/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/45 \/ Male/)).toBeInTheDocument();
+    expect(screen.getByText(/FM-2002/i)).toBeInTheDocument();
+    expect(screen.getByText(/12 \/ Female/)).toBeInTheDocument();
+    expect(screen.getAllByText(/^Active$/i).length).toBeGreaterThan(1);
+  });
 });

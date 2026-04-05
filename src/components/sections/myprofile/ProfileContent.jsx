@@ -29,12 +29,28 @@ const API_BASE_URL = "https://admin.vaidyabandhu.com";
 const pickFirst = (...values) =>
   values.find((value) => value !== undefined && value !== null && value !== "") ?? "";
 
+const pickArray = (...values) => {
+  for (const value of values) {
+    if (Array.isArray(value)) return value;
+  }
+  return [];
+};
+
+const toDisplayName = (entity = {}) => {
+  const directName = pickFirst(entity.full_name, entity.name, entity.member_name, entity.patient_name);
+  if (directName) return directName;
+  const first = pickFirst(entity.first_name, entity.firstname);
+  const last = pickFirst(entity.last_name, entity.lastname);
+  const full = `${first} ${last}`.trim();
+  return full || "";
+};
+
 const normalizeIsActive = (value, fallback = false) => {
   if (typeof value === "boolean") return value;
   if (typeof value === "number") return value === 1;
   if (typeof value === "string") {
     const normalized = value.trim().toLowerCase();
-    if (["true", "1", "active", "paid", "captured", "verified", "success", "completed", "enabled"].includes(normalized)) {
+    if (["true", "1", "active", "paid", "captured", "verified", "success", "completed", "enabled", "activated"].includes(normalized)) {
       return true;
     }
     if (["false", "0", "inactive", "pending", "failed", "cancelled", "disabled"].includes(normalized)) {
@@ -55,20 +71,51 @@ const normalizeMember = (member = {}) => {
     member.is_active ??
     member.active ??
     member.isActive ??
+    member.membership_active ??
+    member.member_active ??
+    member.card_status ??
+    member.member_status ??
+    member.membership_status ??
+    member.payment_status ??
+    member.is_paid ??
+    member.is_verified ??
+    member.verified ??
     member.card_active ??
     member.status;
 
   return {
     ...member,
-    full_name: pickFirst(member.full_name, member.name, member.member_name),
+    full_name: toDisplayName(member),
     age: pickFirst(member.age, member.member_age),
     gender: pickFirst(member.gender, member.sex),
     blood_group: pickFirst(member.blood_group, member.bloodGroup),
     relationship: pickFirst(member.relationship, member.relation),
-    membership_id: pickFirst(member.membership_id, member.member_membership_id, member.card_id),
-    start_date: pickFirst(member.start_date, member.membership_start_date, member.valid_from),
-    end_date: pickFirst(member.end_date, member.membership_end_date, member.valid_to),
-    mobile: pickFirst(member.mobile, member.mobile_number, member.phone, member.phone_number),
+    membership_id: pickFirst(
+      member.membership_id,
+      member.member_membership_id,
+      member.membership_number,
+      member.membership_no,
+      member.card_id,
+      member.member_id
+    ),
+    start_date: pickFirst(
+      member.start_date,
+      member.membership_start_date,
+      member.membership_from,
+      member.valid_from,
+      member.validity_start,
+      member.startDate
+    ),
+    end_date: pickFirst(
+      member.end_date,
+      member.membership_end_date,
+      member.membership_to,
+      member.valid_to,
+      member.validity_end,
+      member.expiry_date,
+      member.endDate
+    ),
+    mobile: pickFirst(member.mobile, member.mobile_number, member.phone, member.phone_number, member.contact_number),
     address: pickFirst(member.address, member.full_address),
     profile_image: toAbsoluteMediaUrl(
       pickFirst(member.profile_image, member.photo, member.image, member.profile_photo)
@@ -78,37 +125,91 @@ const normalizeMember = (member = {}) => {
 };
 
 const normalizePatient = (raw = {}) => {
-  const statusRaw =
-    raw.is_active ??
-    raw.active ??
-    raw.isActive ??
-    raw.membership_active ??
-    raw.status;
+  const payload = raw?.data && typeof raw.data === "object" ? raw.data : raw;
+  const primaryMember = payload?.primary_member && typeof payload.primary_member === "object"
+    ? payload.primary_member
+    : payload?.primaryMember && typeof payload.primaryMember === "object"
+      ? payload.primaryMember
+      : {};
 
-  const familyMembers = Array.isArray(raw.family_members)
-    ? raw.family_members
-    : Array.isArray(raw.familyMembers)
-      ? raw.familyMembers
-      : [];
+  const combinedPrimary = {
+    ...payload,
+    ...primaryMember,
+  };
+
+  const statusRaw =
+    combinedPrimary.is_active ??
+    combinedPrimary.active ??
+    combinedPrimary.isActive ??
+    combinedPrimary.membership_active ??
+    combinedPrimary.member_active ??
+    combinedPrimary.card_status ??
+    combinedPrimary.payment_status ??
+    combinedPrimary.membership_status ??
+    combinedPrimary.status;
+
+  const familyMembersRaw = pickArray(
+    payload.family_members,
+    payload.familyMembers,
+    payload.members,
+    payload.dependents,
+    payload.family
+  );
+
+  const familyMembers = familyMembersRaw.map((member) => {
+    if (member && typeof member === "object" && member.member && typeof member.member === "object") {
+      return { ...member, ...member.member };
+    }
+    return member;
+  });
 
   return {
-    ...raw,
-    full_name: pickFirst(raw.full_name, raw.name, raw.patient_name),
-    age: pickFirst(raw.age, raw.patient_age),
-    gender: pickFirst(raw.gender, raw.sex),
-    blood_group: pickFirst(raw.blood_group, raw.bloodGroup),
-    address: pickFirst(raw.address, raw.full_address, raw.location),
-    pin_code: pickFirst(raw.pin_code, raw.pincode),
-    mobile: pickFirst(raw.mobile, raw.mobile_number, raw.phone, raw.phone_number),
-    email: pickFirst(raw.email, raw.email_id),
-    Aadhar_number: pickFirst(raw.Aadhar_number, raw.aadhaar_number, raw.adhaar_number),
-    pan_number: pickFirst(raw.pan_number, raw.pan),
-    profile_image: toAbsoluteMediaUrl(
-      pickFirst(raw.profile_image, raw.photo, raw.image, raw.profile_photo)
+    ...payload,
+    ...primaryMember,
+    full_name: toDisplayName(combinedPrimary),
+    age: pickFirst(combinedPrimary.age, combinedPrimary.patient_age),
+    gender: pickFirst(combinedPrimary.gender, combinedPrimary.sex),
+    blood_group: pickFirst(combinedPrimary.blood_group, combinedPrimary.bloodGroup),
+    address: pickFirst(combinedPrimary.address, combinedPrimary.full_address, combinedPrimary.location),
+    pin_code: pickFirst(combinedPrimary.pin_code, combinedPrimary.pincode),
+    mobile: pickFirst(
+      combinedPrimary.mobile,
+      combinedPrimary.mobile_number,
+      combinedPrimary.phone,
+      combinedPrimary.phone_number,
+      combinedPrimary.contact_number
     ),
-    membership_id: pickFirst(raw.membership_id, raw.member_id, raw.card_id),
-    start_date: pickFirst(raw.start_date, raw.membership_start_date, raw.valid_from),
-    end_date: pickFirst(raw.end_date, raw.membership_end_date, raw.valid_to),
+    email: pickFirst(combinedPrimary.email, combinedPrimary.email_id),
+    Aadhar_number: pickFirst(combinedPrimary.Aadhar_number, combinedPrimary.aadhaar_number, combinedPrimary.adhaar_number),
+    pan_number: pickFirst(combinedPrimary.pan_number, combinedPrimary.pan),
+    profile_image: toAbsoluteMediaUrl(
+      pickFirst(combinedPrimary.profile_image, combinedPrimary.photo, combinedPrimary.image, combinedPrimary.profile_photo)
+    ),
+    membership_id: pickFirst(
+      combinedPrimary.membership_id,
+      combinedPrimary.member_id,
+      combinedPrimary.card_id,
+      combinedPrimary.member_membership_id,
+      combinedPrimary.membership_number,
+      combinedPrimary.membership_no
+    ),
+    start_date: pickFirst(
+      combinedPrimary.start_date,
+      combinedPrimary.membership_start_date,
+      combinedPrimary.membership_from,
+      combinedPrimary.valid_from,
+      combinedPrimary.validity_start,
+      combinedPrimary.startDate
+    ),
+    end_date: pickFirst(
+      combinedPrimary.end_date,
+      combinedPrimary.membership_end_date,
+      combinedPrimary.membership_to,
+      combinedPrimary.valid_to,
+      combinedPrimary.validity_end,
+      combinedPrimary.expiry_date,
+      combinedPrimary.endDate
+    ),
     is_active: normalizeIsActive(statusRaw, false),
     family_members: familyMembers.map(normalizeMember),
   };

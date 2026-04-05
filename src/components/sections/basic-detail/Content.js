@@ -57,6 +57,31 @@ const API_BASE_URL = "https://admin.vaidyabandhu.com";
 const pickFirst = (...values) =>
   values.find((value) => value !== undefined && value !== null && value !== "") ?? "";
 
+const pickArray = (...values) => {
+  for (const value of values) {
+    if (Array.isArray(value)) return value;
+  }
+  return [];
+};
+
+const getProfilePayload = (profile = {}) =>
+  profile?.data && typeof profile.data === "object" ? profile.data : profile;
+
+const getPrimaryProfile = (profile = {}) => {
+  const payload = getProfilePayload(profile);
+  const primary =
+    payload?.primary_member && typeof payload.primary_member === "object"
+      ? payload.primary_member
+      : payload?.primaryMember && typeof payload.primaryMember === "object"
+        ? payload.primaryMember
+        : {};
+
+  return {
+    ...payload,
+    ...primary,
+  };
+};
+
 const toAbsoluteMediaUrl = (url) => {
   if (!url || typeof url !== "string") return "";
   if (/^(https?:|blob:|data:)/i.test(url)) return url;
@@ -83,12 +108,28 @@ const normalizeProfileForForm = (data = {}) => ({
   age: pickFirst(data.age, data.patient_age),
   gender: pickFirst(data.gender, data.sex),
   blood_group: pickFirst(data.blood_group, data.bloodGroup),
-  mobile: pickFirst(data.mobile, data.mobile_number, data.phone, data.phone_number),
+  mobile: pickFirst(data.mobile, data.mobile_number, data.phone, data.phone_number, data.contact_number),
   alternate_mobile: pickFirst(data.alternate_mobile, data.alternate_number, data.secondary_mobile),
   address: pickFirst(data.address, data.full_address, data.location),
   pin_code: pickFirst(data.pin_code, data.pincode),
   photo: null,
 });
+
+const resolveProfileIsActive = (profile = {}, fallback = false) => {
+  const primary = getPrimaryProfile(profile);
+  const statusRaw = pickFirst(
+    primary.is_active,
+    primary.active,
+    primary.isActive,
+    primary.membership_active,
+    primary.member_active,
+    primary.status,
+    profile?.is_active,
+    profile?.active,
+    profile?.status
+  );
+  return normalizeIsActive(statusRaw, fallback);
+};
 
 const toBool = (value) => {
   if (value === true || value === 1) return true;
@@ -258,17 +299,19 @@ const VaidyaBandhuForm = () => {
         );
         if (response.ok) {
           const data = await response.json();
-          const normalizedProfile = normalizeProfileForForm(data);
+          const primaryProfile = getPrimaryProfile(data);
+          const normalizedProfile = normalizeProfileForForm(primaryProfile);
           setFormData((prev) => ({ ...prev, ...normalizedProfile }));
-          if (data.photo || data.profile_image) {
-            setPhotoPreview(toAbsoluteMediaUrl(data.photo || data.profile_image));
+          if (primaryProfile.photo || primaryProfile.profile_image) {
+            setPhotoPreview(toAbsoluteMediaUrl(primaryProfile.photo || primaryProfile.profile_image));
           }
           // Check if user is already active (existing member)
-          if (normalizeIsActive(data.is_active, false)) {
+          if (resolveProfileIsActive(data, false)) {
             setIsExistingUser(true);
             // Count existing family members if available
-            if (data.family_members && Array.isArray(data.family_members)) {
-              setExistingMembersCount(data.family_members.length);
+            const existingFamilyMembers = pickArray(data.family_members, data.familyMembers, data?.data?.family_members, data?.data?.familyMembers);
+            if (existingFamilyMembers.length > 0) {
+              setExistingMembersCount(existingFamilyMembers.length);
             }
             // Clear any saved draft if user is now active
             localStorage.removeItem(DRAFT_KEY);
@@ -769,7 +812,12 @@ const VaidyaBandhuForm = () => {
       if (!response.ok) return null;
 
       const latestProfile = await response.json();
-      localStorage.setItem("userData", JSON.stringify(latestProfile));
+      const normalizedForStorage = {
+        ...latestProfile,
+        ...getPrimaryProfile(latestProfile),
+        is_active: resolveProfileIsActive(latestProfile, false),
+      };
+      localStorage.setItem("userData", JSON.stringify(normalizedForStorage));
       return latestProfile;
     } catch (error) {
       console.error("Failed to refresh profile after payment:", error);
@@ -997,7 +1045,7 @@ const VaidyaBandhuForm = () => {
             }
 
             const latestProfile = await refreshProfileAfterPayment(token);
-            if (latestProfile && !normalizeIsActive(latestProfile.is_active, false)) {
+            if (latestProfile && !resolveProfileIsActive(latestProfile, false)) {
               alert("Payment is complete, but membership activation is still processing. Please check My Profile again in a few minutes.");
             }
 
