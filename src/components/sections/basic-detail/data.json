@@ -123,7 +123,7 @@
       "aadhaarValid": "Aadhaar number must be 12 digits",
       "panValid": "Please enter a valid PAN number (e.g., ABCDE1234F)",
       "photoValid": "Please upload a valid image file",
-      "photoSize": "Photo size must be less than 2MB"
+      "photoSize": "Photo size must be less than 4MB"
     }
   },
   "hi": {
