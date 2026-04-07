@@ -103,14 +103,14 @@ const ProfileDropdown = () => {
 				</div>
 			</DropdownToggle>
 			<DropdownMenu align="end">
-				<DropdownItem href="#" onClick={handleProfileClick}>
+				{/* <DropdownItem href="#" onClick={handleProfileClick}>
 					<i className="ti ti-user font-16 me-1 align-text-bottom" /> Profile
-				</DropdownItem>
+				</DropdownItem> */}
 				{/* <DropdownItem href="#">
 					<i className="ti ti-settings font-16 me-1 align-text-bottom" />{' '}
 					Settings
 				</DropdownItem> */}
-				<DropdownDivider className="mb-0" />
+				{/* <DropdownDivider className="mb-0" /> */}
 				<DropdownItem onClick={() => logout()} href="#">
 					<i className="ti ti-power font-16 me-1 align-text-bottom" /> Logout
 				</DropdownItem>
