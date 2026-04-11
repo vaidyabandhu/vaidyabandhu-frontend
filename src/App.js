@@ -15,6 +15,9 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { getAppRoutes } from "./components/AppRoute";
 import BasicDetail from "./components/pages/BasicDetail";
 import { SuspenseFallback } from "./components/SuspenseFallback";
+import PrivacyPolicy from "./components/pages/PrivacyPolicy";
+import TermsConditions from "./components/pages/TermsConditions";
+import RefundPolicy from "./components/pages/RefundPolicy";
 
 // Lazy imports
 const Home = React.lazy(() => import("./components/pages/Home"));
@@ -26,7 +29,9 @@ const Blogstandard = React.lazy(() =>
 const Blogdetails = React.lazy(() => import("./components/pages/Blogdetails"));
 const About = React.lazy(() => import("./components/pages/About"));
 const MyProfile = React.lazy(() => import("./components/pages/MyProfile"));
-const DoctorProfile = React.lazy(() => import("./components/pages/DoctorProfile"));
+const DoctorProfile = React.lazy(() =>
+  import("./components/pages/DoctorProfile")
+);
 const Services = React.lazy(() => import("./components/pages/Services"));
 const Servicedetails = React.lazy(() =>
   import("./components/pages/Servicedetails")
@@ -48,8 +53,7 @@ const Doctordetails = React.lazy(() =>
 );
 const Contact = React.lazy(() => import("./components/pages/Contact"));
 const Errorpage = React.lazy(() => import("./components/pages/Errorpage"));
-
-const HospitalList = React.lazy(()=> import('./components/pages/HospitalList'));
+const HospitalList = React.lazy(() => import("./components/pages/HospitalList"));
 const UserLogin = React.lazy(() => import("./components/pages/UserLogin"));
 
 // Scroll to top on route change
@@ -107,8 +111,9 @@ function AppRoutes() {
         path="/blog/author/:authorId"
         element={<Blog key={window.location.pathname} />}
       />
-       <Route path="/myprofile" element={<MyProfile />} />
-       <Route path="/doctorprofile" element={<DoctorProfile />}/>
+
+      <Route path="/myprofile" element={<MyProfile />} />
+      <Route path="/doctorprofile" element={<DoctorProfile />} />
       <Route path="/about" element={<About />} />
       <Route path="/services" element={<Services />} />
       <Route
@@ -152,8 +157,12 @@ function AppRoutes() {
       <Route path="/contact" element={<Contact />} />
       <Route path="/basic-details" element={<BasicDetail />} />
       <Route path="/userlogin" element={<UserLogin />} />
-
       <Route path="/hospital-list" element={<HospitalList />} />
+
+      {/* Policy pages */}
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-and-conditions" element={<TermsConditions />} />
+      <Route path="/refund-policy" element={<RefundPolicy />} />
 
       {/* Dynamically generated routes based on auth */}
       {getAppRoutes(auth)}
