@@ -137,6 +137,7 @@ const LeadershipInline = () => {
                 >
                   Dr. Ajith Ramaswamy
                 </h3>
+                     <p>MBBS, MHA</p>
                 <h5
                   style={{
                     color: '#5a6778',
