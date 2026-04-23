@@ -498,9 +498,11 @@ const MyProfile = () => {
         throw new Error("Membership ID not available. Cannot download card.");
       }
 
-      // Use only the specific membership_id endpoint — no fallback to primary
-      // to prevent downloading the wrong member's card when the endpoint fails.
-      const endpoint = `${API_BASE_URL}/api/user/card/pdf/?membership_id=${encodeURIComponent(effectiveMembershipId)}`;
+      // Primary member: server identifies via auth token — no membership_id param needed.
+      // Family member: must pass membership_id; no fallback to avoid downloading the wrong card.
+      const endpoint = isPrimaryRequest
+        ? `${API_BASE_URL}/api/user/card/pdf/`
+        : `${API_BASE_URL}/api/user/card/pdf/?membership_id=${encodeURIComponent(effectiveMembershipId)}`;
 
       const response = await fetch(endpoint, {
         method: "GET",
