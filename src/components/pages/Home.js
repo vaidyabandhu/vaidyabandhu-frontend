@@ -3,9 +3,6 @@ import { Helmet } from "react-helmet-async";
 import Header from '../layouts/Header';
 import Footer from '../layouts/Footer';
 import Content from '../sections/home/Content';
-import  Banner from '../sections/home/Banner';
-
-const pagelocation = "Homepage";
 
 // const NewsTicker = () => (
 //   <div
@@ -70,12 +67,8 @@ class Home extends Component {
                     <meta name="twitter:description" content="Book appointments with top doctors, hospitals, and diagnostics. Save 10% to 40% on treatments, get cashback, and access free surgeries for those in need." />
                     <meta name="twitter:image" content="https://www.vaidyabandhu.com/preview.png" />
                 </Helmet>
-                {/* <NewsTicker /> */}
                 <Header />
-                  <Banner />
-                
                 <Content />
-             
                 <Footer />
             </Fragment>
         );

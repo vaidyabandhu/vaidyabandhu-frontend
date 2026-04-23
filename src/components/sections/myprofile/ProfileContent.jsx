@@ -1,15 +1,8 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { saveAs } from "file-saver";
 import { useNavigate } from "react-router-dom";
 import {
-  Mail,
-  Phone,
-  MapPin,
-  Droplet,
   User,
-  IdCard,
-  CreditCard,
-  Hash,
   LogOut, Loader2, AlertCircle,
   UserPlus,
   Download,
@@ -19,8 +12,6 @@ import {
   Heart,
   UserCheck,
   Baby,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 // import LoginModal from "./LoginModal";
 
@@ -35,6 +26,49 @@ const pickArray = (...values) => {
   }
   return [];
 };
+
+const IMAGE_FIELDS = ["profile_image", "profile_photo", "photo", "image", "member_image", "member_photo"];
+const MEMBERSHIP_ID_FIELDS = [
+  "membership_id",
+  "member_membership_id",
+  "membership_number",
+  "membership_no",
+  "card_id",
+  "member_id",
+];
+const START_DATE_FIELDS = [
+  "start_date",
+  "membership_start_date",
+  "membership_from",
+  "valid_from",
+  "validity_start",
+  "startDate",
+];
+const END_DATE_FIELDS = [
+  "end_date",
+  "membership_end_date",
+  "membership_to",
+  "valid_to",
+  "validity_end",
+  "expiry_date",
+  "endDate",
+];
+const MOBILE_FIELDS = ["mobile", "mobile_number", "phone", "phone_number", "contact_number"];
+
+const isPlainObject = (value) =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const resolveEntityField = (sources = [], fields = []) => {
+  for (const source of sources) {
+    if (!isPlainObject(source)) continue;
+    const value = pickFirst(...fields.map((field) => source[field]));
+    if (value !== "") return value;
+  }
+  return "";
+};
+
+const extractNestedMember = (member = {}) =>
+  isPlainObject(member.member) ? member.member : null;
 
 const toDisplayName = (entity = {}) => {
   const directName = pickFirst(entity.full_name, entity.name, entity.member_name, entity.patient_name);
@@ -66,60 +100,44 @@ const toAbsoluteMediaUrl = (url) => {
   return `${API_BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
 };
 
+const resolveScopedProfileImage = (...sources) =>
+  toAbsoluteMediaUrl(resolveEntityField(sources, IMAGE_FIELDS));
+
 const normalizeMember = (member = {}) => {
+  const nestedMember = extractNestedMember(member);
+  const memberSources = nestedMember ? [nestedMember, member] : [member];
   const statusRaw =
-    member.is_active ??
-    member.active ??
-    member.isActive ??
-    member.membership_active ??
-    member.member_active ??
-    member.card_status ??
-    member.member_status ??
-    member.membership_status ??
-    member.payment_status ??
-    member.is_paid ??
-    member.is_verified ??
-    member.verified ??
-    member.card_active ??
-    member.status;
+    resolveEntityField(memberSources, [
+      "is_active",
+      "active",
+      "isActive",
+      "membership_active",
+      "member_active",
+      "card_status",
+      "member_status",
+      "membership_status",
+      "payment_status",
+      "is_paid",
+      "is_verified",
+      "verified",
+      "card_active",
+      "status",
+    ]);
 
   return {
     ...member,
-    full_name: toDisplayName(member),
-    age: pickFirst(member.age, member.member_age),
-    gender: pickFirst(member.gender, member.sex),
-    blood_group: pickFirst(member.blood_group, member.bloodGroup),
-    relationship: pickFirst(member.relationship, member.relation),
-    membership_id: pickFirst(
-      member.membership_id,
-      member.member_membership_id,
-      member.membership_number,
-      member.membership_no,
-      member.card_id,
-      member.member_id
-    ),
-    start_date: pickFirst(
-      member.start_date,
-      member.membership_start_date,
-      member.membership_from,
-      member.valid_from,
-      member.validity_start,
-      member.startDate
-    ),
-    end_date: pickFirst(
-      member.end_date,
-      member.membership_end_date,
-      member.membership_to,
-      member.valid_to,
-      member.validity_end,
-      member.expiry_date,
-      member.endDate
-    ),
-    mobile: pickFirst(member.mobile, member.mobile_number, member.phone, member.phone_number, member.contact_number),
-    address: pickFirst(member.address, member.full_address),
-    profile_image: toAbsoluteMediaUrl(
-      pickFirst(member.profile_image, member.photo, member.image, member.profile_photo)
-    ),
+    ...(nestedMember || {}),
+    full_name: toDisplayName({ ...member, ...(nestedMember || {}) }),
+    age: resolveEntityField(memberSources, ["age", "member_age"]),
+    gender: resolveEntityField(memberSources, ["gender", "sex"]),
+    blood_group: resolveEntityField(memberSources, ["blood_group", "bloodGroup"]),
+    relationship: resolveEntityField([member, nestedMember], ["relationship", "relation"]),
+    membership_id: resolveEntityField(memberSources, MEMBERSHIP_ID_FIELDS),
+    start_date: resolveEntityField(memberSources, START_DATE_FIELDS),
+    end_date: resolveEntityField(memberSources, END_DATE_FIELDS),
+    mobile: resolveEntityField(memberSources, MOBILE_FIELDS),
+    address: resolveEntityField(memberSources, ["address", "full_address"]),
+    profile_image: resolveScopedProfileImage(...memberSources),
     is_active: normalizeIsActive(statusRaw, false),
   };
 };
@@ -128,25 +146,41 @@ const normalizePatient = (raw = {}) => {
   const payload = raw?.data && typeof raw.data === "object" ? raw.data : raw;
   const primaryMember = payload?.primary_member && typeof payload.primary_member === "object"
     ? payload.primary_member
-    : payload?.primaryMember && typeof payload.primaryMember === "object"
-      ? payload.primaryMember
-      : {};
+      : payload?.primaryMember && typeof payload.primaryMember === "object"
+        ? payload.primaryMember
+        : {};
+  const hasDedicatedPrimary = Object.keys(primaryMember).length > 0;
 
   const combinedPrimary = {
     ...payload,
     ...primaryMember,
   };
+  const primaryFieldSources = hasDedicatedPrimary ? [primaryMember, payload] : [payload];
+  const primaryIdentity = resolveEntityField([primaryMember], ["id", ...MEMBERSHIP_ID_FIELDS]);
+  const payloadIdentity = resolveEntityField([payload], ["id", ...MEMBERSHIP_ID_FIELDS]);
+  const canFallbackToPayloadImage =
+    !hasDedicatedPrimary ||
+    !primaryIdentity ||
+    !payloadIdentity ||
+    String(primaryIdentity) === String(payloadIdentity);
+  const primaryImageSources = hasDedicatedPrimary
+    ? canFallbackToPayloadImage
+      ? [primaryMember, payload]
+      : [primaryMember]
+    : [payload];
 
   const statusRaw =
-    combinedPrimary.is_active ??
-    combinedPrimary.active ??
-    combinedPrimary.isActive ??
-    combinedPrimary.membership_active ??
-    combinedPrimary.member_active ??
-    combinedPrimary.card_status ??
-    combinedPrimary.payment_status ??
-    combinedPrimary.membership_status ??
-    combinedPrimary.status;
+    resolveEntityField(primaryFieldSources, [
+      "is_active",
+      "active",
+      "isActive",
+      "membership_active",
+      "member_active",
+      "card_status",
+      "payment_status",
+      "membership_status",
+      "status",
+    ]);
 
   const familyMembersRaw = pickArray(
     payload.family_members,
@@ -156,62 +190,32 @@ const normalizePatient = (raw = {}) => {
     payload.family
   );
 
-  const familyMembers = familyMembersRaw.map((member) => {
-    if (member && typeof member === "object" && member.member && typeof member.member === "object") {
-      return { ...member, ...member.member };
-    }
-    return member;
-  });
-
   return {
     ...payload,
     ...primaryMember,
     full_name: toDisplayName(combinedPrimary),
-    age: pickFirst(combinedPrimary.age, combinedPrimary.patient_age),
-    gender: pickFirst(combinedPrimary.gender, combinedPrimary.sex),
-    blood_group: pickFirst(combinedPrimary.blood_group, combinedPrimary.bloodGroup),
-    address: pickFirst(combinedPrimary.address, combinedPrimary.full_address, combinedPrimary.location),
-    pin_code: pickFirst(combinedPrimary.pin_code, combinedPrimary.pincode),
-    mobile: pickFirst(
-      combinedPrimary.mobile,
-      combinedPrimary.mobile_number,
-      combinedPrimary.phone,
-      combinedPrimary.phone_number,
-      combinedPrimary.contact_number
-    ),
-    email: pickFirst(combinedPrimary.email, combinedPrimary.email_id),
-    Aadhar_number: pickFirst(combinedPrimary.Aadhar_number, combinedPrimary.aadhaar_number, combinedPrimary.adhaar_number),
-    pan_number: pickFirst(combinedPrimary.pan_number, combinedPrimary.pan),
-    profile_image: toAbsoluteMediaUrl(
-      pickFirst(combinedPrimary.profile_image, combinedPrimary.photo, combinedPrimary.image, combinedPrimary.profile_photo)
-    ),
-    membership_id: pickFirst(
-      combinedPrimary.membership_id,
-      combinedPrimary.member_id,
-      combinedPrimary.card_id,
-      combinedPrimary.member_membership_id,
-      combinedPrimary.membership_number,
-      combinedPrimary.membership_no
-    ),
-    start_date: pickFirst(
-      combinedPrimary.start_date,
-      combinedPrimary.membership_start_date,
-      combinedPrimary.membership_from,
-      combinedPrimary.valid_from,
-      combinedPrimary.validity_start,
-      combinedPrimary.startDate
-    ),
-    end_date: pickFirst(
-      combinedPrimary.end_date,
-      combinedPrimary.membership_end_date,
-      combinedPrimary.membership_to,
-      combinedPrimary.valid_to,
-      combinedPrimary.validity_end,
-      combinedPrimary.expiry_date,
-      combinedPrimary.endDate
-    ),
+    age: resolveEntityField(primaryFieldSources, ["age", "patient_age"]),
+    gender: resolveEntityField(primaryFieldSources, ["gender", "sex"]),
+    blood_group: resolveEntityField(primaryFieldSources, ["blood_group", "bloodGroup"]),
+    address: resolveEntityField(primaryFieldSources, ["address", "full_address", "location"]),
+    pin_code: resolveEntityField(primaryFieldSources, ["pin_code", "pincode"]),
+    mobile: resolveEntityField(primaryFieldSources, MOBILE_FIELDS),
+    email: resolveEntityField(primaryFieldSources, ["email", "email_id"]),
+    Aadhar_number: resolveEntityField(primaryFieldSources, ["Aadhar_number", "aadhaar_number", "adhaar_number"]),
+    pan_number: resolveEntityField(primaryFieldSources, ["pan_number", "pan"]),
+    profile_image: resolveScopedProfileImage(...primaryImageSources),
+    membership_id: resolveEntityField(primaryFieldSources, [
+      "membership_id",
+      "member_id",
+      "card_id",
+      "member_membership_id",
+      "membership_number",
+      "membership_no",
+    ]),
+    start_date: resolveEntityField(primaryFieldSources, START_DATE_FIELDS),
+    end_date: resolveEntityField(primaryFieldSources, END_DATE_FIELDS),
     is_active: normalizeIsActive(statusRaw, false),
-    family_members: familyMembers.map(normalizeMember),
+    family_members: familyMembersRaw.map(normalizeMember),
   };
 };
 
@@ -244,7 +248,6 @@ const MyProfile = () => {
   const [downloadingMemberId, setDownloadingMemberId] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [activeTab, setActiveTab] = useState('profile');
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [flippedCards, setFlippedCards] = useState({});
 
   // Toggle card flip
@@ -400,7 +403,7 @@ const MyProfile = () => {
         const storedUserData = localStorage.getItem('userData');
         if (storedUserData) {
           try {
-            const parsed = JSON.parse(storedUserData);
+            JSON.parse(storedUserData);
           } catch (e) {
             console.log("Invalid userData in localStorage");
           }
@@ -481,10 +484,8 @@ const MyProfile = () => {
 
     if (isPrimaryRequest) {
       setDownloading(true);
-    } else if (effectiveMembershipId) {
-      setDownloadingMemberId(effectiveMembershipId);
     } else {
-      setDownloading(true);
+      setDownloadingMemberId(effectiveMembershipId);
     }
 
     try {
@@ -493,65 +494,56 @@ const MyProfile = () => {
         throw new Error("Session expired. Please login again.");
       }
 
-      const downloadEndpoints = [];
-      if (effectiveMembershipId) {
-        downloadEndpoints.push(
-          `${API_BASE_URL}/api/user/card/pdf/?membership_id=${encodeURIComponent(effectiveMembershipId)}`
-        );
-      }
-      downloadEndpoints.push(`${API_BASE_URL}/api/user/card/pdf/`);
-
-      let lastError = new Error("Failed to download membership card");
-
-      for (const endpoint of [...new Set(downloadEndpoints)]) {
-        const response = await fetch(endpoint, {
-          method: "GET",
-          headers: {
-            Authorization: token,
-          },
-        });
-
-        if (response.status === 401) {
-          throw new Error("Session expired. Please login again.");
-        }
-
-        if (!response.ok) {
-          lastError = new Error(`Download failed (${response.status})`);
-          continue;
-        }
-
-        const contentDisposition = response.headers.get("Content-Disposition");
-        const contentType = response.headers.get("Content-Type") || "";
-        const blob = await response.blob();
-        const looksLikePdf =
-          contentType.toLowerCase().includes("application/pdf") ||
-          (blob.type || "").toLowerCase().includes("application/pdf") ||
-          /filename=/i.test(contentDisposition || "");
-
-        if (!looksLikePdf) {
-          const maybeError = await blob.text().catch(() => "");
-          lastError = new Error(maybeError || "Invalid membership card file");
-          continue;
-        }
-
-        const name = memberName || patient.full_name || "user";
-        let filename = `${name}_HealthCard.pdf`;
-
-        if (contentDisposition) {
-          const utfMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
-          const directMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
-          if (utfMatch?.[1]) {
-            filename = decodeURIComponent(utfMatch[1]);
-          } else if (directMatch?.[1]) {
-            filename = directMatch[1];
-          }
-        }
-
-        saveAs(blob, filename);
-        return;
+      if (!effectiveMembershipId) {
+        throw new Error("Membership ID not available. Cannot download card.");
       }
 
-      throw lastError;
+      // Use only the specific membership_id endpoint — no fallback to primary
+      // to prevent downloading the wrong member's card when the endpoint fails.
+      const endpoint = `${API_BASE_URL}/api/user/card/pdf/?membership_id=${encodeURIComponent(effectiveMembershipId)}`;
+
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+          Authorization: token,
+        },
+      });
+
+      if (response.status === 401) {
+        throw new Error("Session expired. Please login again.");
+      }
+
+      if (!response.ok) {
+        throw new Error(`Download failed (${response.status})`);
+      }
+
+      const contentDisposition = response.headers.get("Content-Disposition");
+      const contentType = response.headers.get("Content-Type") || "";
+      const blob = await response.blob();
+      const looksLikePdf =
+        contentType.toLowerCase().includes("application/pdf") ||
+        (blob.type || "").toLowerCase().includes("application/pdf") ||
+        /filename=/i.test(contentDisposition || "");
+
+      if (!looksLikePdf) {
+        const maybeError = await blob.text().catch(() => "");
+        throw new Error(maybeError || "Invalid membership card file received from server.");
+      }
+
+      const name = memberName || patient.full_name || "user";
+      let filename = `${name}_HealthCard.pdf`;
+
+      if (contentDisposition) {
+        const utfMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+        const directMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+        if (utfMatch?.[1]) {
+          filename = decodeURIComponent(utfMatch[1]);
+        } else if (directMatch?.[1]) {
+          filename = directMatch[1];
+        }
+      }
+
+      saveAs(blob, filename);
     } catch (error) {
       console.error("Error downloading membership card:", error);
       alert(error?.message || "Failed to download membership card. Please try again later.");
@@ -591,8 +583,9 @@ const MyProfile = () => {
   // Inline styles — optimized for alignment and reusability
   const styles = {
     profilePage: {
-      padding: isMobile ? "15px" : "30px",
-      backgroundColor: "#f8f9fa",
+      padding: isMobile ? "16px 12px 26px" : "30px 22px 44px",
+      background:
+        "radial-gradient(circle at 18% 8%, rgba(120, 217, 206, 0.2), rgba(120, 217, 206, 0) 34%), linear-gradient(180deg, #f7fcfb 0%, #edf8f6 100%)",
       minHeight: "100vh",
     },
     mainContainer: {
@@ -614,11 +607,12 @@ const MyProfile = () => {
       alignItems: "center",
     },
     personalInfoCard: {
-      borderRadius: "15px",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+      borderRadius: "22px",
+      boxShadow: "0 18px 30px rgba(14,80,88,0.14)",
       backgroundColor: "white",
       padding: isMobile ? "16px" : "24px",
       height: "fit-content",
+      border: "1px solid #d5ebe7",
     },
     infoRow: {
       display: "flex",
@@ -646,20 +640,20 @@ const MyProfile = () => {
       overflowWrap: "break-word",
     },
     sectionTitle: {
-      fontSize: isMobile ? "16px" : "18px",
+      fontSize: isMobile ? "18px" : "22px",
       fontWeight: 600,
-      color: "#095D7E",
+      color: "#0f4f58",
       marginBottom: "20px",
       paddingBottom: "10px",
-      borderBottom: "1px solid #eee",
+      borderBottom: "1px solid #d5ebe7",
     },
     healthCard: {
       width: "100%",
       height: "100%",
-      borderRadius: "12px",
-      background: "#F5F9FA",
-      border: "1px solid #CCCCCC",
-      boxShadow: "0px 4px 8px 0px rgba(0,0,0,0.1)",
+      borderRadius: "20px",
+      background: "linear-gradient(165deg, #fbfdfd 0%, #eef8f6 100%)",
+      border: "1px solid #c8e5e1",
+      boxShadow: "0 16px 28px rgba(9,76,84,0.16)",
       overflow: "hidden",
       fontFamily: "Poppins, sans-serif",
       display: "flex",
@@ -670,7 +664,7 @@ const MyProfile = () => {
       color: "#4A4A4A",
     },
     back: {
-      background: "#fdfdfd",
+      background: "#f7fcfb",
       color: "#333",
       fontSize: isMobile ? "10px" : "12px",
       lineHeight: "1.4",
@@ -756,7 +750,6 @@ const MyProfile = () => {
       color: "#095D7E",
       textAlign: "center",
       marginTop: isMobile ? "3px" : "10px",
-      whiteSpace: "nowrap",
       overflow: "hidden",
       textOverflow: "ellipsis",
       maxWidth: "100%",
@@ -793,7 +786,7 @@ const MyProfile = () => {
       whiteSpace: "nowrap",
     },
     blueStrip: {
-      backgroundColor: "#046877",
+      background: "linear-gradient(135deg, #0a7078 0%, #0b4f63 100%)",
       color: "white",
       padding: isMobile ? "8px 12px" : "10px 38px",
       display: "flex",
@@ -845,7 +838,7 @@ const MyProfile = () => {
       position: "absolute",
       top: isMobile ? "30px" : "60px",
       right: isMobile ? "8px" : "15px",
-      backgroundColor: "#046877",
+      backgroundColor: "#0f5f72",
       color: "white",
       padding: isMobile ? "4px 6px" : "8px 12px",
       borderRadius: "20px",
@@ -954,14 +947,14 @@ const MyProfile = () => {
       right: isMobile ? "12px" : "20px",
       fontSize: isMobile ? "20px" : "36px",
       fontWeight: "bold",
-      color: "#046877",
+      color: "#0e5b6f",
     },
     bottomBanner: {
       position: "absolute",
       bottom: "2px",
       left: 0,
       right: 0,
-      backgroundColor: "#046877",
+      backgroundColor: "#0f5f72",
       color: "white",
       padding: isMobile ? "5px 0" : "6px 0",
       borderBottomLeftRadius: "12px",
@@ -994,15 +987,15 @@ const MyProfile = () => {
     logoutButton: {
       display: "flex",
       alignItems: "center",
-      backgroundColor: "#dc3545",
+      background: "linear-gradient(135deg, #c54233 0%, #a62721 100%)",
       color: "white",
       border: "none",
       padding: isMobile ? "8px 16px" : "10px 20px",
-      borderRadius: "5px",
+      borderRadius: "999px",
       cursor: "pointer",
       fontSize: isMobile ? "14px" : "16px",
       fontWeight: "500",
-      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      boxShadow: "0 12px 22px rgba(166, 42, 34, 0.25)",
       transition: "all 0.2s ease",
       marginTop: "15px",
     },
@@ -1035,7 +1028,7 @@ const MyProfile = () => {
       left: "0",
       width: "100vw",
       height: "100vh",
-      background: "rgba(0,0,0,0.5)",
+      background: "rgba(6, 20, 25, 0.64)",
       zIndex: 9999,
       display: "flex",
       alignItems: "center",
@@ -1044,8 +1037,9 @@ const MyProfile = () => {
     modalContent: {
       background: "white",
       padding: isMobile ? "15px" : "20px",
-      borderRadius: "8px",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+      borderRadius: "20px",
+      boxShadow: "0 24px 40px rgba(7, 35, 44, 0.28)",
+      border: "1px solid #d4ebe7",
       maxWidth: isMobile ? "90%" : "400px",
       width: "90%",
       textAlign: "center",
@@ -1102,7 +1096,7 @@ const MyProfile = () => {
       gap: "12px",
       marginBottom: "24px",
       paddingBottom: "12px",
-      borderBottom: "2px solid #095D7E",
+      borderBottom: "1px solid #d0e8e3",
     },
     sectionHeaderIcon: {
       width: "32px",
@@ -1112,7 +1106,7 @@ const MyProfile = () => {
     sectionHeaderTitle: {
       fontSize: isMobile ? "20px" : "24px",
       fontWeight: 700,
-      color: "#095D7E",
+      color: "#0f4f58",
       margin: 0,
     },
     cardsGrid: {
@@ -1120,9 +1114,10 @@ const MyProfile = () => {
       gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(480px, 1fr))",
       gap: isMobile ? "24px" : "32px",
       justifyItems: "center",
+      alignItems: "start",
     },
     memberCardWrapper: {
-      width: isMobile ? "300px" : "480px",
+      width: isMobile ? "100%" : "480px",
       maxWidth: "520px",
       perspective: "1000px",
       position: "relative",
@@ -1207,21 +1202,21 @@ const MyProfile = () => {
       justifyContent: "center",
       gap: "6px",
       padding: isMobile ? "10px 16px" : "12px 24px",
-      borderRadius: "8px",
+      borderRadius: "999px",
       border: "none",
       cursor: "pointer",
       fontSize: isMobile ? "13px" : "14px",
       fontWeight: 600,
       transition: "all 0.2s ease",
-      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+      boxShadow: "0 10px 18px rgba(9, 64, 78, 0.16)",
     },
     viewButton: {
       background: "#fff",
-      color: "#095D7E",
-      border: "2px solid #095D7E",
+      color: "#0f4f58",
+      border: "1px solid #c6e5e0",
     },
     downloadActionButton: {
-      background: "linear-gradient(135deg, #095D7E 0%, #046877 100%)",
+      background: "linear-gradient(135deg, #0f7576 0%, #0e5570 100%)",
       color: "#fff",
     },
     emptyFamilyCard: {
@@ -1257,81 +1252,77 @@ const MyProfile = () => {
       background: "linear-gradient(135deg, #007a7e 0%, #095D7E 100%)",
       color: "#fff",
       border: "none",
-      borderRadius: "12px",
+      borderRadius: "999px",
       fontSize: isMobile ? "14px" : "16px",
       fontWeight: 600,
       cursor: "pointer",
-      boxShadow: "0 4px 15px rgba(0,122,126,0.3)",
+      boxShadow: "0 14px 24px rgba(7,115,120,0.25)",
       transition: "all 0.3s ease",
     },
   };
 
   const tabStyles = {
     tabContainer: {
-      display: 'flex',
-      marginBottom: '24px',
-      flexWrap: 'wrap',
+      display: "flex",
+      marginBottom: "24px",
+      flexWrap: "wrap",
       alignItems: "center",
       justifyContent: "center",
-      gap: "20px",
+      gap: "12px",
     },
     tabButton: {
-      padding: isMobile ? '10px 16px' : '12px 24px',
-      backgroundColor: 'transparent',
-      border: 'none',
-      cursor: 'pointer',
-      fontSize: isMobile ? '16px' : '18px',
-      fontWeight: '600',
-      color: '#fff',
-      position: 'relative',
-      transition: 'color 0.3s ease',
+      padding: isMobile ? "10px 16px" : "11px 22px",
+      backgroundColor: "#ffffff",
+      border: "1px solid #cce6e2",
+      borderRadius: "999px",
+      cursor: "pointer",
+      fontSize: isMobile ? "15px" : "16px",
+      fontWeight: "600",
+      color: "#2f6369",
+      position: "relative",
+      transition: "all 0.3s ease",
+      boxShadow: "0 10px 16px rgba(11, 79, 86, 0.1)",
     },
     activeTab: {
-      color: '#0dcaf0',
+      color: "#ffffff",
+      background: "linear-gradient(135deg, #0f7476 0%, #0e5670 100%)",
+      borderColor: "transparent",
     },
     activeIndicator: {
-      position: 'absolute',
-      bottom: '-2px',
+      position: "absolute",
+      bottom: "-2px",
       left: 0,
-      width: '100%',
-      height: '3px',
-      backgroundColor: '#095D7E',
-      borderRadius: '2px 2px 0 0',
+      width: "100%",
+      height: "0",
+      backgroundColor: "transparent",
+      borderRadius: "0",
     },
     tableHeaderStyle: {
-      padding: '14px 12px',
-      textAlign: 'left',
-      fontSize: '16px',
-      fontWeight: '600',
+      padding: "14px 12px",
+      textAlign: "left",
+      fontSize: "15px",
+      fontWeight: "600",
     },
 
     tableCellStyle: {
-      padding: '14px 12px',
-      fontSize: '15px',
-      color: '#333',
+      padding: "14px 12px",
+      fontSize: "14px",
+      color: "#2d4e53",
     },
   };
 
   const canDownloadPrimaryCard = Boolean(patient.membership_id) && patient.is_active === true;
 
-  // Show loading state while fetching data
-  if (loading) {
+  // Only block the full page during the very first profile load.
+  // Appointments loading/errors are handled inline in the appointments tab.
+  const isInitialProfileLoad = loading && !patient.full_name;
+  if (isInitialProfileLoad) {
     return (
       <div style={styles.loadingContainer}>
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
         <p style={{ marginTop: "20px" }}>Loading profile data...</p>
-      </div>
-    );
-  }
-
-  // Show error state if there was an error fetching data
-  if (error) {
-    return (
-      <div style={styles.errorContainer}>
-        <h3>My Appointments</h3>
-        <p>{error}</p>
       </div>
     );
   }
@@ -1361,7 +1352,7 @@ const MyProfile = () => {
         </div>
       )}
 
-      <div style={styles.profilePage}>
+      <div style={styles.profilePage} className="vb-profile-page">
         {/* tabs */}
         <div style={tabStyles.tabContainer}>
           <button
@@ -1795,11 +1786,16 @@ const MyProfile = () => {
                   patient.family_members.map((member, index) => {
                     const relationDetails = getRelationshipDetails(member.relationship);
                     const RelationIcon = relationDetails.icon;
-                    const memberKey = member.id ?? member.membership_id ?? `${member.full_name || "member"}-${index}`;
+                    // Include index in the key to guarantee uniqueness even when id/membership_id
+                    // are missing or duplicated in the API response — prevents React reusing
+                    // the wrong card DOM node and displaying another member's data.
+                    const memberKey = `${member.id != null ? `id-${member.id}` : member.membership_id ? `mid-${member.membership_id}` : `name-${member.full_name || "member"}`}-${index}`;
                     const cardId = `family-${memberKey}`;
                     const isMemberInactive = member.is_active === false;
                     const canDownloadMemberCard = Boolean(member.membership_id) && !isMemberInactive;
-                    const isDownloadingThis = downloadingMemberId === member.membership_id;
+                    const isDownloadingThis =
+                      Boolean(member.membership_id) &&
+                      downloadingMemberId === member.membership_id;
 
                     return (
                       <div key={memberKey} style={styles.memberCardWrapper}>
@@ -2284,16 +2280,19 @@ const MyProfile = () => {
             )}
 
             {!loading && !error && appointments.length > 0 && (
-              <table style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                backgroundColor: '#fff',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  backgroundColor: "#fff",
+                  borderRadius: "18px",
+                  overflow: "hidden",
+                  boxShadow: "0 18px 30px rgba(11, 80, 86, 0.14)",
+                  border: "1px solid #d4ebe7",
+                }}
+              >
                 <thead>
-                  <tr style={{ backgroundColor: '#095D7E', color: 'white' }}>
+                  <tr style={{ background: "linear-gradient(135deg, #0f7576 0%, #0e5670 100%)", color: "white" }}>
                     <th style={tabStyles.tableHeaderStyle}>Sl. No</th>
                     <th style={tabStyles.tableHeaderStyle}>Doctor Name</th>
                     <th style={tabStyles.tableHeaderStyle}>Hospital Name</th>

@@ -144,4 +144,99 @@ describe('ProfileContent primary member card', () => {
     expect(screen.getByText(/12 \/ Female/)).toBeInTheDocument();
     expect(screen.getAllByText(/^Active$/i).length).toBeGreaterThan(1);
   });
+
+  it('prefers the dedicated primary member image over conflicting root-level image fields', async () => {
+    global.fetch.mockReset();
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        profile_image: '/media/root_wrong.jpg',
+        primary_member: {
+          id: 10,
+          full_name: 'Primary Correct',
+          age: 39,
+          gender: 'Male',
+          membership_id: 'VB-PRIMARY-10',
+          start_date: '2026-01-01',
+          end_date: '2027-01-01',
+          blood_group: 'B+',
+          mobile: '9000000010',
+          profile_photo: '/media/primary_correct.jpg',
+          is_active: 'active',
+        },
+        family_members: [],
+      }),
+    });
+
+    render(
+      <MemoryRouter>
+        <ProfileContent />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/VB-PRIMARY-10/i)).toBeInTheDocument();
+    });
+
+    const primaryImage = screen.getByAltText('Primary Correct');
+    expect(primaryImage).toHaveAttribute(
+      'src',
+      expect.stringContaining('https://admin.vaidyabandhu.com/media/primary_correct.jpg')
+    );
+  });
+
+  it('prefers the nested family member image over conflicting wrapper image fields', async () => {
+    global.fetch.mockReset();
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        primary_member: {
+          full_name: 'Parent User',
+          age: 45,
+          gender: 'Male',
+          membership_id: 'VB-PARENT-45',
+          start_date: '2026-01-01',
+          end_date: '2027-01-01',
+          blood_group: 'O+',
+          mobile: '9000000045',
+          profile_image: '/media/parent.jpg',
+          is_active: 'active',
+        },
+        family_members: [
+          {
+            relationship: 'daughter',
+            profile_image: '/media/wrapper_wrong.jpg',
+            member: {
+              id: 301,
+              member_name: 'Child Correct',
+              member_age: 14,
+              sex: 'Female',
+              member_membership_id: 'VB-CHILD-301',
+              membership_start_date: '2026-01-01',
+              membership_end_date: '2027-01-01',
+              blood_group: 'A+',
+              profile_photo: '/media/child_correct.jpg',
+              membership_status: 'active',
+            },
+          },
+        ],
+      }),
+    });
+
+    render(
+      <MemoryRouter>
+        <ProfileContent />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/VB-CHILD-301/i)).toBeInTheDocument();
+    });
+
+    const childImage = screen.getByAltText('Child Correct');
+    expect(childImage).toHaveAttribute(
+      'src',
+      expect.stringContaining('https://admin.vaidyabandhu.com/media/child_correct.jpg')
+    );
+  });
 });

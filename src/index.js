@@ -11,6 +11,7 @@ import '../node_modules/magnific-popup/dist/magnific-popup.css';
 import './assets/fonts/font-awesome.min.css';
 import './assets/fonts/flaticon/flaticon.css';
 import './assets/css/style.css';
+import './assets/css/premium-theme.css';
 import './index.css';
 
 const GA_MEASUREMENT_ID = process.env.REACT_APP_GA_MEASUREMENT_ID;

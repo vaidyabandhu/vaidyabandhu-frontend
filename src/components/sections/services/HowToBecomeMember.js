@@ -262,10 +262,9 @@ const HowToBecomeMember = () => {
           >
             <div style={stepNumberStyle}>1</div>
             <div style={stepContentStyle}>
-              <h3 style={stepTitleStyle}>Step 1: Fill out the Membership Form</h3>
+              <h3 style={stepTitleStyle}>Step 1:  Activate Your ₹49 Membership</h3>
               <p style={stepDescriptionStyle}>
-                Enter your name, address, phone number. PAN & Aadhaar are
-                optional.
+               Access our healthcare network and add your family in minutes.
               </p>
             </div>
           </div>
@@ -289,12 +288,9 @@ const HowToBecomeMember = () => {
           >
             <div style={stepNumberStyle}>2</div>
             <div style={stepContentStyle}>
-              <h3 style={stepTitleStyle}>Step 2: Make a One-Time Payment</h3>
+              <h3 style={stepTitleStyle}>Step 2: Get Support for Consultations & Hospital Care</h3>
               <p style={stepDescriptionStyle}>
-                Pay just{" "}
-                <strong style={{ color: "#007a7e" }}>&#8377;49</strong> to
-                activate your membership and access all benefits for a full year.
-                Renew it after a year.
+              We guide you to the right doctors, hospitals, and diagnostics based on your need.
               </p>
             </div>
           </div>
@@ -319,11 +315,10 @@ const HowToBecomeMember = () => {
             <div style={stepNumberStyle}>3</div>
             <div style={stepContentStyle}>
               <h3 style={stepTitleStyle}>
-                Step 3: Receive Your Membership Card
+                Step 3: Save on Surgeries & admissions + Receive cost savings
               </h3>
               <p style={stepDescriptionStyle}>
-                Your personalized membership card will be delivered directly to
-                your address, granting you access to all benefits.
+            Reduce your treatment costs and get money back on eligible treatments.
               </p>
             </div>
           </div>

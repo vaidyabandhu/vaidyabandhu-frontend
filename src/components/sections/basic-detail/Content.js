@@ -53,6 +53,13 @@ const RELATIONSHIP_CHOICES = [
 
 const MEMBERSHIP_PRICE = 49;
 const API_BASE_URL = "https://admin.vaidyabandhu.com";
+const RAZORPAY_DUMMY_EMAIL_DOMAIN = (
+  process.env.REACT_APP_RAZORPAY_DUMMY_EMAIL_DOMAIN ||
+  process.env.RAZORPAY_DUMMY_EMAIL_DOMAIN ||
+  "example.com"
+).trim().toLowerCase();
+const CHECKOUT_MOBILE_ERROR =
+  "Please update your registered 10-digit mobile number before continuing to payment.";
 
 const pickFirst = (...values) =>
   values.find((value) => value !== undefined && value !== null && value !== "") ?? "";
@@ -62,6 +69,28 @@ const pickArray = (...values) => {
     if (Array.isArray(value)) return value;
   }
   return [];
+};
+
+const IMAGE_FIELDS = ["profile_image", "profile_photo", "photo", "image"];
+const MEMBERSHIP_ID_FIELDS = [
+  "membership_id",
+  "member_membership_id",
+  "membership_number",
+  "membership_no",
+  "card_id",
+  "member_id",
+];
+
+const isPlainObject = (value) =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+const resolveEntityField = (sources = [], fields = []) => {
+  for (const source of sources) {
+    if (!isPlainObject(source)) continue;
+    const value = pickFirst(...fields.map((field) => source[field]));
+    if (value !== "") return value;
+  }
+  return "";
 };
 
 const getProfilePayload = (profile = {}) =>
@@ -80,6 +109,30 @@ const getPrimaryProfile = (profile = {}) => {
     ...payload,
     ...primary,
   };
+};
+
+const getPrimaryProfileImage = (profile = {}) => {
+  const payload = getProfilePayload(profile);
+  const primary =
+    payload?.primary_member && typeof payload.primary_member === "object"
+      ? payload.primary_member
+      : payload?.primaryMember && typeof payload.primaryMember === "object"
+        ? payload.primaryMember
+        : null;
+
+  if (!primary) {
+    return toAbsoluteMediaUrl(resolveEntityField([payload], IMAGE_FIELDS));
+  }
+
+  const primaryIdentity = resolveEntityField([primary], ["id", ...MEMBERSHIP_ID_FIELDS]);
+  const payloadIdentity = resolveEntityField([payload], ["id", ...MEMBERSHIP_ID_FIELDS]);
+  const canFallbackToPayloadImage =
+    !primaryIdentity ||
+    !payloadIdentity ||
+    String(primaryIdentity) === String(payloadIdentity);
+  const imageSources = canFallbackToPayloadImage ? [primary, payload] : [primary];
+
+  return toAbsoluteMediaUrl(resolveEntityField(imageSources, IMAGE_FIELDS));
 };
 
 const toAbsoluteMediaUrl = (url) => {
@@ -140,6 +193,102 @@ const toBool = (value) => {
   return false;
 };
 
+const digitsOnly = (value = "") => String(value || "").replace(/\D/g, "");
+
+const normalizeIndianMobileForRazorpay = (value = "") => {
+  const rawDigits = digitsOnly(value);
+  let mobileDigits = rawDigits;
+
+  if (mobileDigits.length === 12 && mobileDigits.startsWith("91")) {
+    mobileDigits = mobileDigits.slice(2);
+  } else if (mobileDigits.length === 11 && mobileDigits.startsWith("0")) {
+    mobileDigits = mobileDigits.slice(1);
+  }
+
+  if (!/^[6-9]\d{9}$/.test(mobileDigits)) {
+    return { contact: "", mobileDigits: "" };
+  }
+
+  return { contact: `+91${mobileDigits}`, mobileDigits };
+};
+
+const sanitizeEmail = (value = "") => String(value || "").trim().toLowerCase();
+
+const isValidEmail = (value = "") => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizeEmail(value));
+
+const sanitizeEmailLocalPart = (value = "") => {
+  const cleaned = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, "");
+
+  return cleaned.replace(/^[._-]+|[._-]+$/g, "");
+};
+
+const extractCheckoutProfile = (profile = {}) => {
+  const primaryProfile = getPrimaryProfile(profile);
+
+  return {
+    userId: pickFirst(
+      primaryProfile.id,
+      primaryProfile.user_id,
+      primaryProfile.userId,
+      primaryProfile.patient_id,
+      primaryProfile.member_id,
+      profile?.id,
+      profile?.user_id,
+      profile?.userId
+    ),
+    mobile: pickFirst(
+      primaryProfile.mobile,
+      primaryProfile.mobile_number,
+      primaryProfile.phone,
+      primaryProfile.phone_number,
+      primaryProfile.contact_number,
+      profile?.mobile,
+      profile?.mobile_number
+    ),
+    email: pickFirst(
+      primaryProfile.email,
+      primaryProfile.email_id,
+      profile?.email,
+      profile?.email_id
+    ),
+    fullName: pickFirst(
+      primaryProfile.full_name,
+      primaryProfile.name,
+      primaryProfile.patient_name,
+      profile?.full_name,
+      profile?.name
+    ),
+  };
+};
+
+const readStoredCheckoutProfile = () => {
+  try {
+    const stored = localStorage.getItem("userData");
+    if (!stored) return {};
+    return extractCheckoutProfile(JSON.parse(stored));
+  } catch (error) {
+    return {};
+  }
+};
+
+const buildDummyEmail = ({ userId, mobileDigits }) => {
+  if (userId) {
+    const userSeed = sanitizeEmailLocalPart(userId);
+    if (userSeed) {
+      return `rzp.user.${userSeed}@${RAZORPAY_DUMMY_EMAIL_DOMAIN}`;
+    }
+  }
+
+  if (mobileDigits) {
+    return `mobile.${mobileDigits}@${RAZORPAY_DUMMY_EMAIL_DOMAIN}`;
+  }
+
+  return `rzp.user.guest@${RAZORPAY_DUMMY_EMAIL_DOMAIN}`;
+};
+
 const isPaymentVerified = (payload) => {
   if (!payload || typeof payload !== "object") return true;
 
@@ -191,6 +340,7 @@ const VaidyaBandhuForm = () => {
     alternate_mobile: "",
     address: "",
     pin_code: "",
+    referral_code: "",
     photo: null,
   });
 
@@ -210,6 +360,12 @@ const VaidyaBandhuForm = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false); // New state for welcome modal
   const [apiProcessing, setApiProcessing] = useState(false);
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const [checkoutProfile, setCheckoutProfile] = useState({
+    userId: "",
+    mobile: "",
+    email: "",
+    fullName: "",
+  });
 
   // Payment state tracking
   const [hasPendingDraft, setHasPendingDraft] = useState(false);
@@ -302,8 +458,10 @@ const VaidyaBandhuForm = () => {
           const primaryProfile = getPrimaryProfile(data);
           const normalizedProfile = normalizeProfileForForm(primaryProfile);
           setFormData((prev) => ({ ...prev, ...normalizedProfile }));
-          if (primaryProfile.photo || primaryProfile.profile_image) {
-            setPhotoPreview(toAbsoluteMediaUrl(primaryProfile.photo || primaryProfile.profile_image));
+          setCheckoutProfile(extractCheckoutProfile(data));
+          const resolvedPrimaryImage = getPrimaryProfileImage(data);
+          if (resolvedPrimaryImage) {
+            setPhotoPreview(resolvedPrimaryImage);
           }
           // Check if user is already active (existing member)
           if (resolveProfileIsActive(data, false)) {
@@ -478,6 +636,7 @@ const VaidyaBandhuForm = () => {
         gender: "",
         blood_group: "",
         relationship: "",
+        referral_code: "",
         profile_image: null,
         imagePreview: null,
       },
@@ -776,6 +935,7 @@ const VaidyaBandhuForm = () => {
       pin_code: "",
       aadhaar_number: "",
       pan_number: "",
+      referral_code: "",
       photo: null,
     });
     setFamilyMembers([]);
@@ -877,6 +1037,44 @@ const VaidyaBandhuForm = () => {
         throw new Error("Payment SDK failed to load");
       }
 
+      const storedCheckoutProfile = readStoredCheckoutProfile();
+      const rawMobile = pickFirst(
+        checkoutProfile.mobile,
+        storedCheckoutProfile.mobile,
+        formData.mobile,
+        formData.mobile_number
+      );
+      const { contact: checkoutContact, mobileDigits } = normalizeIndianMobileForRazorpay(rawMobile);
+
+      if (!checkoutContact) {
+        setErrors((prev) => ({
+          ...prev,
+          mobile_number: CHECKOUT_MOBILE_ERROR,
+        }));
+        throw new Error(CHECKOUT_MOBILE_ERROR);
+      }
+
+      const resolvedUserId = pickFirst(checkoutProfile.userId, storedCheckoutProfile.userId);
+      const realEmail = sanitizeEmail(
+        pickFirst(checkoutProfile.email, storedCheckoutProfile.email)
+      );
+      const checkoutEmail = isValidEmail(realEmail)
+        ? realEmail
+        : buildDummyEmail({ userId: resolvedUserId, mobileDigits });
+      const checkoutName = pickFirst(
+        checkoutProfile.fullName,
+        storedCheckoutProfile.fullName,
+        formData.full_name
+      );
+
+      if (process.env.NODE_ENV !== "production") {
+        console.debug("[Razorpay] Prepared checkout prefill", {
+          hasRealEmail: isValidEmail(realEmail),
+          contactEnding: checkoutContact.slice(-4),
+          emailDomain: checkoutEmail.split("@")[1],
+        });
+      }
+
       /* ---------- 3. OPEN PAYMENT ---------- */
       const options = {
         key: orderData.razorpay_key,
@@ -885,6 +1083,15 @@ const VaidyaBandhuForm = () => {
         name: "VaidyaBandhu Membership",
         description: `Membership Payment (${subscriptionCount} ${subscriptionCount === 1 ? 'member' : 'members'})`,
         order_id: orderData.order_id,
+        prefill: {
+          name: checkoutName,
+          contact: checkoutContact,
+          email: checkoutEmail,
+        },
+        readonly: {
+          contact: true,
+          email: true,
+        },
 
         handler: async function (rpResponse) {
           try {
@@ -946,6 +1153,9 @@ const VaidyaBandhuForm = () => {
                 mobile: resolvedMobile,
                 mobile_number: resolvedMobile,
                 alternate_number: resolvedAlternate || "",
+                ...(formData.referral_code?.trim()
+                  ? { referral_code: formData.referral_code.trim() }
+                  : {}),
               };
 
               console.log("Profile data being sent:", profileData);
@@ -963,6 +1173,7 @@ const VaidyaBandhuForm = () => {
                   gender: m.gender,
                   relationship: m.relationship,
                   blood_group: m.blood_group || "",
+                  ...(m.referral_code?.trim() ? { referral_code: m.referral_code.trim() } : {}),
                 }));
                 console.log("Family members data:", membersData);
                 formDataToSend.append("family_members", JSON.stringify(membersData));
@@ -1626,6 +1837,29 @@ const VaidyaBandhuForm = () => {
                           </Form.Group>
                         </Col>
                       </Row>
+
+                      <Row>
+                        <Col>
+                          <Form.Group controlId="formReferralCode" className="mb-3">
+                            <Form.Label>
+                              Referral Code <span style={{ color: "#6c757d", fontWeight: 400, fontSize: "0.85em" }}>(Optional)</span>
+                            </Form.Label>
+                            <Form.Control
+                              type="text"
+                              name="referral_code"
+                              value={formData.referral_code}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  referral_code: e.target.value.toUpperCase(),
+                                }))
+                              }
+                              placeholder="Enter referral code if you have one"
+                              maxLength="20"
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
                     </>
                   )}
 
@@ -2001,6 +2235,27 @@ const VaidyaBandhuForm = () => {
                                     {errors[`member_${member.id}_photo`]}
                                   </div>
                                 )}
+                              </Form.Group>
+                            </Col>
+                          </Row>
+
+                          <Row>
+                            <Col md={6}>
+                              <Form.Group className="mb-0">
+                                <Form.Label style={{ fontWeight: "500", color: "#333" }}>
+                                  Referral Code{" "}
+                                  <span style={{ color: "#6c757d", fontWeight: 400, fontSize: "0.85em" }}>(Optional)</span>
+                                </Form.Label>
+                                <Form.Control
+                                  type="text"
+                                  value={member.referral_code}
+                                  onChange={(e) =>
+                                    updateFamilyMember(member.id, "referral_code", e.target.value.toUpperCase())
+                                  }
+                                  placeholder="Enter referral code if you have one"
+                                  maxLength="20"
+                                  style={{ borderRadius: "8px", padding: "10px 14px" }}
+                                />
                               </Form.Group>
                             </Col>
                           </Row>

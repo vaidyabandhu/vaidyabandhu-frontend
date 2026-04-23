@@ -1,82 +1,102 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { useLocation } from "react-router-dom";
-import { isNotEmptyArray } from "../../utiles/utils";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { useFetch } from "../../hooks/usefetch";
 
-// Responsive filter sidebar for mobile + desktop
-function FilterSidebar({
-  filtersContent,
-  showMobileFilters,
-  setShowMobileFilters,
-}) {
-  return (
-    <>
-      {/* Mobile overlay */}
-      {showMobileFilters && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100"
-          style={{ zIndex: 1040, background: "rgba(0,0,0,0.3)" }}
-          onClick={() => setShowMobileFilters(false)}
-        />
-      )}
-      {/* Mobile drawer */}
-      <div
-        className="card shadow-sm d-md-none"
-        style={{
-          position: "fixed",
-          left: showMobileFilters ? 0 : "-100vw",
-          top: 0,
-          height: "100vh",
-          maxWidth: "90vw",
-          width: "320px",
-          transition: "left 0.3s",
-          background: "#fff",
-          zIndex: 1050,
-          padding: "16px 10px",
-          overflowY: "auto",
-        }}
-      >
-        <button
-          type="button"
-          aria-label="Close"
-          className="btn btn-link"
-          style={{
-            position: "absolute",
-            right: 10,
-            top: 10,
-            fontSize: 22,
-            color: "#444",
-            zIndex: 10,
-          }}
-          onClick={() => setShowMobileFilters(false)}
-        >
-          ×
-        </button>
-        <div className="card-body pt-4">{filtersContent}</div>
-      </div>
-      {/* Desktop sidebar */}
-      <div className="d-none d-md-block">
-        <div className="card shadow-sm">
-          <div className="card-body">{filtersContent}</div>
-        </div>
-      </div>
-    </>
-  );
-}
+const availabilityOptions = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+const ratingOptions = [
+  { value: "5", label: "5 Stars" },
+  { value: "4", label: "4+ Stars" },
+  { value: "3", label: "3+ Stars" },
+  { value: "2", label: "2+ Stars" },
+  { value: "1", label: "1+ Stars" },
+];
+
+const genderOptions = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "Nopreference", label: "No preference" },
+];
+
+const normalizeDoctorSearch = (value = "") =>
+  value
+    .trim()
+    .replace(/^dr\.?\s*/i, "")
+    .replace(/\s+/g, " ");
+
+const getHospitalDisplayImage = (hospital = {}) =>
+  hospital?.image ||
+  hospital?.photo ||
+  hospital?.hospital_image ||
+  hospital?.hospital_photo ||
+  hospital?.thumbnail ||
+  hospital?.logo ||
+  "/assets/img/default-img.jpg";
+
+const getHospitalDisplayAddress = (hospital = {}) =>
+  [
+    hospital?.address,
+    hospital?.address_1,
+    hospital?.address_2,
+    hospital?.area,
+    hospital?.local_area,
+    hospital?.locality,
+    hospital?.neighborhood,
+    hospital?.location,
+    hospital?.area_name,
+    hospital?.place,
+    hospital?.region,
+    hospital?.city,
+    hospital?.city_name,
+    hospital?.district,
+    hospital?.state,
+    hospital?.pincode,
+  ]
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .filter(
+      (item, index, collection) =>
+        collection.findIndex(
+          (candidate) => candidate.toLowerCase() === item.toLowerCase()
+        ) === index
+    )
+    .join(", ");
+
+const getHospitalContact = (hospital = {}) =>
+  hospital?.contact_number ||
+  hospital?.phone_number ||
+  hospital?.phone ||
+  hospital?.mobile ||
+  hospital?.contact ||
+  "";
 
 const Content = () => {
-  const [locations, setLocations] = useState([]);
-  const [page, setPage] = useState(1);
-  const [itemPerpage] = useState(15); // match doctor-grid
-  const { search } = useLocation();
-  const params = new URLSearchParams(search);
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
   const specialtyParam = params.get("specialty");
-  const id = params.get("id");
+  const hospitalId = params.get("id");
 
-  // Filters
+  const itemPerPage = 15;
+
+  const [page, setPage] = useState(1);
+  const [doctors, setDoctors] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  const [specialtySearchTerm, setSpecialtySearchTerm] = useState("");
+  const [locationSearchTerm, setLocationSearchTerm] = useState("");
+  const [hospitalName, setHospitalName] = useState("");
+
   const [selectedSpecialties, setSelectedSpecialties] = useState(
     specialtyParam ? [Number(specialtyParam)] : []
   );
@@ -85,104 +105,79 @@ const Content = () => {
   const [selectedRating, setSelectedRating] = useState("");
   const [selectedGender, setSelectedGender] = useState("");
   const [sortBy, setSortBy] = useState("");
+
+  const [locations, setLocations] = useState([]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [specialtySearchTerm, setSpecialtySearchTerm] = useState("");
-  const [locationSearchTerm, setLocationSearchTerm] = useState("");
-  const [hospitalName, setHospitalName] = useState("");
-  const [isMobile, setIsMobile] = useState(false);
 
-  console.log({ selectedGender, selectedRating });
+  const loadMoreRef = useRef(null);
+  const requestingPageRef = useRef(false);
 
-  // Static options
-  const availabilityOptions = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
-  const ratingOptions = [
-    { value: "5", label: "5 Stars" },
-    { value: "4", label: "4+ Stars" },
-    { value: "3", label: "3+ Stars" },
-    { value: "2", label: "2+ Stars" },
-    { value: "1", label: "1+ Stars" },
-  ];
-  const genderOptions = [
-    { value: "male", label: "Male" },
-    { value: "female", label: "Female" },
-    { value: "Nopreference", label: "No preference" },
-  ];
-
-  // Check if mobile view
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 400);
 
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Scroll to top when page changes
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [page]);
-
-  // Debounce search
-  useEffect(() => {
-    const timeoutId = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  // 🔑 CRITICAL FIX: Reset page to 1 whenever any filter or search changes
+  const normalizedDoctorSearch = useMemo(
+    () => normalizeDoctorSearch(debouncedSearchTerm),
+    [debouncedSearchTerm]
+  );
+
+  const filterResetKey = useMemo(
+    () =>
+      JSON.stringify({
+        search: normalizedDoctorSearch,
+        selectedSpecialties,
+        selectedLocations,
+        selectedAvailability,
+        selectedRating,
+        selectedGender,
+        sortBy,
+        hospitalName,
+        hospitalId,
+      }),
+    [
+      normalizedDoctorSearch,
+      selectedSpecialties,
+      selectedLocations,
+      selectedAvailability,
+      selectedRating,
+      selectedGender,
+      sortBy,
+      hospitalName,
+      hospitalId,
+    ]
+  );
+
   useEffect(() => {
     setPage(1);
-  }, [
-    debouncedSearchTerm,
-    selectedSpecialties,
-    selectedLocations,
-    selectedAvailability,
-    selectedRating,
-    selectedGender,
-    sortBy,
-    hospitalName,
-  ]);
+    setHasMore(true);
+    setInitialLoadDone(false);
+    requestingPageRef.current = false;
+  }, [filterResetKey]);
 
-  // Fetch specialties
-  const {
-    data: specialtiesData,
-    loading: specialtiesLoading,
-    error: specialtiesError,
-  } = useFetch({ method: "GET", request: "specialty/" });
+  const { data: specialtiesData } = useFetch({
+    method: "GET",
+    request: "specialty/",
+  });
 
-  // Fetch cities using the new API
-  const token = localStorage.getItem("token");
-  const {
-    data: citiesData,
-    loading: citiesLoading,
-    error: citiesError,
-  } = useFetch({
+  const { data: citiesData, error: citiesError } = useFetch({
     method: "GET",
     request: "https://admin.vaidyabandhu.com/api/city/",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token,
-    },
   });
 
   useEffect(() => {
-    if (citiesData && citiesData.data) {
-      const transformedCities = citiesData.data.map(city => ({
+    if (citiesData?.data) {
+      const transformed = citiesData.data.map((city) => ({
         id: city.id,
-        name: city.city_name 
+        name: city.city_name,
       }));
-      setLocations(transformedCities);
+      setLocations(transformed);
+      return;
     }
+
     if (citiesError) {
       setLocations([
         { id: "Delhi", name: "Delhi" },
@@ -194,72 +189,149 @@ const Content = () => {
     }
   }, [citiesData, citiesError]);
 
-  // Fetch doctors
   const {
     data,
-    loading: loader,
+    loading,
     error,
     refetch,
   } = useFetch({
     method: "GET",
     request: "https://admin.vaidyabandhu.com/api/doctors",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token,
-    },
     params: {
-      search: debouncedSearchTerm.trim(),
+      search: normalizedDoctorSearch,
       specialties: selectedSpecialties.join(","),
       city: selectedLocations.join(","),
       availability: selectedAvailability.join(","),
       rating: selectedRating,
       gender: selectedGender,
       sort: sortBy,
-      page_count: itemPerpage,
-      page: page,
-      hospital_ids: id,
+      page_count: itemPerPage,
+      page,
+      hospital_ids: hospitalId,
       name: hospitalName,
     },
   });
 
-  console.log({ loader, data }, "test");
+  useEffect(() => {
+    if (!data || !Array.isArray(data.data)) {
+      if (page > 1 && data) {
+        setHasMore(false);
+        requestingPageRef.current = false;
+      }
+      return;
+    }
 
-  // Filter Handlers
-  const handlePageChange = (pageNumber) => setPage(pageNumber);
-  const handleSearchChange = (e) => setSearchTerm(e.target.value);
-  const clearSearch = () => setSearchTerm("");
-  const handleSpecialtyChange = (specialtyId) => {
-    setSelectedSpecialties((prev) =>
-      prev.includes(specialtyId)
-        ? prev.filter((id) => id !== specialtyId)
-        : [...prev, specialtyId]
+    const incoming = data.data;
+
+    if (page > 1 && incoming.length === 0) {
+      setHasMore(false);
+      setInitialLoadDone(true);
+      requestingPageRef.current = false;
+      return;
+    }
+
+    setDoctors((previous) => {
+      const merged =
+        page === 1
+          ? incoming
+          : [
+              ...previous,
+              ...incoming.filter(
+                (doctor) => !previous.some((item) => item.id === doctor.id)
+              ),
+            ];
+
+      const totalCount = Number(data?.pagination_data?.total_count || 0);
+      const canLoadMore = totalCount
+        ? merged.length < totalCount
+        : incoming.length === itemPerPage;
+
+      setHasMore(canLoadMore);
+      return merged;
+    });
+
+    setInitialLoadDone(true);
+    requestingPageRef.current = false;
+  }, [data, itemPerPage, page]);
+
+  useEffect(() => {
+    if (!loading) {
+      requestingPageRef.current = false;
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    if (!loadMoreRef.current || !initialLoadDone || !hasMore || loading || error) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+
+        if (!entry?.isIntersecting || requestingPageRef.current) {
+          return;
+        }
+
+        requestingPageRef.current = true;
+        setPage((previous) => previous + 1);
+      },
+      { rootMargin: "240px 0px" }
     );
-  };
-  const handleLocationChange = (locationId) => {
-    setSelectedLocations((prev) =>
-      prev.includes(locationId)
-        ? prev.filter((id) => id !== locationId)
-        : [...prev, locationId]
-    );
-  };
-  const handleAvailabilityChange = (day) => {
-    setSelectedAvailability((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    );
-  };
-  const handleHospitalNameChange = (e) => setHospitalName(e.target.value);
-  const handleReset = () => {
-    setSearchTerm("");
-    setSelectedSpecialties([]);
-    setSelectedLocations([]);
-    setSelectedAvailability([]);
-    setSelectedRating("");
-    setSelectedGender("");
-    setSortBy("");
-    setSpecialtySearchTerm("");
-    setLocationSearchTerm("");
-    setHospitalName("");
-  };
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [error, hasMore, initialLoadDone, loading]);
+
+  const filteredSpecialties = useMemo(
+    () =>
+      specialtiesData?.data?.filter(
+        (specialty) =>
+          specialty.title &&
+          specialty.title
+            .toLowerCase()
+            .includes(specialtySearchTerm.toLowerCase().trim())
+      ) || [],
+    [specialtiesData?.data, specialtySearchTerm]
+  );
+
+  const filteredLocations = useMemo(
+    () =>
+      locations.filter(
+        (location) =>
+          location.name &&
+          location.name.toLowerCase().includes(locationSearchTerm.toLowerCase().trim())
+      ),
+    [locationSearchTerm, locations]
+  );
+
+  const hospitalDetails = useMemo(() => {
+    const routeHospital =
+      location?.state?.hospital &&
+      (!hospitalId || String(location.state.hospital.id) === String(hospitalId))
+        ? location.state.hospital
+        : null;
+
+    if (routeHospital) {
+      return routeHospital;
+    }
+
+    const matchedHospital = doctors
+      .flatMap((doctor) => (Array.isArray(doctor?.hospital) ? doctor.hospital : []))
+      .find((hospital) => String(hospital?.id) === String(hospitalId));
+
+    return matchedHospital || null;
+  }, [doctors, hospitalId, location?.state?.hospital]);
+
+  const hospitalAddress = useMemo(
+    () => getHospitalDisplayAddress(hospitalDetails || {}),
+    [hospitalDetails]
+  );
+
+  const hospitalPhone = useMemo(
+    () => getHospitalContact(hospitalDetails || {}),
+    [hospitalDetails]
+  );
 
   const hasActiveFilters =
     searchTerm ||
@@ -271,55 +343,41 @@ const Content = () => {
     sortBy ||
     hospitalName;
 
-  // Filtered lists
-  const filteredSpecialties = specialtiesData?.data?.filter((specialty) =>
-    specialty.title && specialty.title.toLowerCase().includes(specialtySearchTerm.toLowerCase())
-  ) || [];
-
-  const filteredLocations = locations.filter((location) =>
-    location.name && location.name.toLowerCase().includes(locationSearchTerm.toLowerCase())
-  );
-
-  // Filter chips
   const getActiveFilters = () => {
     const filters = [];
-    if (selectedSpecialties.length > 0) {
-      selectedSpecialties.forEach((id) => {
-        const specialty = specialtiesData?.data?.find((s) => s.id === id);
-        if (specialty)
-          filters.push({ type: "specialty", id, label: specialty.title });
-      });
-    }
-    if (selectedLocations.length > 0) {
-      selectedLocations.forEach((id) => {
-        const location = locations.find((l) => l.id === id);
-        if (location)
-          filters.push({ type: "location", id, label: location.name });
-      });
-    }
-    if (selectedAvailability.length > 0) {
-      selectedAvailability.forEach((day) =>
-        filters.push({ type: "availability", id: day, label: day })
-      );
-    }
+
+    selectedSpecialties.forEach((id) => {
+      const specialty = specialtiesData?.data?.find((item) => item.id === id);
+      if (specialty) {
+        filters.push({ type: "specialty", id, label: specialty.title });
+      }
+    });
+
+    selectedLocations.forEach((id) => {
+      const location = locations.find((item) => item.id === id);
+      if (location) {
+        filters.push({ type: "location", id, label: location.name });
+      }
+    });
+
+    selectedAvailability.forEach((day) => {
+      filters.push({ type: "availability", id: day, label: day });
+    });
+
     if (selectedRating) {
-      const rating = ratingOptions.find((r) => r.value === selectedRating);
-      if (rating)
-        filters.push({
-          type: "rating",
-          id: selectedRating,
-          label: rating.label,
-        });
+      const rating = ratingOptions.find((item) => item.value === selectedRating);
+      if (rating) {
+        filters.push({ type: "rating", id: selectedRating, label: rating.label });
+      }
     }
+
     if (selectedGender) {
-      const gender = genderOptions.find((g) => g.value === selectedGender);
-      if (gender)
-        filters.push({
-          type: "gender",
-          id: selectedGender,
-          label: gender.label,
-        });
+      const gender = genderOptions.find((item) => item.value === selectedGender);
+      if (gender) {
+        filters.push({ type: "gender", id: selectedGender, label: gender.label });
+      }
     }
+
     if (hospitalName) {
       filters.push({
         type: "hospital_name",
@@ -327,20 +385,67 @@ const Content = () => {
         label: `Hospital: ${hospitalName}`,
       });
     }
+
     return filters;
+  };
+
+  const activeFilters = getActiveFilters();
+
+  const clearSearch = () => setSearchTerm("");
+
+  const handleSpecialtyChange = (specialtyId) => {
+    setSelectedSpecialties((previous) =>
+      previous.includes(specialtyId)
+        ? previous.filter((id) => id !== specialtyId)
+        : [...previous, specialtyId]
+    );
+  };
+
+  const handleLocationChange = (locationId) => {
+    setSelectedLocations((previous) =>
+      previous.includes(locationId)
+        ? previous.filter((id) => id !== locationId)
+        : [...previous, locationId]
+    );
+  };
+
+  const handleAvailabilityChange = (day) => {
+    setSelectedAvailability((previous) =>
+      previous.includes(day)
+        ? previous.filter((item) => item !== day)
+        : [...previous, day]
+    );
+  };
+
+  const handleReset = () => {
+    setSearchTerm("");
+    setDebouncedSearchTerm("");
+    setSelectedSpecialties([]);
+    setSelectedLocations([]);
+    setSelectedAvailability([]);
+    setSelectedRating("");
+    setSelectedGender("");
+    setSortBy("");
+    setSpecialtySearchTerm("");
+    setLocationSearchTerm("");
+    setHospitalName("");
   };
 
   const removeFilter = (filterType, filterId) => {
     switch (filterType) {
       case "specialty":
-        setSelectedSpecialties((prev) => prev.filter((id) => id !== filterId));
+        setSelectedSpecialties((previous) =>
+          previous.filter((id) => id !== filterId)
+        );
         break;
       case "location":
-        setSelectedLocations((prev) => prev.filter((id) => id !== filterId));
+        setSelectedLocations((previous) =>
+          previous.filter((id) => id !== filterId)
+        );
         break;
       case "availability":
-        setSelectedAvailability((prev) =>
-          prev.filter((day) => day !== filterId)
+        setSelectedAvailability((previous) =>
+          previous.filter((item) => item !== filterId)
         );
         break;
       case "rating":
@@ -357,565 +462,423 @@ const Content = () => {
     }
   };
 
-  const activeFilters = getActiveFilters();
-
-  // Filters sidebar content
   const filtersContent = (
     <>
-      {/* Specialities */}
-      <div className="mb-4">
-        <h6 className="font-weight-bold mb-3">Specialities</h6>
-        <div className="form-group">
-          <div className="position-relative">
-            <input
-              type="text"
-              className="form-control form-control-sm mb-3"
-              placeholder="Search Speciality"
-              value={specialtySearchTerm}
-              onChange={(e) => setSpecialtySearchTerm(e.target.value)}
-              style={{ paddingRight: specialtySearchTerm ? "35px" : "12px" }}
-            />
-            {specialtySearchTerm && (
-              <button
-                onClick={() => setSpecialtySearchTerm("")}
-                className="btn btn-link p-0"
-                style={{
-                  position: "absolute",
-                  right: "8px",
-                  top: "20px",
-                  fontSize: "18px",
-                  color: "#FFF",
-                  textDecoration: "none",
-                  lineHeight: "1",
-                  width: "20px",
-                  height: "20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  zIndex: 10,
-                }}
-              >
-                ×
-              </button>
-            )}
-          </div>
-        </div>
-        <div style={{ maxHeight: "200px", overflowY: "auto" }}>
-          {filteredSpecialties.length === 0 ? (
-            <p className="text-muted small">No specialties found</p>
-          ) : (
+      <div className="vb-filter-group">
+        <h4>Specialities</h4>
+        <input
+          type="text"
+          className="vb-filter-input"
+          placeholder="Search speciality"
+          value={specialtySearchTerm}
+          onChange={(event) => setSpecialtySearchTerm(event.target.value)}
+        />
+        <div className="vb-check-list" style={{ marginTop: "0.5rem" }}>
+          {filteredSpecialties.length > 0 ? (
             filteredSpecialties.map((specialty) => (
-              <div key={specialty.id} className="form-check mb-2">
+              <label className="vb-check-item" key={specialty.id}>
                 <input
-                  className="form-check-input"
                   type="checkbox"
-                  id={`specialty-${specialty.id}`}
                   checked={selectedSpecialties.includes(specialty.id)}
                   onChange={() => handleSpecialtyChange(specialty.id)}
                 />
-                <label
-                  className="form-check-label small"
-                  htmlFor={`specialty-${specialty.id}`}
-                >
-                  {specialty.title}
-                </label>
-              </div>
+                <span>{specialty.title}</span>
+              </label>
             ))
+          ) : (
+            <p className="vb-mini" style={{ margin: 0 }}>
+              No specialities found.
+            </p>
           )}
         </div>
       </div>
 
-      {/* Location */}
-      <div className="mb-4">
-        <h6 className="font-weight-bold mb-3">City</h6>
-        <div className="form-group">
-          <div className="position-relative">
-            <input
-              type="text"
-              className="form-control form-control-sm mb-3"
-              placeholder="Search Cities"
-              value={locationSearchTerm}
-              onChange={(e) => setLocationSearchTerm(e.target.value)}
-              style={{ paddingRight: locationSearchTerm ? "35px" : "12px" }}
-            />
-            {locationSearchTerm && (
-              <button
-                onClick={() => setLocationSearchTerm("")}
-                className="btn btn-link p-0"
-                style={{
-                  position: "absolute",
-                  right: "8px",
-                  top: "20px",
-                  fontSize: "18px",
-                  color: "#6c757d",
-                  textDecoration: "none",
-                  lineHeight: "1",
-                  width: "20px",
-                  height: "20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  zIndex: 10,
-                }}
-              >
-                ×
-              </button>
-            )}
-          </div>
-        </div>
-        <div style={{ maxHeight: "200px", overflowY: "auto" }}>
-          {filteredLocations.length === 0 ? (
-            <p className="text-muted small">No locations found</p>
-          ) : (
+      <div className="vb-filter-group">
+        <h4>City</h4>
+        <input
+          type="text"
+          className="vb-filter-input"
+          placeholder="Search city"
+          value={locationSearchTerm}
+          onChange={(event) => setLocationSearchTerm(event.target.value)}
+        />
+        <div className="vb-check-list" style={{ marginTop: "0.5rem" }}>
+          {filteredLocations.length > 0 ? (
             filteredLocations.map((location) => (
-              <div key={location.id} className="form-check mb-2">
+              <label className="vb-check-item" key={location.id}>
                 <input
-                  className="form-check-input"
                   type="checkbox"
-                  id={`location-${location.id}`}
                   checked={selectedLocations.includes(location.id)}
                   onChange={() => handleLocationChange(location.id)}
                 />
-                <label
-                  className="form-check-label small"
-                  htmlFor={`location-${location.id}`}
-                >
-                  {location.name}
-                </label>
-              </div>
+                <span>{location.name}</span>
+              </label>
             ))
+          ) : (
+            <p className="vb-mini" style={{ margin: 0 }}>
+              No cities found.
+            </p>
           )}
         </div>
       </div>
 
-      {/* Availability */}
-      <div className="mb-4">
-        <h6 className="font-weight-bold mb-3">Availability</h6>
-        <div className="row">
+      <div className="vb-filter-group">
+        <h4>Availability</h4>
+        <div className="vb-check-list">
           {availabilityOptions.map((day) => (
-            <div key={day} className="col-6 mb-2">
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id={`day-${day}`}
-                  checked={selectedAvailability.includes(day)}
-                  onChange={() => handleAvailabilityChange(day)}
-                />
-                <label
-                  className="form-check-label small"
-                  htmlFor={`day-${day}`}
-                >
-                  {day.slice(0, 3)}
-                </label>
-              </div>
-            </div>
+            <label className="vb-check-item" key={day}>
+              <input
+                type="checkbox"
+                checked={selectedAvailability.includes(day)}
+                onChange={() => handleAvailabilityChange(day)}
+              />
+              <span>{day}</span>
+            </label>
           ))}
         </div>
+      </div>
+
+      <div className="vb-filter-group">
+        <h4>Rating</h4>
+        <select
+          className="vb-filter-input"
+          value={selectedRating}
+          onChange={(event) => setSelectedRating(event.target.value)}
+        >
+          <option value="">Any rating</option>
+          {ratingOptions.map((rating) => (
+            <option key={rating.value} value={rating.value}>
+              {rating.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="vb-filter-group">
+        <h4>Gender</h4>
+        <select
+          className="vb-filter-input"
+          value={selectedGender}
+          onChange={(event) => setSelectedGender(event.target.value)}
+        >
+          <option value="">Any gender</option>
+          {genderOptions.map((gender) => (
+            <option key={gender.value} value={gender.value}>
+              {gender.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="vb-filter-group">
+        <h4>Hospital Name</h4>
+        <input
+          type="text"
+          className="vb-filter-input"
+          placeholder="Type hospital name"
+          value={hospitalName}
+          onChange={(event) => setHospitalName(event.target.value)}
+        />
+      </div>
+
+      <div className="vb-filter-actions">
+        <button
+          type="button"
+          className="vb-btn vb-btn-secondary"
+          onClick={handleReset}
+        >
+          Reset
+        </button>
+        <button
+          type="button"
+          className="vb-btn vb-btn-primary"
+          onClick={() => setShowMobileFilters(false)}
+        >
+          Apply
+        </button>
       </div>
     </>
   );
 
   return (
-    <div className="sidebar-style-9 container-bg" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div className="section section-padding" style={{ flex: '1 0 auto' }}>
-        <div className="container-fluid">
-          {/* Top Search Bar - Centered */}
-          <div className="row mb-4 justify-content-center">
-            <div className="col-lg-6 col-md-8 col-sm-12 d-flex justify-content-center">
-              <div className="search-container">
-                <div
-                  className="search-wrapper d-flex align-items-center"
-                  style={{
-                    background: "#f8f9fa",
-                    borderRadius: "50px",
-                    padding: "0px 23px",
-                    border: "1px solid #e9ecef",
-                    width: "130%",
-                    maxWidth: "500px",
-                    position: "relative",
-                  }}
-                >
-                  <input
-                    type="text"
-                    placeholder={isMobile ? "Search Doctors & Specialities..." : "Search for Doctors & Specialities...."}
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    className="form-control border-0 bg-transparent"
-                    style={{
-                      fontSize: "16px",
-                      padding: "12px 40px",
-                      paddingRight: searchTerm ? "50px" : "40px",
-                      outline: "none",
-                      boxShadow: "none",
-                      marginBottom: "0px",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                    }}
-                  />
-                  {searchTerm && (
-                    <button
-                      onClick={clearSearch}
-                      className="btn btn-link p-0"
-                      style={{
-                        position: "absolute",
-                        right: "20px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        fontSize: "20px",
-                        color: "rgb(244 250 255)",
-                        textDecoration: "none",
-                        width: "24px",
-                        height: "24px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        lineHeight: "1",
-                        zIndex: 10,
-                      }}
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Filter Chips Section */}
-          <div className="row mb-4">
-            <div className="col-12">
-              <div className="filter-section">
-                <div className="d-flex flex-wrap align-items-center justify-content-between">
-                  <div className="d-flex flex-wrap align-items-center">
-                    <div className="d-flex flex-wrap align-items-center mb-2">
-                      <h5
-                        className="mb-0 me-3"
-                        style={{ fontSize: "16px", fontWeight: "600" }}
-                      >
-                        Filters
-                      </h5>
-                      {/* Mobile filter toggle */}
-                      <button
-                        className="btn me-2 btn-primary flex-fill d-flex align-items-center justify-content-center gap-2 ms-2 d-md-none"
-                        onClick={() => setShowMobileFilters(!showMobileFilters)}
-                        style={{ borderRadius: "12px" }}
-                      >
-                        <i
-                          className="fas fa-filter"
-                          style={{ fontSize: "16px", color: "#fff" }}
-                        ></i>
-                        Filters
-                        {hasActiveFilters && (
-                          <span className="badge bg-light text-primary rounded-pill">
-                            {selectedSpecialties.length +
-                              selectedLocations.length +
-                              selectedAvailability.length +
-                              (selectedRating ? 1 : 0) +
-                              (selectedGender ? 1 : 0) +
-                              (hospitalName ? 1 : 0)}
-                          </span>
-                        )}
-                      </button>
-                      {hasActiveFilters && (
-                        <button
-                          className="btn btn-outline-secondary btn-sm me-2"
-                          onClick={handleReset}
-                          style={{
-                            borderRadius: "20px",
-                            padding: "5px 15px",
-                            fontSize: "12px",
-                            fontWeight: "500",
-                            color: "#FFF",
-                          }}
-                        >
-                          RESET
-                        </button>
-                      )}
-                    </div>
-                    <div className="filter-chips-container d-flex flex-wrap">
-                      {activeFilters.map((filter, index) => (
-                        <span
-                          key={index}
-                          className="badge badge-light d-flex align-items-center me-2 mb-2"
-                          style={{
-                            backgroundColor: "#f8f9fa",
-                            border: "1px solid #dee2e6",
-                            borderRadius: "15px",
-                            padding: "6px 12px",
-                            fontSize: "12px",
-                            fontWeight: "500",
-                            color: "#495057",
-                          }}
-                        >
-                          {filter.label}
-                          <button
-                            className="btn btn-link p-0 ms-2"
-                            onClick={() => removeFilter(filter.type, filter.id)}
-                            style={{
-                              fontSize: "14px",
-                              color: "#FFF",
-                              textDecoration: "none",
-                              lineHeight: "1",
-                            }}
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="row">
-            {/* Filters Sidebar */}
-            <div className="col-lg-3 col-md-4 mb-4">
-              <FilterSidebar
-                filtersContent={filtersContent}
-                showMobileFilters={showMobileFilters}
-                setShowMobileFilters={setShowMobileFilters}
+    <section className="vb-list-page">
+      <div className="vb-list-shell">
+        {hospitalDetails && (
+          <section className="vb-hospital-hero-card" aria-label="Selected hospital details">
+            <div className="vb-hospital-hero-media">
+              <img
+                src={getHospitalDisplayImage(hospitalDetails)}
+                alt={hospitalDetails?.name || "Hospital"}
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = "/assets/img/default-img.jpg";
+                }}
               />
             </div>
 
-            {/* Doctor List */}
-            <div className="col-lg-9 col-md-8">
-              {error ? (
-                <div className="alert alert-danger text-center">
-                  <h5>Error</h5>
-                  <p>{error}</p>
-                  <button className="btn btn-primary mt-2" onClick={refetch}>
-                    Try Again
+            <div className="vb-hospital-hero-body">
+              <span className="vb-pill">Selected Hospital</span>
+              <h2 className="vb-hospital-hero-title">
+                {hospitalDetails?.name || "Hospital"}
+              </h2>
+
+              {hospitalAddress && (
+                <p className="vb-hospital-hero-address">
+                  <i className="fal fa-map-marker-alt" aria-hidden="true" />
+                  <span>{hospitalAddress}</span>
+                </p>
+              )}
+
+              <div className="vb-hospital-hero-meta">
+                {hospitalPhone && (
+                  <span>
+                    <i className="fal fa-phone-alt" aria-hidden="true" />
+                    <span>{hospitalPhone}</span>
+                  </span>
+                )}
+
+                {(hospitalDetails?.city || hospitalDetails?.city_name) && (
+                  <span>
+                    <i className="fal fa-city" aria-hidden="true" />
+                    <span>{hospitalDetails?.city || hospitalDetails?.city_name}</span>
+                  </span>
+                )}
+
+                <span>
+                  <i className="fal fa-user-md" aria-hidden="true" />
+                  <span>
+                    {doctors.length} doctor{doctors.length === 1 ? "" : "s"} available
+                  </span>
+                </span>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <div className="vb-list-search">
+          <i className="fas fa-search" />
+          <input
+            type="text"
+            placeholder="Search doctors, hospitals, specialities..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={clearSearch}
+              className="vb-icon-btn"
+              aria-label="Clear doctor search"
+            >
+              ×
+            </button>
+          )}
+        </div>
+
+        <div className="vb-results-header">
+          <div>
+            <h3 className="vb-filter-title" style={{ marginBottom: "0.2rem" }}>
+              Discover Doctors
+            </h3>
+            <p className="vb-mini" style={{ margin: 0 }}>
+              Showing {doctors.length} doctor{doctors.length === 1 ? "" : "s"}
+            </p>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.55rem", flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="vb-btn vb-btn-secondary vb-mobile-filter-trigger"
+              onClick={() => setShowMobileFilters(true)}
+            >
+              Filters
+            </button>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="vb-btn vb-btn-secondary"
+                onClick={handleReset}
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+
+          {activeFilters.length > 0 && (
+            <div className="vb-chip-wrap" style={{ width: "100%" }}>
+              {activeFilters.map((filter) => (
+                <span className="vb-chip" key={`${filter.type}-${filter.id}`}>
+                  {filter.label}
+                  <button
+                    type="button"
+                    onClick={() => removeFilter(filter.type, filter.id)}
+                    aria-label={`Remove ${filter.label}`}
+                  >
+                    ×
                   </button>
-                </div>
-              ) : loader ? (
-                <div className="text-center py-5">
-                  <div className="spinner-border text-primary" role="status">
-                    <span className="sr-only">Loading...</span>
-                  </div>
-                  <p className="mt-3">Fetching doctor list...</p>
-                </div>
-              ) : !isNotEmptyArray(data?.data) ? (
-                <div className="text-center py-5">
-                  <h5>No doctors found</h5>
-                  <p>
-                    Try adjusting your search criteria or reset the filters.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {data.data.map((item) => {
-                    const hospitalAddresses =
-                      item?.hospital
-                        ?.map((h) => h.address)
-                        .filter((addr) => addr && addr.trim() !== "") || [];
-                    const addressString =
-                      hospitalAddresses.length > 0
-                        ? hospitalAddresses.join(", ")
-                        : "Not specified";
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
 
-                    return (
-                      <div className="sigma_team style-17" key={item.id}>
-                        <div className="row no-gutters">
-                          <div className="col-md-3">
-                            <div className="sigma_team-thumb shadow-sm">
-                              <img
-                                src={
-                                  item?.photo && item.photo.trim() !== ""
-                                    ? item.photo
-                                    : "/assets/img/default-img.jpg"
-                                }
-                                alt={item?.full_name || "User"}
-                                style={{
-                                  width: "100%",
-                                  height: "auto",
-                                  objectFit: "cover",
-                                  borderRadius: "8px",
-                                }}
-                                onError={(e) => {
-                                  e.currentTarget.onerror = null;
-                                  e.currentTarget.src = "/assets/img/default-img.jpg";
-                                  e.currentTarget.classList.add("default-doctor-img");
-                                }}
-                                className={
-                                  !(item?.photo && item.photo.trim() !== "")
-                                    ? "default-doctor-img"
-                                    : ""
-                                }
-                              />
+        <div className="vb-list-layout">
+          <aside className="vb-filter-panel" aria-label="Doctor filters">
+            {filtersContent}
+          </aside>
+
+          <div>
+            {error && page === 1 && (
+              <div className="vb-error-box">
+                <h4 style={{ marginTop: 0 }}>Couldn’t load doctors</h4>
+                <p style={{ marginBottom: "0.8rem" }}>{error}</p>
+                <button type="button" className="vb-btn vb-btn-primary" onClick={refetch}>
+                  Try Again
+                </button>
+              </div>
+            )}
+
+            {loading && page === 1 && !initialLoadDone && (
+              <div className="vb-loading">
+                <i className="fas fa-circle-notch fa-spin" aria-hidden="true" />
+                <p style={{ margin: "0.5rem 0 0" }}>Fetching doctor list...</p>
+              </div>
+            )}
+
+            {!loading && !error && initialLoadDone && doctors.length === 0 && (
+              <div className="vb-empty">
+                <h4 style={{ marginTop: 0 }}>No doctors found</h4>
+                <p style={{ marginBottom: 0 }}>
+                  Try adjusting the filters or clearing your search.
+                </p>
+              </div>
+            )}
+
+            {doctors.length > 0 && (
+              <div className="vb-card-stack">
+                {doctors.map((item) => {
+                  const hospitals = item?.hospital || [];
+                  const hospitalNames = hospitals
+                    .map((hospital) => hospital.name)
+                    .filter(Boolean)
+                    .join(", ");
+
+                  return (
+                    <article className="vb-doctor-card" key={item.id}>
+                      <div className="vb-doctor-grid">
+                        <div className="vb-doctor-media">
+                          <img
+                            src={
+                              item?.photo && item.photo.trim() !== ""
+                                ? item.photo
+                                : "/assets/img/default-img.jpg"
+                            }
+                            alt={item?.full_name || "Doctor"}
+                            onError={(event) => {
+                              event.currentTarget.onerror = null;
+                              event.currentTarget.src = "/assets/img/default-img.jpg";
+                            }}
+                          />
+                        </div>
+
+                        <div className="vb-doctor-body">
+                          <div className="vb-doctor-head">
+                            <div>
+                              <h3 className="vb-doctor-name">{item.full_name}</h3>
+                              <p className="vb-mini">{item.designation || "Designation not specified"}</p>
+                              <span className="vb-doctor-verified">✓ Verified</span>
                             </div>
+                            <Link
+                              to={`/doctor-details?id=${item.id}`}
+                              className="vb-btn vb-btn-primary"
+                            >
+                              View Profile
+                            </Link>
                           </div>
-                          <div className="col-md-5 col-sm-6">
-                            <div className="sigma_team-body">
-                              <h5>
-                                <i className="fas fa-user-md me-2" style={{ color: "#555" }}></i>
-                                <Link to={`/doctor-details?id=${item.id}`}>
-                                  {item.full_name}
-                                </Link>
-                              </h5>
 
-                              <div
-                                className="hospital-info"
-                                style={{
-                                  marginTop: "8px",
-                                  marginBottom: "8px",
-                                }}
-                              >
-                                <span style={{ fontSize: "18px", color: "#6c757d" }}>
-                                  <i
-                                    className="fal fa-hospital"
-                                    style={{ marginRight: "6px", color: "#555" }}
-                                  ></i>
-                                  {isNotEmptyArray(item?.hospital)
-                                    ? item.hospital.map((el) => el.name).join(", ")
-                                    : "Not specified"}
+                          <p className="vb-mini" style={{ margin: 0 }}>
+                            <i className="fal fa-hospital" style={{ marginRight: "0.3rem" }} />
+                            {hospitalNames || "Hospital not specified"}
+                          </p>
+
+                          {item.department_name && (
+                            <p className="vb-mini" style={{ margin: 0 }}>
+                              <i className="fal fa-layer-group" style={{ marginRight: "0.3rem" }} />
+                              {item.department_name}
+                            </p>
+                          )}
+
+                          <div className="vb-tag-row">
+                            {Array.isArray(item.speciality) && item.speciality.length > 0 ? (
+                              item.speciality.slice(0, 3).map((speciality, index) => (
+                                <span className="vb-tag" key={`${item.id}-${speciality.id || index}`}>
+                                  {speciality.title}
                                 </span>
-                              </div>
-
-                              <div className="designation-info" style={{ marginBottom: "8px" }}>
-                                <span style={{ fontSize: "18px", color: "#6c757d" }}>
-                                  <i
-                                    className="fal fa-user-tie"
-                                    style={{ marginRight: "6px", color: "#555" }}
-                                  ></i>
-                                  {item.designation || "Not specified"}
-                                </span>
-                              </div>
-
-                              {item.department_name && (
-                                <div
-                                  className="department-info"
-                                  style={{ marginTop: "4px", marginBottom: "8px" }}
-                                >
-                                  <span style={{ fontSize: "18px", color: "#6c757d" }}>
-                                    <i
-                                      className="fal fa-layer-group"
-                                      style={{ marginRight: "6px", color: "#555" }}
-                                    ></i>
-                                    {item.department_name}
-                                  </span>
-                                </div>
-                              )}
-
-                              <div
-                                className="sigma_team-categories"
-                                style={{ color: "#686A6F", cursor: "default" }}
-                              >
-                                <i
-                                  className="fal fa-stethoscope"
-                                  style={{ marginRight: "6px", color: "#555" }}
-                                ></i>
-                                {item.speciality
-                                  ?.slice(0, 3)
-                                  .map((specialityItem, index) => (
-                                    <span key={index}>
-                                      {specialityItem.title}
-                                      {index !== Math.min(2, item.speciality.length - 1) && ", "}
-                                    </span>
-                                  ))}
-                                {item.speciality?.length > 3 && " ..."}
-                              </div>
-
-                              <div className="d-flex align-items-center mt-4">
-                                <Link
-                                  to={`/doctor-details?id=${item.id}`}
-                                  className="sigma_btn"
-                                >
-                                  View More
-                                </Link>
-                              </div>
-                            </div>
+                              ))
+                            ) : (
+                              <span className="vb-tag">Speciality not specified</span>
+                            )}
                           </div>
-                          <div className="col-md-4 col-sm-6">
-                            <div className="sigma_team-footer">
-                              <div className="sigma_team-info">
-                                <span>
-                                  <i className="fal fa-calendar" style={{ color: "#555" }} />
-                                  {item.qualification}
-                                </span>
 
-                                <span>
-                                  <i className="fal fa-award" style={{ color: "#555" }} />
-                                  {item.experience} Yrs Experience
-                                </span>
+                          <ul className="vb-info-list">
+                            <li>
+                              <strong>Qualification:</strong> {item.qualification || "Not specified"}
+                            </li>
+                            <li>
+                              <strong>Experience:</strong> {item.experience || 0} Yrs
+                            </li>
+                          </ul>
 
-                                <span>
-                                  <i className="fal fa-map-marker-alt" style={{ color: "#555" }} />
-                                  {addressString}
-                                </span>
-                              </div>
-                            </div>
+                          <div className="vb-card-actions">
+                            <Link to={`/doctor-details?id=${item.id}`} className="vb-btn vb-btn-secondary">
+                              View Details
+                            </Link>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
 
-                  {/* Pagination */}
-                  {(() => {
-                    const totalCount = data?.pagination_data?.total_count || 0;
-                    const totalPages = Math.ceil(totalCount / itemPerpage);
-                    return (
-                      totalPages > 1 && (
-                        <div style={{ textAlign: "center", margin: "40px 0 0" }}>
-                          <button
-                            disabled={page === 1}
-                            onClick={() => setPage((p) => p - 1)}
-                          >
-                            Prev
-                          </button>
-                          <span style={{ margin: "0 12px" }}>
-                            Page {page} of {totalPages}
-                          </span>
-                          <button
-                            disabled={page === totalPages}
-                            onClick={() => setPage((p) => p + 1)}
-                          >
-                            Next
-                          </button>
-                        </div>
-                      )
-                    );
-                  })()}
-                </>
-              )}
-            </div>
+            {loading && page > 1 && (
+              <p className="vb-load-more-note">
+                <i className="fas fa-circle-notch fa-spin" /> Loading more doctors...
+              </p>
+            )}
+
+            <div className="vb-load-sentinel" ref={loadMoreRef} />
           </div>
         </div>
       </div>
 
-      {/* Mobile styles */}
-      <style jsx>{`
-        @media (max-width: 767px) {
-          .pagination .page-link {
-            padding: 4px 10px;
-            font-size: 14px;
-            gap: 4px;
-          }
-
-          .default-doctor-img {
-            width: 70% !important;
-            margin: 15px auto;
-            display: block;
-          }
-          
-          .search-wrapper {
-            width: 100% !important;
-            max-width: 100% !important;
-            margin: 0 auto !important;
-          }
-          
-          .search-wrapper input {
-            text-overflow: ellipsis !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-          }
-        }
-      `}</style>
-    </div>
+      {showMobileFilters && (
+        <div className="vb-mobile-filter-sheet" onClick={() => setShowMobileFilters(false)}>
+          <div onClick={(event) => event.stopPropagation()}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "0.8rem",
+              }}
+            >
+              <h3 className="vb-filter-title">Filters</h3>
+              <button
+                type="button"
+                className="vb-icon-btn"
+                onClick={() => setShowMobileFilters(false)}
+                aria-label="Close filters"
+              >
+                ×
+              </button>
+            </div>
+            {filtersContent}
+          </div>
+        </div>
+      )}
+    </section>
   );
 };
 

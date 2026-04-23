@@ -1,14 +1,5 @@
-import React, { Component } from "react";
+import React from "react";
 
-// Import Poppins font
-// import '@fontsource/poppins/300.css';
-// import '@fontsource/poppins/400.css';
-// import '@fontsource/poppins/500.css';
-// import '@fontsource/poppins/600.css';
-// import '@fontsource/poppins/700.css';
-// import '@fontsource/poppins/800.css';
-
-// Dummy data for whyus since the import was removed
 const whyus = [
   {
     icon: "flaticon-doctor",
@@ -42,103 +33,54 @@ const whyus = [
   },
 ];
 
-class Whyus extends Component {
-  render() {
-    return (
-      <div
-        className="row"
-        style={{
-          paddingTop: "80px",
-          fontFamily: "Poppins", 
-        }}
-      >
-        <div className="col-lg-5 order-2 order-lg-1">
-          <div className="sigma_about style-21">
-            <div className="section-title" style={{ marginBottom: "40px" }}>
-              <h2
-                style={{
-                  fontSize: "clamp(24px, 4vw, 34px)",
-                  fontWeight: 800,
-                  color: "#fff",
-                  textAlign: "center",
-                  marginBottom: "8px",
-                  lineHeight: "1.3",
-                  fontFamily: "Poppins", 
-                }}
-              >
-                Why Choose VaidyaBandhu?
-              </h2>
-              <p
-                style={{
-                  marginLeft: "24px",
-                  fontSize: "22px",
-                  lineHeight: "1.3",
-                  fontFamily:
-                    "Poppins" /* Optional: keep font consistent */,
-                }}
-              >
-                Ready to Get Started?
-                <br />
-                Empower your health journey join VaidyaBandhu for trusted,
-                smarter care.
-              </p>
-            </div>
-            <div className="sigma_about-content">
-              {/* Data */}
-              {whyus.slice(0, 6).map((item, i) => (
-                <div className="sigma_info style-15" key={i}>
-                  <div className="sigma_info-title">
-                    <i className={"sigma_info-icon " + item.icon} />
-                  </div>
-                  <div
-                    className="sigma_info-description"
-                    style={{ fontFamily: "Poppins" }} 
-                  >
-                    <h5
-                      style={{
-                        fontFamily: "Poppins", 
-                      }}
-                    >
-                      {item.title}
-                    </h5>
-                    <p
-                      style={{
-                        fontFamily: "Poppins", 
-                        fontSize: "22px",
-                      }}
-                    >
-                      {item.text}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              {/* Data */}
-            </div>
-          </div>
-        </div>
-        <div className="col-lg-6 offset-lg-1 order-1 order-lg-2">
-          <div className="sigma_about style-21 mt-0 w-100 h-100">
-            <div className="relative w-full h-72 flex items-center justify-center">
-              {/* First Image */}
-              <img
-                src={process.env.PUBLIC_URL + "/assets/img/doc-1.jpeg"}
-                alt="img"
-                className="rounded-lg shadow-lg w-[300px] h-auto object-cover z-10"
-              />
+const Whyus = () => (
+  <div className="vb-about-shell">
+    <div className="vb-about-section-head">
+      <div>
+        <span className="vb-about-kicker">Why Choose Us</span>
+        <h2>Why Choose VaidyaBandhu?</h2>
+      </div>
+      <p>
+        Ready to Get Started? Empower your health journey join VaidyaBandhu for trusted,
+        smarter care.
+      </p>
+    </div>
 
-              {/* Second Image with left margin */}
-              <img
-                src={process.env.PUBLIC_URL + "/assets/img/doc-6.jpg"}
-                alt="img"
-                className="rounded-lg shadow-lg w-[280px] h-auto object-cover hidden sm:block z-0"
-                style={{ marginTop: "-6%", marginLeft: "15%" }}
-              />
-            </div>
-          </div>
+    <div className="vb-about-why-layout">
+      <div className="vb-about-why-media">
+        <div className="vb-about-why-collage">
+          <img
+            src={`${process.env.PUBLIC_URL}/assets/img/doc-1.jpeg`}
+            alt="Doctor consultation"
+            className="vb-about-why-photo vb-about-why-photo-main"
+          />
+          <img
+            src={`${process.env.PUBLIC_URL}/assets/img/doc-6.jpg`}
+            alt="Healthcare support"
+            className="vb-about-why-photo vb-about-why-photo-secondary"
+          />
+        </div>
+        <div className="vb-about-why-note">
+          <strong>Patient-first care</strong>
+          <span>Affordable access with trusted medical guidance.</span>
         </div>
       </div>
-    );
-  }
-}
+
+      <div className="vb-about-why-list">
+        {whyus.map((item) => (
+          <article className="vb-about-why-card" key={item.title}>
+            <span className="vb-about-why-icon">
+              <i className={item.icon} />
+            </span>
+            <div>
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </div>
+);
 
 export default Whyus;

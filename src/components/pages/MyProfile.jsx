@@ -7,9 +7,11 @@ const MyProfile = () => {
   return (
     <>
       <Header />
-      <div style={{ height: '200px' }}></div> 
-      <ProfileContent />
-      <Footer/>
+      <div className="vb-global-header-spacer" />
+      <main className="vb-profile-page-wrap">
+        <ProfileContent />
+      </main>
+      <Footer />
     </>
   );
 };

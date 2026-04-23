@@ -1,25 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import MembershipModal from "../../layouts/MembershipModal";
-// Updated dummy workprocess data with 3 steps and new content
+
 const dummyWorkprocess = [
   {
-    title: "Get Your <br/>₹49 Membership Card",
+    title: "Activate Your ₹49 Membership",
     points: [
-      "Fill out the membership form (Name, Address, Phone Number; PAN & Aadhaar optional).",
+      "Access our healthcare network and add your family in minutes.",
       "Pay ₹49 (valid for 1 year).",
       "Receive your membership card at your doorstep.",
     ],
-    imageUrl: "https://cdn-icons-png.flaticon.com/128/3135/3135768.png", // ID card icon
+    imageUrl: "https://cdn-icons-png.flaticon.com/128/3135/3135768.png",
   },
   {
-    title: "Access Quality Healthcare <br/>at Affordable Rates",
+    title: "Get Support for Consultations & Hospital Care",
     points: [
       "Call or Email Us – Tell us your medical concern.",
       "Consult Top Doctors – We connect you with the best specialists.",
       "Avail 10% to 40% Discounts – On surgeries, treatments, and diagnostics.",
       "Visit Partner Hospitals & Diagnostic Centers – Use your membership card to get benefits.",
     ],
-    imageUrl: "https://cdn-icons-png.flaticon.com/128/3209/3209265.png", // Doctor and hospital icon
+    imageUrl: "https://cdn-icons-png.flaticon.com/128/3209/3209265.png",
   },
   {
     title: "Get Complete <br/>Healthcare Support",
@@ -28,483 +28,49 @@ const dummyWorkprocess = [
       "Best Treatment Plans – We help you choose the right hospital and doctor.",
       "Priority Support for Critical Cases – Quick access to necessary treatments.",
     ],
-    imageUrl: "https://cdn-icons-png.flaticon.com/128/2991/2991158.png", // Support/help icon
+    imageUrl: "https://cdn-icons-png.flaticon.com/128/2991/2991158.png",
   },
 ];
-const Workprocess = () => {
-  const [animated, setAnimated] = useState(false);
-  const [hoveredStep, setHoveredStep] = useState(null);
-  useEffect(() => {
-    const timer = setTimeout(() => setAnimated(true), 200);
-    return () => clearTimeout(timer);
-  }, []);
-  const baseTransition = "all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-  return (
-    <div
-      style={{
-        padding: "40px 20px",
-        background: "linear-gradient(135deg, #f5fdfd 0%, #e0f7fa 100%)", // Light, calming gradient
-        fontFamily: "poppins",
-        color: "#4a5568",
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
-      {/* Decorative background elements */}
-      <div
-        style={{
-          position: "absolute",
-          top: "5%",
-          left: "5%",
-          width: "min(100px, 10vw)",
-          height: "min(100px, 10vw)",
-          backgroundColor: "rgba(0, 122, 126, 0.05)",
-          borderRadius: "50%",
-          filter: "blur(20px)",
-          animation: "floatShape1 10s infinite ease-in-out",
-          opacity: animated ? 1 : 0,
-          transition: "opacity 1s ease-out",
-          zIndex: 0,
-        }}
-      ></div>
-      <div
-        style={{
-          position: "absolute",
-          bottom: "5%",
-          right: "5%",
-          width: "min(130px, 13vw)",
-          height: "min(130px, 13vw)",
-          backgroundColor: "rgba(0, 122, 126, 0.03)",
-          borderRadius: "50%",
-          filter: "blur(25px)",
-          animation: "floatShape2 12s infinite ease-in-out",
-          opacity: animated ? 1 : 0,
-          transition: "opacity 1s ease-out",
-          zIndex: 0,
-        }}
-      ></div>
-      <div
-        className="container"
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
-        <div
-          className="header-section"
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            marginBottom: "40px",
-            gap: "20px",
-          }}
-        >
-          <div style={{ flex: "1", textAlign: "center" }}>
-            {" "}
-            <div
-              className="section-title"
-              style={{
-                opacity: animated ? 1 : 0,
-                transform: animated ? "translateY(0)" : "translateY(30px)",
-                transition: "opacity 0.8s ease-out, transform 0.8s ease-out",
-                maxWidth: "800px",
-                margin: "0 auto",
-              }}
-            >
-              <h3
-                style={{
-                  fontSize: "clamp(36px, 5vw, 48px)",
-                  fontFamily: "Poppins",
-                  fontWeight: "800",
-                  color: "#004d4f",
-                  marginBottom: "15px",
-                  lineHeight: "1.2",
-                }}
-              >
-                How it Works?
-              </h3>
-              <p
-                style={{
-                  fontSize: "clamp(16px, 2.5vw, 22px)",
-                  color: "#4a5568",
-                  lineHeight: "1.5",
-                  fontFamily: "Poppins",
-                  marginBottom: "0",
-                  opacity: animated ? 1 : 0,
-                  transform: animated ? "translateY(0)" : "translateY(30px)",
-                  transition:
-                    "opacity 0.8s ease-out 0.2s, transform 0.8s ease-out 0.2s",
-                }}
-              >
-                At Vaidya Bandhu, we make quality healthcare simple, affordable,
-                and accessible. Here's how you can benefit from our services.
-              </p>
-            </div>
-          </div>
-          <div className="membership-button-wrapper" style={{ flex: "none", textAlign: "right" }}>
-            {" "}
-            <MembershipModal />
-          </div>
+
+const Workprocess = () => (
+  <div className="vb-about-shell">
+    <div className="vb-process-head">
+      <div className="vb-about-section-head">
+        <div>
+          <span className="vb-about-kicker">How It Works</span>
+          <h2>How it Works?</h2>
         </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "30px",
-          }}
-        >
-          {dummyWorkprocess.map((item, i) => (
-            <div
-              key={i}
-              style={{
-                background: "#ffffff",
-                borderRadius: "16px",
-                boxShadow:
-                  hoveredStep === i
-                    ? "0 18px 40px rgba(0, 122, 126, 0.2)"
-                    : "0 8px 20px rgba(0, 122, 126, 0.08)",
-                overflow: "hidden",
-                padding: "30px",
-                textAlign: "left",
-                transition: baseTransition,
-                opacity: animated ? 1 : 0,
-                transform: animated ? "translateY(0)" : "translateY(40px)",
-                transitionDelay: `${0.4 + i * 0.1}s`,
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-              }}
-              onMouseEnter={() => setHoveredStep(i)}
-              onMouseLeave={() => setHoveredStep(null)}
-            >
-              <div
-                style={{
-                  width: "60px",
-                  height: "60px",
-                  borderRadius: "50%",
-                  background: hoveredStep === i ? "#004d4f" : "#e6fffa",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: "20px",
-                  boxShadow: "0 4px 12px rgba(0, 122, 126, 0.15)",
-                  transition: baseTransition,
-                  flexShrink: 0,
-                }}
-              >
-                <img
-                  src={item.imageUrl}
-                  alt={`Step ${i + 1}`}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    transition: baseTransition,
-                    ...(hoveredStep === i && { transform: "scale(1.1)" }),
-                  }}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = `https://placehold.co/60x60/CCCCCC/666666?text=${
-                      i + 1
-                    }`;
-                  }}
-                />
-              </div>
-              <h5
-                style={{
-                  fontSize: "clamp(20px, 2.5vw, 22px)",
-                  fontWeight: "700",
-                  color: "#004d4f",
-                  fontFamily: "Poppins",
-                  marginBottom: "15px",
-                  lineHeight: "1.3",
-                  transition: baseTransition,
-                  ...(hoveredStep === i && { color: "#007a7e" }),
-                }}
-                dangerouslySetInnerHTML={{ __html: item.title }}
-              />
-              <ul
-                style={{
-                  paddingLeft: "20px",
-                  marginBottom: "0",
-                  marginTop: "0",
-                  fontFamily: "Poppins",
-                  flexGrow: 1,
-                  color: "#5a6778",
-                  fontSize: "clamp(15px, 1.8vw, 18px)",
-                  lineHeight: "1.3",
-                  listStyleType: "disc",
-                }}
-              >
-                {item.points.map((point, j) => (
-                  <li
-                    key={j}
-                    style={{
-                      margin: "0",
-                      padding: "0",
-                      marginBottom: "0",
-                      marginTop: "0",
-                      paddingBottom: "0",
-                      paddingTop: "0",
-                      listStyle: "disc",
-                      fontFamily: "Poppins",
-                      lineHeight: "1.3",
-                    }}
-                  >
-                    {point}
-                  </li>
-                ))}
-              </ul>
-              <span
-                className="steps"
-                style={{
-                  fontSize: "clamp(28px, 4vw, 36px)",
-                  fontWeight: "800",
-                  color: "rgba(0, 77, 79, 0.1)",
-                  position: "absolute",
-                  bottom: "15px",
-                  fontFamily: "Poppins",
-                  right: "20px",
-                  zIndex: 0,
-                  transition: baseTransition,
-                  ...(hoveredStep === i && {
-                    color: "rgba(0, 122, 126, 0.2)",
-                    transform: "scale(1.1)",
-                  }),
-                }}
-              >
-                Step {i + 1}
-              </span>
-              <span
-                className="pulsive-dot"
-                style={{
-                  position: "absolute",
-                  top: "20px",
-                  right: "20px",
-                  fontFamily: "Poppins",
-                  width: "15px",
-                  height: "15px",
-                  borderRadius: "50%",
-                  backgroundColor: "#007a7e",
-                  boxShadow: "0 0 0 0 rgba(0, 122, 126, 0.7)",
-                  animation: "pulse 2s infinite",
-                  zIndex: 1,
-                  display: hoveredStep === i ? "block" : "none",
-                }}
-              />
-            </div>
-          ))}
-        </div>
+        <p>
+          At Vaidya Bandhu, we make quality healthcare simple, affordable, and
+          accessible. Here&apos;s how you can benefit from our services.
+        </p>
       </div>
-      {/* Keyframes for animations */}
-      <style>
-        {`
-          @keyframes floatShape1 {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(20px, 20px) rotate(5deg); }
-            100% { transform: translate(0, 0) rotate(0deg); }
-          }
-          @keyframes floatShape2 {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(-20px, -20px) rotate(-5deg); }
-            100% { transform: translate(0, 0) rotate(0deg); }
-          }
-          @keyframes pulse {
-            0% {
-              transform: scale(0.9);
-              box-shadow: 0 0 0 0 rgba(0, 122, 126, 0.7);
-            }
-            70% {
-              transform: scale(1.2);
-              box-shadow: 0 0 0 15px rgba(0, 122, 126, 0);
-            }
-            100% {
-              transform: scale(0.9);
-              box-shadow: 0 0 0 0 rgba(0, 122, 126, 0);
-            }
-          }
-          /* Remove all gaps between list items */
-          .container ul li {
-            margin: 0 !important;
-            padding: 0 !important;
-            margin-bottom: 0 !important;
-            margin-top: 0 !important;
-            padding-bottom: 0 !important;
-            padding-top: 0 !important;
-          }
-          
-          div[style*="background: #ffffff"] ul li {
-            margin: 0 !important;
-            padding: 0 !important;
-            margin-bottom: 0 !important;
-            margin-top: 0 !important;
-            padding-bottom: 0 !important;
-            padding-top: 0 !important;
-          }
-          /* Responsive adjustments */
-          @media (max-width: 992px) {
-            .header-section {
-                flex-direction: column !important;
-                text-align: center !important;
-                gap: 15px !important;
-                margin-bottom: 35px !important;
-            }
-            
-            .header-section > div:first-child {
-                flex-basis: 100% !important;
-                text-align: center !important;
-            }
-            
-            .membership-button-wrapper {
-                text-align: center !important;
-                margin-top: 10px !important;
-            }
-            
-            h3[style*="font-size: clamp(36px, 5vw, 48px)"] {
-                font-size: clamp(32px, 6vw, 40px) !important;
-            }
-            p[style*="font-size: clamp(16px, 2.5vw, 22px)"] {
-                font-size: clamp(15px, 2.8vw, 18px) !important;
-            }
-            a[href="/appointment"] {
-                font-size: 16px !important;
-                padding: 10px 20px !important;
-            }
-          }
-          @media (max-width: 768px) {
-            .header-section {
-                gap: 12px !important;
-                margin-bottom: 30px !important;
-            }
-            
-            .membership-button-wrapper {
-                margin-top: 8px !important;
-            }
-            
-            div[style*="padding: 40px 20px"] {
-              padding: 30px 15px !important;
-            }
-            h3[style*="font-size: clamp(36px, 5vw, 48px)"] {
-                font-size: clamp(28px, 7vw, 36px) !important;
-            }
-            p[style*="font-size: clamp(16px, 2.5vw, 22px)"] {
-                font-size: clamp(14px, 3vw, 16px) !important;
-            }
-            div[style*="padding: 30px"] {
-              padding: 25px !important;
-            }
-            div[style*="width: 60px"] {
-                width: 50px !important;
-                height: 50px !important;
-                margin-bottom: 15px !important;
-            }
-            img[alt^="Step"] {
-                width: 100% !important;
-                height: 100% !important;
-            }
-            h5[style*="font-size: clamp(20px, 2.5vw, 22px)"] {
-                font-size: clamp(18px, 3vw, 20px) !important;
-            }
-            ul[style*="font-size: clamp(15px, 1.8vw, 18px)"] {
-                font-size: clamp(14px, 2.5vw, 15px) !important;
-            }
-            .container ul li {
-                margin: 0 !important;
-                padding: 0 !important;
-                margin-bottom: 0 !important;
-                margin-top: 0 !important;
-                padding-bottom: 0 !important;
-                padding-top: 0 !important;
-            }
-            div[style*="background: #ffffff"] ul li {
-                margin: 0 !important;
-                padding: 0 !important;
-                margin-bottom: 0 !important;
-                margin-top: 0 !important;
-                padding-bottom: 0 !important;
-                padding-top: 0 !important;
-            }
-            span.steps {
-                font-size: clamp(24px, 5vw, 30px) !important;
-                bottom: 10px !important;
-                right: 15px !important;
-            }
-            span.pulsive-dot {
-                width: 12px !important;
-                height: 12px !important;
-                top: 15px !important;
-                right: 15px !important;
-            }
-          }
-          @media (max-width: 480px) {
-            .header-section {
-                gap: 10px !important;
-                margin-bottom: 25px !important;
-            }
-            
-            .membership-button-wrapper {
-                margin-top: 5px !important;
-            }
-            
-            div[style*="padding: 40px 20px"] {
-              padding: 20px 10px !important;
-            }
-            div[style*="padding: 30px"] {
-              padding: 20px !important;
-            }
-            div[style*="width: 60px"] {
-                width: 45px !important;
-                height: 45px !important;
-                margin-bottom: 10px !important;
-            }
-            img[alt^="Step"] {
-                width: 100% !important;
-                height: 100% !important;
-            }
-            h5[style*="font-size: clamp(20px, 2.5vw, 22px)"] {
-                font-size: clamp(16px, 4vw, 18px) !important;
-            }
-            ul[style*="font-size: clamp(15px, 1.8vw, 18px)"] {
-                font-size: clamp(13px, 3vw, 14px) !important;
-            }
-            .container ul li {
-                margin: 0 !important;
-                padding: 0 !important;
-                margin-bottom: 0 !important;
-                margin-top: 0 !important;
-                padding-bottom: 0 !important;
-                padding-top: 0 !important;
-                line-height: 1.3 !important;
-            }
-            div[style*="background: #ffffff"] ul li {
-                margin: 0 !important;
-                padding: 0 !important;
-                margin-bottom: 0 !important;
-                margin-top: 0 !important;
-                padding-bottom: 0 !important;
-                padding-top: 0 !important;
-                line-height: 1.3 !important;
-            }
-            span.steps {
-                font-size: clamp(20px, 6vw, 26px) !important;
-                bottom: 8px !important;
-                right: 10px !important;
-            }
-            span.pulsive-dot {
-                width: 10px !important;
-                height: 10px !important;
-                top: 10px !important;
-                right: 10px !important;
-            }
-          }
-        `}
-      </style>
+      <div className="vb-process-cta">
+        <MembershipModal />
+      </div>
     </div>
-  );
-};
+
+    <div className="vb-process-grid">
+      {dummyWorkprocess.map((item, index) => (
+        <article className="vb-process-card" key={item.title}>
+          <div className="vb-process-card-top">
+            <span className="vb-process-step">Step {index + 1}</span>
+            <div className="vb-process-icon">
+              <img src={item.imageUrl} alt={`Step ${index + 1}`} />
+            </div>
+          </div>
+
+          <h3 dangerouslySetInnerHTML={{ __html: item.title }} />
+
+          <ul className="vb-process-points">
+            {item.points.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </div>
+  </div>
+);
+
 export default Workprocess;

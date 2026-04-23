@@ -18,6 +18,7 @@ import { SuspenseFallback } from "./components/SuspenseFallback";
 import PrivacyPolicy from "./components/pages/PrivacyPolicy";
 import TermsConditions from "./components/pages/TermsConditions";
 import RefundPolicy from "./components/pages/RefundPolicy";
+import HelpBot from "./components/common/HelpBot";
 
 // Lazy imports
 const Home = React.lazy(() => import("./components/pages/Home"));
@@ -55,6 +56,7 @@ const Contact = React.lazy(() => import("./components/pages/Contact"));
 const Errorpage = React.lazy(() => import("./components/pages/Errorpage"));
 const HospitalList = React.lazy(() => import("./components/pages/HospitalList"));
 const UserLogin = React.lazy(() => import("./components/pages/UserLogin"));
+const AppRedirect = React.lazy(() => import("./components/pages/AppRedirect"));
 
 // Scroll to top on route change
 function ScrollToTop({ children }) {
@@ -158,6 +160,7 @@ function AppRoutes() {
       <Route path="/basic-details" element={<BasicDetail />} />
       <Route path="/userlogin" element={<UserLogin />} />
       <Route path="/hospital-list" element={<HospitalList />} />
+      <Route path="/app-redirect" element={<AppRedirect />} />
 
       {/* Policy pages */}
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -190,7 +193,10 @@ function App() {
                 }
               >
                 <ScrollToTop>
-                  <AppRoutes />
+                  <>
+                    <AppRoutes />
+                    <HelpBot />
+                  </>
                 </ScrollToTop>
               </Suspense>
             </AuthProvider>
