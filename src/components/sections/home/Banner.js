@@ -9,7 +9,7 @@ const heroContent = {
   benefits: [
     "Save up to 40% on treatments.",
     "Get quick support from our care team.",
-    "Free surgeries available",
+    "Free surgeries available 10% money back",
     "Free advice: 9 AM–6 PM",
     "Right doctor guidance",
   ],

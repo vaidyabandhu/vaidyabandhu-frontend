@@ -9,7 +9,11 @@ const benefits = [
 
 const MembershipCardBenefits = () => {
   return (
-    <section className="vb-section">
+    <section
+      id="membership-benefits"
+      className="vb-section"
+      style={{ scrollMarginTop: "132px" }}
+    >
       <div className="vb-container">
         <span className="vb-pill">Membership Benefits</span>
         <h2 className="vb-section-heading">

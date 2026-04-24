@@ -2,6 +2,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import Banner from "./Banner";
 import Services from "./Services";
 import Testimonials from "./Testimonials";
+import PatientTestimonials from "./PatientTestimonials";
 import Workprocess from "./Workprocess";
 import HealthcareReality from "./HealthcareReality";
 import MembershipCardBenefits from "./MembershipCardBenefits";
@@ -62,6 +63,7 @@ const Content = () => {
       <Services />
       <ClientLogosCarousel />
       <Testimonials />
+      <PatientTestimonials />
       <section className="vb-section">
         <div className="vb-container">
           <div className="vb-home-counter-panel">

@@ -1,8 +1,23 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const FloatingVaidyabandhuCardButton = () => {
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(() =>
+    Boolean(localStorage.getItem("token"))
+  );
+
+  useEffect(() => {
+    const handleAuth = () => setIsLoggedIn(Boolean(localStorage.getItem("token")));
+    window.addEventListener("login-state-changed", handleAuth);
+    window.addEventListener("storage", handleAuth);
+    return () => {
+      window.removeEventListener("login-state-changed", handleAuth);
+      window.removeEventListener("storage", handleAuth);
+    };
+  }, []);
+
+  if (isLoggedIn) return null;
 
   return (
     <>
@@ -44,21 +59,21 @@ const FloatingVaidyabandhuCardButton = () => {
         {`
           .vb-float-btn {
             position: fixed;
-            bottom: 90px;
+            bottom: 180px;
             right: 20px;
             height: 64px;
-            padding: 0 10px;
+            padding: 0 18px;
             display: inline-flex;
             align-items: center;
             gap: 14px;
-            background: linear-gradient(90deg, #1e293b 0%, #007a7e 100%);
+            background: linear-gradient(135deg, #cc3c2d 0%, #ae1e1e 100%);
             border-radius: 36px;
             cursor: pointer;
-            box-shadow: 0 8px 26px rgba(30, 41, 59, 0.3);
+            box-shadow: 0 8px 26px rgba(174, 30, 30, 0.35);
             z-index: 1000;
             overflow: hidden;
-            width: fit-content;          /* ✅ auto width */
-            max-width: calc(100vw - 40px); /* ✅ safe on small screens */
+            width: fit-content;
+            max-width: calc(100vw - 40px);
           }
 
           .vb-icon {
@@ -100,7 +115,7 @@ const FloatingVaidyabandhuCardButton = () => {
           /* Mobile */
           @media (max-width: 768px) {
             .vb-float-btn {
-              bottom: 170px;
+              bottom: 14px;
               right: 14px;
               height: 50px;
               padding: 0 16px;

@@ -1,6 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, MessageCircle, X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocation } from "react-router-dom";
+
+const AiAssistIcon = ({ size = 24 }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="2.35" />
+    <path d="M12 5.5v3" />
+    <path d="M12 15.5v3" />
+    <path d="M5.5 12h3" />
+    <path d="M15.5 12h3" />
+    <path d="M7.35 7.35l2.15 2.15" />
+    <path d="M14.5 14.5l2.15 2.15" />
+    <path d="M16.65 7.35l-2.15 2.15" />
+    <path d="M9.5 14.5l-2.15 2.15" />
+    <circle cx="12" cy="4.25" r="1.15" />
+    <circle cx="12" cy="19.75" r="1.15" />
+    <circle cx="4.25" cy="12" r="1.15" />
+    <circle cx="19.75" cy="12" r="1.15" />
+  </svg>
+);
 
 const HELP_TOPICS = {
   app: {
@@ -48,26 +77,7 @@ const HelpBot = () => {
         aria-label={isOpen ? "Close VaidyaBandhu help bot" : "Open VaidyaBandhu help bot"}
         aria-expanded={isOpen}
       >
-        {/* Inline SVG — immune to global button CSS interference */}
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="28"
-          height="28"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#ffffff"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ display: "block", flexShrink: 0 }}
-        >
-          <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h3a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3h3V5.73A2 2 0 0 1 10 4a2 2 0 0 1 2-2z" />
-          <circle cx="9" cy="13" r="1" fill="#ffffff" stroke="none" />
-          <circle cx="15" cy="13" r="1" fill="#ffffff" stroke="none" />
-          <path d="M9 17h6" />
-          <line x1="8" y1="7" x2="8" y2="7" />
-          <line x1="16" y1="7" x2="16" y2="7" />
-        </svg>
+        <AiAssistIcon size={26} />
       </button>
 
       {isOpen && (
@@ -80,7 +90,7 @@ const HelpBot = () => {
           <div className="vb-helpbot-header">
             <div className="vb-helpbot-header-brand">
               <span className="vb-helpbot-header-icon">
-                <MessageCircle size={16} />
+                <AiAssistIcon size={18} />
               </span>
               <div className="vb-helpbot-header-copy">
                 <span className="vb-helpbot-kicker">Quick Help</span>
@@ -96,7 +106,9 @@ const HelpBot = () => {
               }}
               aria-label="Close help bot"
             >
-              <X size={18} />
+              <span className="vb-helpbot-close-icon" aria-hidden="true">
+                &times;
+              </span>
             </button>
           </div>
 

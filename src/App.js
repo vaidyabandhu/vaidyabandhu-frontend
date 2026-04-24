@@ -63,8 +63,22 @@ function ScrollToTop({ children }) {
   const location = useLocation();
 
   useLayoutEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
+    if (!location.hash) {
+      window.scrollTo(0, 0);
+      return undefined;
+    }
+
+    const hashId = decodeURIComponent(location.hash.replace(/^#/, ""));
+    const scrollToHash = () => {
+      const target = document.getElementById(hashId);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+
+    const timeoutId = window.setTimeout(scrollToHash, 60);
+    return () => window.clearTimeout(timeoutId);
+  }, [location.pathname, location.hash]);
 
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.gtag !== "function") {

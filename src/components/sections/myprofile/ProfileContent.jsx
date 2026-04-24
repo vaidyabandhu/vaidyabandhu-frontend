@@ -1275,15 +1275,20 @@ const MyProfile = () => {
     tabButton: {
       padding: isMobile ? "10px 16px" : "11px 22px",
       backgroundColor: "#ffffff",
-      border: "1px solid #cce6e2",
+      border: "1.5px solid #9ecfc9",
       borderRadius: "999px",
       cursor: "pointer",
       fontSize: isMobile ? "15px" : "16px",
-      fontWeight: "600",
-      color: "#2f6369",
+      fontWeight: "700",
+      color: "#0f4f58",
       position: "relative",
       transition: "all 0.3s ease",
       boxShadow: "0 10px 16px rgba(11, 79, 86, 0.1)",
+    },
+    appointmentTabButton: {
+      color: "#ffffff",
+      background: "linear-gradient(135deg, #0f7476 0%, #0e5670 100%)",
+      borderColor: "transparent",
     },
     activeTab: {
       color: "#ffffff",
@@ -1371,6 +1376,7 @@ const MyProfile = () => {
           <button
             style={{
               ...tabStyles.tabButton,
+              ...tabStyles.appointmentTabButton,
               ...(activeTab === 'appointments' ? tabStyles.activeTab : {}),
             }}
             onClick={() => setActiveTab('appointments')}

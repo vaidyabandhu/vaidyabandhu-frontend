@@ -4,14 +4,13 @@ import { Autoplay, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
-const YOUTUBE_SHORTS = [
-  "https://youtube.com/shorts/NizGUNAIOus",
-  "https://youtube.com/shorts/XjHFVJ-nJ_Q",
-  "https://youtube.com/shorts/2DK1F7hYKyw",
-  "https://youtube.com/shorts/V5nwPrSISOY",
-  "https://youtube.com/shorts/y1tOPZyW_ZE",
-  "https://youtube.com/shorts/306omKo4a4E",
-  "https://youtube.com/shorts/53OtlqhIJlE",
+const PATIENT_YOUTUBE_SHORTS = [
+  "https://youtube.com/shorts/_1KoY_MktZ0",
+  "https://youtube.com/shorts/1wSayy5Q5A8",
+  "https://youtube.com/shorts/0ayY9LTxbhs",
+  "https://youtube.com/shorts/uQ8ql-h-h7c",
+  "https://youtube.com/shorts/A1GXQ5JRI2M",
+  "https://youtube.com/shorts/yqx4M_G8te4",
 ];
 
 const getYoutubeId = (url) => {
@@ -24,12 +23,12 @@ const getYoutubeId = (url) => {
   return null;
 };
 
-const Testimonials = () => {
+const PatientTestimonials = () => {
   const [activeVideo, setActiveVideo] = useState(null);
 
   const cards = useMemo(
     () =>
-      YOUTUBE_SHORTS.map((url, index) => ({
+      PATIENT_YOUTUBE_SHORTS.map((url, index) => ({
         id: index + 1,
         videoId: getYoutubeId(url),
       })).filter((item) => item.videoId),
@@ -37,26 +36,26 @@ const Testimonials = () => {
   );
 
   return (
-    <section className="vb-section" id="doctor-video-testimonials">
+    <section className="vb-section vb-section-tight" id="patient-video-testimonials">
       <div className="vb-container">
-        <span className="vb-pill">Doctor Video Testimonials</span>
-        <h2 className="vb-section-heading">Doctor Feedback</h2>
+        <span className="vb-pill">Patient Video Testimonials</span>
+        <h2 className="vb-section-heading">Patient Feedback</h2>
         <p className="vb-section-subheading">
-          Real videos from our doctor feedback library.
+          Real patient videos shared through our feedback library.
         </p>
 
         <div className="vb-swiper-arrows">
           <button
             type="button"
-            className="vb-swiper-arrow vb-test-prev"
-            aria-label="Previous testimonials"
+            className="vb-swiper-arrow vb-patient-test-prev"
+            aria-label="Previous patient testimonials"
           >
             <i className="far fa-arrow-left" />
           </button>
           <button
             type="button"
-            className="vb-swiper-arrow vb-test-next"
-            aria-label="Next testimonials"
+            className="vb-swiper-arrow vb-patient-test-next"
+            aria-label="Next patient testimonials"
           >
             <i className="far fa-arrow-right" />
           </button>
@@ -68,8 +67,8 @@ const Testimonials = () => {
           slidesPerView={1.15}
           autoplay={{ delay: 3200, disableOnInteraction: false }}
           navigation={{
-            prevEl: ".vb-test-prev",
-            nextEl: ".vb-test-next",
+            prevEl: ".vb-patient-test-prev",
+            nextEl: ".vb-patient-test-next",
           }}
           breakpoints={{
             540: { slidesPerView: 2, spaceBetween: 14 },
@@ -90,12 +89,12 @@ const Testimonials = () => {
                     setActiveVideo(item.videoId);
                   }
                 }}
-                aria-label={`Play doctor testimonial video ${item.id}`}
+                aria-label={`Play patient testimonial video ${item.id}`}
               >
                 <div className="vb-video-thumb">
                   <img
                     src={`https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg`}
-                    alt={`Doctor testimonial ${item.id}`}
+                    alt={`Patient testimonial ${item.id}`}
                     loading="lazy"
                   />
                   <span className="vb-video-play" aria-hidden="true">
@@ -128,7 +127,7 @@ const Testimonials = () => {
             </button>
             <iframe
               src={`https://www.youtube.com/embed/${activeVideo}?autoplay=1&rel=0&modestbranding=1`}
-              title="Doctor testimonial video"
+              title="Patient testimonial video"
               allow="autoplay; encrypted-media; picture-in-picture"
               allowFullScreen
             />
@@ -139,4 +138,4 @@ const Testimonials = () => {
   );
 };
 
-export default Testimonials;
+export default PatientTestimonials;

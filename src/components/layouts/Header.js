@@ -128,6 +128,15 @@ const Header = () => {
     navigate("/userlogin");
   };
 
+  const handleCardCtaClick = () => {
+    if (isLoggedIn) {
+      handleIconClick();
+      return;
+    }
+
+    handleLoginPage();
+  };
+
   const handleIconClick = async () => {
     const token = localStorage.getItem("token");
 
@@ -230,6 +239,13 @@ const Header = () => {
         </ul>
 
         <div className="vb-mobile-footer-actions">
+          <button
+            type="button"
+            className="vb-btn vb-btn-alert vb-card-cta-rotator"
+            onClick={handleCardCtaClick}
+          >
+            {currentCardLabel}
+          </button>
           {isLoggedIn ? (
             <>
               <button
@@ -249,13 +265,6 @@ const Header = () => {
             </>
           ) : (
             <>
-              <button
-                type="button"
-                className="vb-btn vb-btn-alert vb-card-cta-rotator"
-                onClick={handleLoginPage}
-              >
-                {currentCardLabel}
-              </button>
               <button
                 type="button"
                 className="vb-btn vb-btn-primary"
@@ -311,6 +320,13 @@ const Header = () => {
           </nav>
 
           <div className="vb-header-actions">
+            <button
+              type="button"
+              className="vb-btn vb-btn-alert vb-card-cta-rotator vb-card-cta-global"
+              onClick={handleCardCtaClick}
+            >
+              {currentCardLabel}
+            </button>
             {isLoggedIn ? (
               <>
                 <button
@@ -330,13 +346,6 @@ const Header = () => {
               </>
             ) : (
               <>
-                <button
-                  type="button"
-                  className="vb-btn vb-btn-alert vb-card-cta-rotator"
-                  onClick={handleLoginPage}
-                >
-                  {currentCardLabel}
-                </button>
                 <button
                   type="button"
                   className="vb-btn vb-btn-primary"

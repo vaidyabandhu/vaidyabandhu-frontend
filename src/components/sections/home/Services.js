@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const services = [
   {
@@ -41,12 +41,30 @@ const services = [
       "https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=1200&auto=format&fit=crop",
     title: "Membership Benefits",
     short: "Save more with your ₹49 card",
-    link: "/",
+    link: "/#membership-benefits",
     featured: true,
   },
 ];
 
 const Services = () => {
+  const location = useLocation();
+
+  const handleMembershipCardClick = (event, item) => {
+    if (item.id !== 5 || location.pathname !== "/") {
+      return;
+    }
+
+    event.preventDefault();
+
+    const target = document.getElementById("membership-benefits");
+    if (!target) {
+      return;
+    }
+
+    window.history.replaceState({}, "", "/#membership-benefits");
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <section className="vb-section">
       <div className="vb-container">
@@ -56,6 +74,7 @@ const Services = () => {
               to={item.link}
               className={`vb-service-card-new ${item.featured ? "is-featured" : ""}`}
               key={item.id}
+              onClick={(event) => handleMembershipCardClick(event, item)}
             >
               <div
                 className={`vb-service-image ${
