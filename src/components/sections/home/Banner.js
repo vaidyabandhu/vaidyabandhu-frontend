@@ -15,6 +15,8 @@ const heroContent = {
   ],
 };
 
+const heroBannerSrc = `${process.env.PUBLIC_URL}/assets/img/bnr.jpeg`;
+
 const Banner = () => {
   const quickStats = counter.slice(0, 3).map((item) =>
     item.title === "Diagnostic Centers"
@@ -60,7 +62,7 @@ const Banner = () => {
 
           <div className="vb-hero-visual" aria-hidden="true">
             <img
-              src={process.env.PUBLIC_URL + "/assets/img/banner-2.jpg"}
+              src={heroBannerSrc}
               alt="Doctor greeting a patient in a hospital"
             />
           </div>
