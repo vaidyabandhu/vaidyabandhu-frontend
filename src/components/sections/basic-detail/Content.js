@@ -636,6 +636,8 @@ const VaidyaBandhuForm = () => {
         gender: "",
         blood_group: "",
         relationship: "",
+        aadhaar_number: "",
+        pan_number: "",
         referral_code: "",
         profile_image: null,
         imagePreview: null,
@@ -1212,18 +1214,22 @@ const VaidyaBandhuForm = () => {
                 hasPreview: !!m.imagePreview
               })));
 
-              for (const member of familyMembers) {
-                const memberFormData = new FormData();
-                memberFormData.append("full_name", member.full_name);
-                memberFormData.append("age", member.age);
-                memberFormData.append("gender", member.gender);
-                memberFormData.append("blood_group", member.blood_group || "");
-                memberFormData.append("relationship", member.relationship);
-                memberFormData.append("adhaar_number", "");
-                memberFormData.append("pan_number", "");
+              const memberFormData = new FormData();
+              const membersPayload = familyMembers.map((member) => ({
+                full_name: member.full_name,
+                age: Number(member.age),
+                gender: typeof member.gender === "string" ? member.gender.toLowerCase() : member.gender,
+                relationship: member.relationship,
+                blood_group: member.blood_group || "",
+                aadhaar_number: member.aadhaar_number || "",
+                pan_number: member.pan_number || "",
+              }));
 
-                // Debug: Check if profile_image exists
+              memberFormData.append("family_members", JSON.stringify(membersPayload));
+
+              familyMembers.forEach((member, index) => {
                 console.log("👤 Processing member:", {
+                  index,
                   name: member.full_name,
                   hasImage: !!member.profile_image,
                   imageType: member.profile_image ? member.profile_image.type : 'none',
@@ -1231,27 +1237,29 @@ const VaidyaBandhuForm = () => {
                 });
 
                 if (member.profile_image) {
-                  memberFormData.append("profile_image", member.profile_image);
-                  console.log("✅ profile_image ADDED to FormData");
+                  memberFormData.append(`profile_image_${index}`, member.profile_image);
+                  console.log(`✅ profile_image_${index} ADDED to FormData`);
                 } else {
-                  console.log("❌ profile_image NOT ADDED - member.profile_image is:", member.profile_image);
+                  console.log(`❌ profile_image_${index} NOT ADDED - member.profile_image is:`, member.profile_image);
                 }
+              });
 
-                console.log("Adding member:", member.full_name);
-                const memberRes = await fetch(
-                  "https://admin.vaidyabandhu.com/api/add/member/",
-                  {
-                    method: "POST",
-                    headers: { Authorization: token },
-                    body: memberFormData,
-                  }
-                );
+              console.log("📦 family_members payload:", membersPayload);
+              console.log("🚀 Sending batched family member request");
 
-                if (!memberRes.ok) {
-                  const errorText = await memberRes.text();
-                  console.error("Failed to add member:", member.full_name, memberRes.status, errorText);
-                  throw new Error(`Failed to add member: ${member.full_name}`);
+              const memberRes = await fetch(
+                "https://admin.vaidyabandhu.com/api/add/member/",
+                {
+                  method: "POST",
+                  headers: { Authorization: token },
+                  body: memberFormData,
                 }
+              );
+
+              if (!memberRes.ok) {
+                const errorText = await memberRes.text();
+                console.error("Failed to add family members:", memberRes.status, errorText);
+                throw new Error("Failed to add family members");
               }
             }
 
@@ -2587,5 +2595,4 @@ const VaidyaBandhuForm = () => {
 };
 
 export default VaidyaBandhuForm;
-
 
