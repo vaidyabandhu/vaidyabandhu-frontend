@@ -7,11 +7,12 @@ const heroContent = {
   intro:
     "Find verified doctors, hospitals, and diagnostics with guided support.",
   benefits: [
-    "Save up to 40% on treatments.",
-    "Get quick support from our care team.",
-    "Free surgeries available 10% money back",
-    "Free advice: 9 AM–6 PM",
-    "Right doctor guidance",
+    "Save 10% to 40% on surgeries, treatments & diagnostics.",
+    "10% Cashback / Patient Benefit Care support.",
+    "Right doctor & hospital guidance area-wise.",
+    "Quick support from our healthcare team.",
+    "Free healthcare advice: 9 AM – 6 PM (24/7 soon).",
+     "200+ Hospitals | 4000+ Doctors | 100+ Diagnostics.",
   ],
 };
 
