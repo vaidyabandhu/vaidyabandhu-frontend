@@ -63,14 +63,15 @@ const AppDownloadSection = () => {
                 <span>Download on App Store</span>
               </button>
 
-              <button
-                type="button"
+              <a
+                href="https://play.google.com/store/apps/details?id=com.vadiyabandhu.app&hl=en_IN"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="vb-app-store-btn"
-                onClick={() => setShowComingSoon(true)}
               >
                 <i className="fab fa-google-play" aria-hidden="true" />
                 <span>Get it on Google Play</span>
-              </button>
+              </a>
             </div>
           </div>
         </div>
